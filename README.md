@@ -1,3 +1,13 @@
+## Development Rules
+
+* Add comments in every file explaining what it does.
+* Always `git pull` before pushing your changes.
+* Use clear commit messages 
+* Follow the existing folder structure.
+* Test everything before pushing.
+* Work on a separate branch for your feature (example: `teacher-feature`) instead of pushing directly to `main`.   This helps avoid conflicts
+
+
 # BWF Web Dashboard
 
 Web-based Admin and Warden dashboard for the [Borderless World Foundation](https://www.borderlessworldfoundation.org/) Management System.
