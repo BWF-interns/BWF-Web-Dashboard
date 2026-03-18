@@ -1,0 +1,382 @@
+/* =========================================
+   BWF DASHBOARD STYLES (TRAUMA-AWARE)
+   ========================================= */
+
+/* --- 1. LAYOUT & STRUCTURE --- */
+.dashboard-layout {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+}
+
+.main-content {
+  flex: 1;
+  padding: 32px;
+  overflow-y: auto;
+  max-width: 1400px; 
+  margin: 0 auto;
+  width: 100%;
+}
+
+.flex { display: flex; }
+.justify-between { justify-content: space-between; }
+.items-center { align-items: center; }
+
+/* --- 2. SIDEBAR --- */
+.sidebar {
+  width: 260px;
+  background-color: var(--bg-card);
+  border-right: 1px solid #e2e8f0;
+  display: flex;
+  flex-direction: column;
+}
+
+.sidebar-logo {
+  padding: 24px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  width: 40px;
+  height: 40px;
+  background-color: var(--brand-blue-light);
+  color: var(--brand-blue);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+}
+
+.sidebar-nav {
+  padding: 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  border-radius: var(--border-radius-sm);
+  color: var(--text-secondary);
+  font-size: 1rem;
+  font-family: inherit;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.nav-item:hover, .nav-item.active {
+  background-color: var(--brand-blue-light);
+  color: var(--brand-blue);
+  font-weight: 500;
+}
+
+/* --- 3. TOP HEADER --- */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.icon-btn {
+  background: var(--bg-card);
+  border: 1px solid #e2e8f0; 
+  padding: 10px;
+  border-radius: 50%;
+  cursor: pointer;
+  box-shadow: 0 2px 5px rgba(0,0,0,0.02);
+  color: #475569; 
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  background: #f1f5f9;
+  color: #1e293b;
+}
+
+.profile-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  overflow: hidden;
+  border: 2px solid white;
+  box-shadow: var(--shadow-soft);
+}
+
+.profile-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+/* --- 4. WELCOME BANNER & MOOD TRACKER --- */
+.welcome-banner {
+  background: linear-gradient(135deg, #e0f2fe 0%, #d1fae5 100%);
+  border-radius: var(--border-radius-lg);
+  padding: 32px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 32px;
+}
+
+.welcome-text h2 { margin-bottom: 8px; }
+.welcome-text p { color: var(--text-secondary); font-size: 0.95rem; }
+
+.mood-tracker {
+  display: flex;
+  gap: 16px;
+}
+
+.mood-btn {
+  background: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: var(--border-radius-md);
+  padding: 12px 16px;
+  width: 80px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.05);
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.mood-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
+}
+
+.mood-btn .emoji { font-size: 2rem; }
+.mood-btn .label { font-size: 0.8rem; font-weight: 500; color: var(--text-primary); }
+
+/* --- 5. DASHBOARD GRID & BASE CARDS --- */
+.dashboard-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 24px;
+}
+
+.card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  padding: 24px;
+  border: 1px solid #f1f5f9; 
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+}
+
+.card h3 {
+  margin-bottom: 20px;
+  font-size: 1.1rem;
+}
+
+
+
+/* --- 7. ASSIGNMENTS --- */
+.assignment-item {
+  padding: 16px;
+  border: 1px solid #f1f5f9;
+  border-radius: var(--border-radius-md);
+  margin-bottom: 12px;
+}
+
+.assignment-header {
+  display: flex;
+  align-items: center;
+  gap: 8px; 
+  margin-bottom: 4px;
+}
+
+.status-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  display: inline-block;
+}
+
+.dot-urgent {
+  background-color: #f87171;
+  box-shadow: 0 0 0 3px #fee2e2; 
+}
+
+.dot-normal {
+  background-color: #34d399;
+  box-shadow: 0 0 0 3px #d1fae5; 
+}
+
+/* --- 8. QUICK RESOURCES --- */
+.resource-btn {
+  width: 100%;
+  padding: 16px;
+  border: none;
+  border-radius: var(--border-radius-md);
+  color: white;
+  font-weight: 600;
+  margin-bottom: 12px;
+  cursor: pointer;
+}
+
+.bg-library { background-color: #e0e7ff; color: #4f46e5; }
+.bg-syllabus { background-color: #d1fae5; color: #059669; }
+.bg-mentor { background-color: #ccfbf1; color: #0d9488; }
+
+/* --- 9. CONNECTION SECTION (BOTTOM CARDS) --- */
+.connection-section {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+  gap: 24px;
+  margin-top: 32px;
+}
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 16px;
+}
+
+/* Mentor Card */
+.mentor-note-card {
+  background: linear-gradient(135deg, #fdf2f8 0%, #fce7f3 100%);
+  border: 1px solid #fbcfe8;
+}
+
+.mentor-info { display: flex; align-items: center; gap: 12px; }
+.mentor-avatar { width: 44px; height: 44px; border-radius: 50%; box-shadow: 0 2px 8px rgba(219, 39, 119, 0.15); }
+.mentor-avatar img { width: 100%; height: 100%; object-fit: cover; }
+
+.date-badge {
+  background: rgba(255, 255, 255, 0.6);
+  color: #be185d;
+  font-size: 0.75rem;
+  font-weight: 600;
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.mentor-message {
+  background: #ffffff;
+  padding: 16px;
+  border-radius: 12px 12px 12px 4px; 
+  color: #831843;
+  font-size: 0.95rem;
+  line-height: 1.5;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.02);
+  margin-bottom: 16px;
+}
+
+.mentor-actions { display: flex; gap: 8px; }
+
+.btn-react, .btn-reply {
+  background: rgba(255, 255, 255, 0.6);
+  border: none;
+  padding: 8px 16px;
+  border-radius: 20px;
+  cursor: pointer;
+  color: #db2777;
+  font-weight: 500;
+  transition: background 0.2s;
+}
+
+.btn-react:hover, .btn-reply:hover { background: #ffffff; }
+
+/* Daily Inspiration Card */
+.mindful-card {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border: 1px solid #a7f3d0;
+  display: flex;
+  flex-direction: column;
+}
+
+.mindful-header { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; }
+.mindful-header h3 { color: #065f46; font-weight: 600; font-size: 1.1rem; margin: 0; }
+
+.mindful-body p { color: #065f46; font-style: italic; font-size: 1.05rem; line-height: 1.6; margin-bottom: 24px; }
+
+.mindful-footer {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: auto; 
+  padding-top: 16px;
+  border-top: 1px solid #a7f3d0;
+}
+
+.mindful-footer p { color: #047857; font-size: 0.85rem; margin: 0; }
+.mindful-emoji { font-size: 1.2rem; }
+
+/* --- 10. BUTTONS --- */
+.btn-primary {
+  background-color: var(--brand-blue-light);
+  color: var(--brand-blue);
+  border: 1px solid #bfdbfe; 
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-top: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 4px rgba(59, 130, 246, 0.05); 
+}
+
+.btn-primary:hover {
+  background-color: var(--brand-blue);
+  color: white;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 6px rgba(59, 130, 246, 0.1);
+}
+
+.btn-secondary {
+  background-color: #f1f5f9;
+  color: #64748b;
+  border: 1px solid #e2e8f0;
+  padding: 6px 14px;
+  border-radius: 20px;
+  margin-top: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  font-size: 0.8rem;
+  transition: all 0.2s ease;
+}
+
+.btn-secondary:hover {
+  background-color: #e2e8f0;
+  color: #334155;
+}
+
+/* --- 11. PAGE LOAD ANIMATIONS --- */
+@keyframes softFadeUp {
+  from { opacity: 0; transform: translateY(15px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.welcome-banner, .card {
+  animation: softFadeUp 0.6s ease-out forwards;
+  opacity: 0; 
+}
+
+.welcome-banner { animation-delay: 0.1s; }
+.schedule-card { animation-delay: 0.2s; }
+.assignments-card { animation-delay: 0.3s; }
+.resources-card { animation-delay: 0.4s; }
+.mentor-note-card { animation-delay: 0.5s; }
+.mindful-card { animation-delay: 0.6s; }

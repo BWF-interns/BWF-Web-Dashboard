@@ -1,0 +1,167 @@
+/* --- CLASSROOM ARCHITECTURE --- */
+
+.classroom-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background-color: #ffffff; /* Classroom usually has white bg with shaded cards */
+  height: 100vh;
+}
+
+/* Persistent Header */
+.classroom-header {
+  border-bottom: 1px solid #e2e8f0;
+  background: #fff;
+  z-index: 10;
+}
+
+.header-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 24px;
+}
+
+.class-title-group { display: flex; align-items: center; gap: 16px; }
+.class-title-group h1 { font-size: 1.1rem; color: #3c4043; font-weight: 500; }
+
+.back-btn { color: #5f6368; border-radius: 50%; padding: 8px; transition: 0.2s; }
+.back-btn:hover { background: #f1f3f4; }
+
+/* The Navigation Tabs */
+.classroom-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 32px;
+}
+
+.tab-btn {
+  background: none;
+  border: none;
+  padding: 12px 24px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: #5f6368;
+  cursor: pointer;
+  position: relative;
+  transition: 0.2s;
+}
+
+.tab-btn:hover { color: var(--brand-blue); background: #f8fbff; }
+
+.tab-btn.active { color: var(--brand-blue); }
+.tab-btn.active::after {
+  content: '';
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--brand-blue);
+  border-radius: 3px 3px 0 0;
+}
+
+/* Scroll Area & Centered Column */
+.classroom-scroll-area {
+  flex: 1;
+  overflow-y: auto;
+  background: #f8f9fa; /* Slight grey bg makes the white cards feel like physical paper */
+  padding: 24px;
+}
+
+.centered-content {
+  max-width: 800px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* Stream Styles (Announcements) */
+.class-banner-minimal {
+  background: #3c4043;
+  color: white;
+  padding: 40px;
+  border-radius: 8px;
+  background-image: linear-gradient(to right, rgba(0,0,0,0.4), transparent), url('https://www.gstatic.com/classroom/themes/img_graduation.jpg');
+  background-size: cover;
+}
+
+.announcement-input {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px 24px;
+  cursor: pointer;
+}
+
+.placeholder-text {
+  background: none;
+  border: none;
+  color: #70757a;
+  font-size: 0.85rem;
+}
+
+.stream-item { padding: 20px; }
+.stream-header { display: flex; align-items: center; gap: 12px; margin-bottom: 16px; }
+
+.avatar-sm {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: #4285f4;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 600;
+}
+
+.stream-meta { display: flex; flex-direction: column; flex: 1; }
+.stream-meta .name { font-weight: 600; font-size: 0.85rem; }
+.stream-meta .date { font-size: 0.75rem; color: #70757a; }
+
+.stream-footer { border-top: 1px solid #f1f3f4; margin-top: 16px; padding-top: 12px; }
+.comment-btn { background: none; border: none; font-size: 0.8rem; color: #5f6368; display: flex; align-items: center; gap: 8px; cursor: pointer; }
+
+/* Classwork Styles */
+.topic-title {
+  font-size: 1.5rem;
+  color: var(--brand-blue);
+  border-bottom: 2px solid var(--brand-blue);
+  display: inline-block;
+  padding-bottom: 8px;
+  margin-bottom: 24px;
+}
+
+.classwork-item {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  padding: 16px 24px;
+  border-radius: 8px;
+  transition: 0.2s;
+  cursor: pointer;
+}
+
+.classwork-item:hover { background: #f1f3f4; box-shadow: none; }
+
+.item-icon-bg {
+  width: 40px;
+  height: 40px;
+  background: var(--brand-blue);
+  color: white;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.item-info { flex: 1; display: flex; flex-direction: column; }
+.item-title { font-weight: 500; font-size: 0.95rem; color: #3c4043; }
+.item-date { font-size: 0.8rem; color: #70757a; }
+
+.item-due { font-size: 0.8rem; color: #d93025; font-weight: 500; }
+.item-status { font-size: 0.8rem; color: #1e8e3e; font-weight: 600; }
+
+.completed .item-icon-bg { background: #e8f0fe; color: var(--brand-blue); }

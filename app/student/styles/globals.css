@@ -1,0 +1,46 @@
+/* styles/globals.css */
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap');
+
+:root {
+  /* TID Color Palette - Soft, non-triggering pastels */
+  --bg-main: #f8fafc;
+  --bg-card: #ffffff;
+  --text-primary: #334155;
+  --text-secondary: #64748b;
+  
+  --brand-blue: #3b82f6;
+  --brand-blue-light: #eff6ff;
+  
+  --status-happy: #fef08a;
+  --status-okay: #bbf7d0;
+  --status-help: #fecaca;
+  --status-help-icon: #ef4444;
+
+  --border-radius-lg: 24px;
+  --border-radius-md: 16px;
+  --border-radius-sm: 8px;
+  
+  --shadow-soft: 0 4px 20px rgba(0, 0, 0, 0.03);
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: 'Inter', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+}
+/* Update your existing .card class */
+.card {
+  background: var(--bg-card);
+  border-radius: var(--border-radius-lg);
+  padding: 24px;
+  /* Add a very soft, barely-there border */
+  border: 1px solid #f1f5f9; 
+  /* Add a soft, dispersed shadow to lift it off the background */
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.02), 0 8px 10px -6px rgba(0, 0, 0, 0.01);
+}
