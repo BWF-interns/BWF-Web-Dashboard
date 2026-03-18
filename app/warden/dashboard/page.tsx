@@ -1,11 +1,11 @@
 
-export default function TeacherDashboard() {
+export default function WardenDashboard() {
   return (
     <div className="p-6">
       <h1 className="text-2xl font-bold">Teacher Dashboard</h1>
 
       <p className="mt-2 text-gray-600">
-        Welcome to the teacher dashboard.
+        Welcome to the warden dashboard.
       </p>
 
       <div className="mt-6 grid grid-cols-3 gap-4">
