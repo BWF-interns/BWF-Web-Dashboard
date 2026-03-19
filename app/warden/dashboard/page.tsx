@@ -70,12 +70,42 @@ export default function DashboardPage() {
 
       {/* Cards */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        <Card label="Total Students" value={summary.totalStudents} icon={Users} color="bg-blue-500" />
-        <Card label="Pending Activities" value={summary.pendingActivities} icon={Clock} color="bg-yellow-500" />
-        <Card label="Pending Posts" value={summary.pendingPosts} icon={MessageSquare} color="bg-purple-500" />
-        <Card label="Monthly Expenses" value={`₹${summary.monthlyExpenses}`} icon={DollarSign} color="bg-green-500" />
-        <Card label="Open Complaints" value={summary.openComplaints} icon={AlertCircle} color="bg-red-500" />
-        <Card label="Inactive Students" value={summary.inactiveStudents} icon={UserX} color="bg-gray-500" />
+        <Card
+          label="Total Students"
+          value={summary.totalStudents}
+          icon={Users}
+          color="bg-blue-500"
+        />
+        <Card
+          label="Pending Activities"
+          value={summary.pendingActivities}
+          icon={Clock}
+          color="bg-yellow-500"
+        />
+        <Card
+          label="Pending Posts"
+          value={summary.pendingPosts}
+          icon={MessageSquare}
+          color="bg-purple-500"
+        />
+        <Card
+          label="Monthly Expenses"
+          value={`₹${summary.monthlyExpenses}`}
+          icon={DollarSign}
+          color="bg-green-500"
+        />
+        <Card
+          label="Open Complaints"
+          value={summary.openComplaints}
+          icon={AlertCircle}
+          color="bg-red-500"
+        />
+        <Card
+          label="Inactive Students"
+          value={summary.inactiveStudents}
+          icon={UserX}
+          color="bg-gray-500"
+        />
       </div>
 
       {/* Alert */}
@@ -107,12 +137,8 @@ export default function DashboardPage() {
               />
 
               <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-800 truncate">
-                  {item.message}
-                </p>
-                <p className="text-xs text-gray-400">
-                  3/18/2026, 6:32:56 PM
-                </p>
+                <p className="text-sm text-gray-800 truncate">{item.message}</p>
+                <p className="text-xs text-gray-400">3/18/2026, 6:32:56 PM</p>
               </div>
 
               {item.status && (
