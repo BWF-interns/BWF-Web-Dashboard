@@ -148,3 +148,24 @@
   background: radial-gradient(circle, rgba(59,130,246,0.07) 0%, transparent 70%);
   border-radius: 50%;
 }
+
+/* ── MOBILE RESPONSIVENESS ── */
+@media (max-width: 768px) {
+  /* Match your actual class name: .sidebar */
+  .sidebar {
+    display: none !important; 
+  }
+
+  /* Ensure the page area takes up 100% width and removes any desktop margins/padding */
+  .student-page-area {
+    width: 100vw;
+    flex: 1;
+    margin: 0;
+    padding: 0;
+  }
+
+  /* Optional: If your shell has a specific layout for desktop, reset it here */
+  .student-shell {
+    flex-direction: column;
+  }
+}

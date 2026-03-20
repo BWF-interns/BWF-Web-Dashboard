@@ -426,3 +426,128 @@
   background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%);
   border-radius: 50%; pointer-events: none;
 }
+
+/* ── MOBILE RESPONSIVENESS ── */
+
+/* Hidden by default on Desktop */
+.mobile-top-bar, .mobile-close-btn, .sidebar-overlay {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  /* Hide the desktop title, use the logo icon only or custom text */
+  .sidebar-title { font-size: 1rem; }
+
+  /* Transform Sidebar into a Slide-in Drawer */
+  .sidebar {
+    position: fixed;
+    left: -260px; /* Hidden off-screen */
+    top: 0;
+    bottom: 0;
+    width: 260px;
+    z-index: 999;
+    transition: left 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    background: white;
+    box-shadow: none;
+  }
+
+  .sidebar.mobile-active {
+    left: 0; /* Slides in */
+    box-shadow: 10px 0 40px rgba(0,0,0,0.15);
+  }
+
+  /* Show the Mobile Header */
+  .mobile-top-bar {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 16px;
+    background: white;
+    border-bottom: 1px solid #eee;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .mobile-logo-text {
+    font-weight: 800;
+    color: #1e40af; /* Your brand blue */
+  }
+
+  .mobile-menu-btn, .mobile-avatar-btn {
+    background: none;
+    border: none;
+    cursor: pointer;
+    padding: 5px;
+  }
+
+  /* Overlay */
+  .sidebar-overlay {
+    display: block;
+    position: fixed;
+    inset: 0;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: blur(3px);
+    z-index: 998;
+  }
+
+  .mobile-close-btn {
+    display: flex;
+    position: absolute;
+    right: 12px;
+    top: 12px;
+    background: #f3f4f6;
+    border-radius: 50%;
+    padding: 5px;
+    border: none;
+    z-index: 1001;
+  }
+
+  /* Ensure the page area doesn't have extra margins on mobile */
+  .student-page-area {
+    width: 100%;
+    padding-top: 10px;
+  }
+}
+@media (max-width: 768px) {
+  /* 1. Force the sidebar to be physically removed from the layout flow */
+  .sidebar {
+    display: none !important;
+    position: fixed; /* Takes it out of the flex calculation */
+  }
+
+  /* 2. Fix the "White Gap" - Make the page area take the whole width */
+  .student-shell {
+    display: block !important; /* Switch from flex to block on mobile */
+    width: 100%;
+  }
+
+  .student-page-area {
+    width: 100% !important;
+    margin-left: 0 !important;
+    padding: 15px !important; /* Give the content some breathing room */
+  }
+
+  /* 3. Center the Mobile Top Bar content */
+  .mobile-top-bar {
+    display: flex !important;
+    width: 100%;
+    box-sizing: border-box;
+  }
+}
+@media (max-width: 768px) {
+  /* Allow the outer container to scroll if needed */
+  .student-shell {
+    height: auto !important; 
+    min-height: 100vh;
+    overflow: visible !important;
+    display: block !important;
+  }
+
+  /* Ensure the page content doesn't get stuck */
+  .student-page-area {
+    height: auto !important;
+    overflow: visible !important;
+    padding-bottom: 80px; /* Space so the last card isn't cut off */
+  }
+}
