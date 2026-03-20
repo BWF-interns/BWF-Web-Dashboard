@@ -1,70 +1,90 @@
 "use client";
-
-import {
-  LayoutDashboard,
-  BookOpen,
-  MessageSquare,
-  User,
-  HeartPulse,
-  X,
-} from "lucide-react";
+// app/student/components/Sidebar.tsx
+import React from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
+import { usePathname, useRouter } from "next/navigation";
+import { Home, BookOpen, Bell, Settings, HeartPulse, Megaphone } from "lucide-react";
+import { useNotices } from "../context/NoticeContext";
+import { useProfile } from "../context/ProfileContext";
+import { getAvatar } from "../constants/avatars";
+import Image from 'next/image';
 
-const studentMenu = [
-  { name: "Dashboard", icon: LayoutDashboard, path: "/student/dashboard" },
-  { name: "My Courses", icon: BookOpen, path: "/student/courses" },
-  { name: "Notice Board", icon: MessageSquare, path: "/student/notice" },
-  { name: "Well Being", icon: HeartPulse, path: "/student/wellbeing" },
-  { name: "Profile", icon: User, path: "/student/profile" },
+const NAV_LINKS = [
+  { href: "/student/dashboard",   label: "Home",           Icon: Home       },
+  { href: "/student/mycourses",   label: "My Courses",     Icon: BookOpen   },
+  { href: "/student/noticeboard", label: "Notice Board",   Icon: Megaphone  },
+  { href: "/student/wellbeing",   label: "Wellbeing/Help", Icon: HeartPulse },
+  { href: "/student/profile",    label: "Profile",       Icon: Settings   },
 ];
 
-export default function StudentSidebar({
-  closeSidebar,
-}: {
-  closeSidebar?: () => void;
-}) {
-  const pathname = usePathname();
+export default function StudentSidebar() {
+  const pathname      = usePathname();
+  const router        = useRouter();
+  const { unreadCount } = useNotices();
+  const { avatarId }    = useProfile();
+  const av              = getAvatar(avatarId);
+  const hasUnread       = unreadCount > 0;
 
   return (
-    <div className="h-full w-full flex flex-col border-r border-gray-200 p-5">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-lg font-semibold text-gray-900">
-            Student Portal
-          </h1>
-          <p className="text-xs text-gray-500">Borderless World Foundation</p>
-        </div>
+    <aside className="sidebar">
 
-        {/* Close button (mobile only) */}
-        <button className="md:hidden" onClick={closeSidebar}>
-          <X className="text-black" />
-        </button>
-      </div>
+     <div className="sidebar-logo">
+  <div className="logo-icon">
+    <Image 
+      src="/logo.png"  // Ensure logo.png is in the /public folder
+      alt="BWF Logo" 
+      width={42} 
+      height={42}
+      priority
+      className="rounded-full" // If you're using Tailwind, otherwise use CSS
+    />
+  </div>
+  <h2 className="text-xl font-bold ml-2">BWF</h2>
+</div> 
 
-      {/* Menu */}
-      <div className="space-y-2">
-        {studentMenu.map((item) => {
-          const isActive = pathname === item.path;
-
+      {/* Nav */}
+      <nav className="sidebar-nav">
+        {NAV_LINKS.map(({ href, label, Icon }) => {
+          const isActive = pathname === href || pathname.startsWith(href + "/");
+          const isNotice = href.includes("noticeboard");
           return (
-            <Link
-              key={item.name}
-              href={item.path}
-              onClick={closeSidebar}
-              className={`flex items-center gap-3 px-3 py-2 rounded-lg text-sm transition ${
-                isActive
-                  ? "bg-blue-50 text-blue-600 font-medium"
-                  : "text-gray-600 hover:bg-gray-100"
-              }`}
-            >
-              <item.icon size={18} />
-              {item.name}
+            <Link key={href} href={href} className={`nav-item${isActive ? " active" : ""}`}>
+              <span className="nav-icon-wrap">
+                <Icon size={19} />
+                {isNotice && hasUnread && (
+                  <span className="nav-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+                )}
+              </span>
+              {label}
             </Link>
           );
         })}
+      </nav>
+
+      {/* Bottom: bell + avatar */}
+      <div className="sidebar-bottom">
+        <button
+          className={`sb-bell${hasUnread ? " sb-bell--on" : ""}`}
+          onClick={() => router.push("/student/noticeboard")}
+          title={hasUnread ? `${unreadCount} unread notices` : "All caught up!"}
+        >
+          <Bell size={17} />
+          {hasUnread && (
+            <span className="sb-bell-badge">{unreadCount > 9 ? "9+" : unreadCount}</span>
+          )}
+        </button>
+
+        <button
+          className="sb-avatar"
+          style={{ background: av.bg }}
+          onClick={() => router.push("/student/profile")}
+          title="My Profile"
+        >
+          <span>{av.emoji}</span>
+        </button>
       </div>
-    </div>
+
+      <div className="sb-foot-blob" />
+    </aside>
   );
 }

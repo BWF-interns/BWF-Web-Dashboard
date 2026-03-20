@@ -1,0 +1,49 @@
+/* =========================================
+   BWF GLOBAL STYLES
+   ========================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&family=Lora:ital,wght@0,400;0,600;1,400&display=swap');
+
+:root {
+  --bg-main: #f4f7fd;
+  --bg-card: #ffffff;
+  --sidebar-bg: #ffffff;
+  --sidebar-border: #eef2f9;
+
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+
+  --brand-blue: #3b82f6;
+  --brand-blue-mid: #60a5fa;
+  --brand-blue-light: #eff6ff;
+  --brand-teal: #06b6d4;
+
+  --border-radius-lg: 24px;
+  --border-radius-md: 16px;
+  --border-radius-sm: 10px;
+
+  --shadow-soft: 0 4px 20px rgba(0,0,0,0.04);
+  --shadow-card: 0 4px 20px rgba(0,0,0,0.04), 0 1px 4px rgba(0,0,0,0.02);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Nunito', sans-serif;
+  background-color: var(--bg-main);
+  color: var(--text-primary);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', sans-serif;
+  font-weight: 800;
+}
+
+button { font-family: 'Nunito', sans-serif; }
+
+::-webkit-scrollbar { width: 5px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 10px; }
+::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }

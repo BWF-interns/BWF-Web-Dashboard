@@ -1,0 +1,428 @@
+/* =========================================
+   BWF SIDEBAR + SHELL
+   Extracted from layout.css — now standalone
+   ========================================= */
+
+/* ── SHELL ── */
+.student-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-main);
+}
+
+.student-page-area {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1.5px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+  overflow: hidden;
+}
+
+/* Gradient shimmer edge */
+.sidebar::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0;
+  width: 1.5px;
+  background: linear-gradient(to bottom, transparent, var(--brand-blue) 35%, var(--brand-teal) 65%, transparent);
+  opacity: 0.15;
+  pointer-events: none;
+}
+
+/* Logo */
+.sidebar-logo {
+  padding: 26px 22px 22px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 14px;
+}
+
+.logo-icon {
+  width: 40px; height: 40px;
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-teal));
+  color: #fff;
+  border-radius: 13px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.75rem; letter-spacing: 0.5px;
+  box-shadow: 0 4px 16px rgba(59,130,246,0.32);
+  flex-shrink: 0;
+}
+
+.sidebar-logo h2 {
+  font-size: 1.15rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-teal));
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.4px;
+}
+
+/* Nav */
+.sidebar-nav {
+  padding: 0 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: 11px 14px;
+  border-radius: 13px;
+  color: var(--text-secondary);
+  font-size: 0.9rem; font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  white-space: nowrap;
+}
+
+.nav-item:hover {
+  background: var(--brand-blue-light);
+  color: var(--brand-blue);
+  transform: translateX(3px);
+}
+
+.nav-item.active {
+  background: linear-gradient(120deg, var(--brand-blue-light), #e0f2fe);
+  color: var(--brand-blue);
+  font-weight: 800;
+  border-color: #bfdbfe;
+  box-shadow: 0 2px 12px rgba(59,130,246,0.1);
+}
+
+/* Nav icon wrapper — holds the unread dot */
+.nav-icon-wrap {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+/* Unread dot on Notice Board nav item */
+.nav-unread-dot {
+  position: absolute;
+  top: -6px;
+  right: -8px;
+  background: #f97316;
+  color: white;
+  font-size: 0.58rem;
+  font-weight: 900;
+  min-width: 16px;
+  height: 16px;
+  border-radius: 10px;
+  padding: 0 4px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(249,115,22,0.4);
+  animation: dotPulse 2s ease infinite;
+}
+
+@keyframes dotPulse {
+  0%,100% { box-shadow: 0 2px 6px rgba(249,115,22,0.4); }
+  50%      { box-shadow: 0 2px 10px rgba(249,115,22,0.7); }
+}
+
+/* ── BOTTOM BAR ── */
+.sidebar-bottom {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 18px;
+  border-top: 1px solid var(--sidebar-border);
+  margin-top: auto;
+  gap: 10px;
+}
+
+/* Bell button */
+.sidebar-bell {
+  position: relative;
+  width: 40px; height: 40px;
+  border-radius: 13px;
+  border: 1.5px solid #e8edf5;
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+  flex-shrink: 0;
+}
+
+.sidebar-bell:hover {
+  background: var(--brand-blue-light);
+  color: var(--brand-blue);
+  border-color: #bfdbfe;
+  transform: scale(1.07);
+}
+
+/* Orange bell when there are unread notices */
+.sidebar-bell--active {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #f97316;
+  animation: bellRing 3s ease infinite;
+}
+
+@keyframes bellRing {
+  0%,100% { transform: rotate(0deg); }
+  5%       { transform: rotate(-12deg); }
+  10%      { transform: rotate(12deg); }
+  15%      { transform: rotate(-8deg); }
+  20%      { transform: rotate(8deg); }
+  25%      { transform: rotate(0deg); }
+}
+
+/* Badge on bell */
+.sidebar-bell-badge {
+  position: absolute;
+  top: -5px; right: -5px;
+  background: #f97316;
+  color: white;
+  font-size: 0.58rem;
+  font-weight: 900;
+  min-width: 17px;
+  height: 17px;
+  border-radius: 10px;
+  padding: 0 4px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--sidebar-bg);
+  box-shadow: 0 2px 6px rgba(249,115,22,0.4);
+}
+
+/* Avatar → profile button */
+.sidebar-av {
+  flex: 1;
+  height: 40px;
+  border-radius: 13px;
+  border: 2px solid rgba(255,255,255,0.8);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer;
+  font-size: 1.3rem;
+  position: relative;
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  overflow: hidden;
+}
+
+.sidebar-av:hover {
+  transform: scale(1.06);
+  box-shadow: 0 6px 20px rgba(0,0,0,0.14);
+}
+
+.sidebar-av-emoji { position: relative; z-index: 1; line-height: 1; }
+
+/* Footer blob */
+.sidebar-footer-blob {
+  position: absolute;
+  bottom: -30px; left: -20px;
+  width: 130px; height: 130px;
+  background: radial-gradient(circle, rgba(59,130,246,0.06) 0%, transparent 70%);
+  border-radius: 50%;
+  pointer-events: none;
+}
+/* =============================================
+   BWF SIDEBAR + STUDENT SHELL
+   ============================================= */
+
+.student-shell {
+  display: flex;
+  height: 100vh;
+  overflow: hidden;
+  background: var(--bg-main);
+}
+
+.student-page-area {
+  flex: 1;
+  overflow-y: auto;
+  min-width: 0;
+}
+
+/* ── SIDEBAR ── */
+.sidebar {
+  width: 240px;
+  min-width: 240px;
+  flex-shrink: 0;
+  background: var(--sidebar-bg);
+  border-right: 1.5px solid var(--sidebar-border);
+  display: flex;
+  flex-direction: column;
+  position: relative;
+  z-index: 20;
+  overflow: hidden;
+}
+
+.sidebar::after {
+  content: '';
+  position: absolute;
+  right: 0; top: 0; bottom: 0; width: 1.5px;
+  background: linear-gradient(to bottom, transparent, var(--brand-blue) 35%, var(--brand-teal) 65%, transparent);
+  opacity: 0.12;
+  pointer-events: none;
+}
+
+/* Logo */
+.sidebar-logo {
+  padding: 26px 22px 20px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  border-bottom: 1px solid var(--sidebar-border);
+  margin-bottom: 12px;
+}
+
+.logo-icon {
+  width: 38px; height: 38px;
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-teal));
+  color: #fff;
+  border-radius: 12px;
+  display: flex; align-items: center; justify-content: center;
+  font-weight: 900; font-size: 0.72rem; letter-spacing: 0.5px;
+  box-shadow: 0 4px 14px rgba(59,130,246,0.3);
+  flex-shrink: 0;
+}
+
+.sidebar-logo h2 {
+  font-size: 1.1rem; font-weight: 900;
+  background: linear-gradient(135deg, var(--brand-blue), var(--brand-teal));
+  -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;
+  letter-spacing: -0.3px;
+}
+
+/* Nav */
+.sidebar-nav {
+  padding: 0 10px;
+  display: flex; flex-direction: column; gap: 2px;
+  flex: 1;
+}
+
+.nav-item {
+  display: flex; align-items: center; gap: 11px;
+  padding: 11px 14px;
+  border-radius: 12px;
+  color: var(--text-secondary);
+  font-size: 0.88rem; font-weight: 600;
+  font-family: 'Nunito', sans-serif;
+  text-decoration: none;
+  border: 1.5px solid transparent;
+  transition: all 0.2s cubic-bezier(0.4,0,0.2,1);
+  white-space: nowrap;
+}
+
+.nav-item:hover { background: var(--brand-blue-light); color: var(--brand-blue); transform: translateX(2px); }
+
+.nav-item.active {
+  background: linear-gradient(120deg, var(--brand-blue-light), #e0f2fe);
+  color: var(--brand-blue); font-weight: 800;
+  border-color: #bfdbfe;
+  box-shadow: 0 2px 10px rgba(59,130,246,0.08);
+}
+
+/* Nav icon + unread badge */
+.nav-icon-wrap {
+  position: relative; display: flex; align-items: center; flex-shrink: 0;
+}
+
+.nav-badge {
+  position: absolute; top: -7px; right: -9px;
+  background: #f97316; color: white;
+  font-size: 0.55rem; font-weight: 900;
+  min-width: 15px; height: 15px;
+  border-radius: 10px; padding: 0 3px;
+  display: flex; align-items: center; justify-content: center;
+  border: 1.5px solid var(--sidebar-bg);
+  box-shadow: 0 1px 4px rgba(249,115,22,0.4);
+}
+
+/* ── BOTTOM BAR ── */
+.sidebar-bottom {
+  display: flex; align-items: center; gap: 10px;
+  padding: 14px 16px 16px;
+  border-top: 1px solid var(--sidebar-border);
+}
+
+/* Bell */
+.sb-bell {
+  position: relative;
+  width: 40px; height: 40px;
+  border-radius: 12px;
+  border: 1.5px solid #e8edf5;
+  background: var(--bg-main);
+  color: var(--text-secondary);
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; flex-shrink: 0;
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.sb-bell:hover { background: var(--brand-blue-light); color: var(--brand-blue); border-color: #bfdbfe; transform: scale(1.06); }
+
+/* Orange + animated when unread */
+.sb-bell--on {
+  background: #fff7ed;
+  border-color: #fdba74;
+  color: #ea580c;
+  animation: bellWiggle 4s ease infinite;
+}
+
+.sb-bell--on:hover { background: #ffedd5; color: #c2410c; }
+
+@keyframes bellWiggle {
+  0%,85%,100% { transform: rotate(0); }
+  88%  { transform: rotate(-12deg); }
+  91%  { transform: rotate(12deg); }
+  94%  { transform: rotate(-7deg); }
+  97%  { transform: rotate(7deg); }
+}
+
+.sb-bell-badge {
+  position: absolute; top: -5px; right: -5px;
+  background: #ea580c; color: white;
+  font-size: 0.55rem; font-weight: 900;
+  min-width: 16px; height: 16px;
+  border-radius: 10px; padding: 0 3px;
+  display: flex; align-items: center; justify-content: center;
+  border: 2px solid var(--sidebar-bg);
+  box-shadow: 0 1px 5px rgba(234,88,12,0.45);
+}
+
+/* Avatar button */
+.sb-avatar {
+  flex: 1; height: 40px;
+  border-radius: 12px;
+  border: 2px solid rgba(255,255,255,0.85);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.35rem; line-height: 1;
+  cursor: pointer;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.08);
+  transition: all 0.22s cubic-bezier(0.34,1.56,0.64,1);
+}
+
+.sb-avatar:hover { transform: scale(1.06); box-shadow: 0 6px 18px rgba(0,0,0,0.13); }
+
+/* Footer blob */
+.sb-foot-blob {
+  position: absolute; bottom: -28px; left: -16px;
+  width: 110px; height: 110px;
+  background: radial-gradient(circle, rgba(59,130,246,0.05) 0%, transparent 70%);
+  border-radius: 50%; pointer-events: none;
+}
