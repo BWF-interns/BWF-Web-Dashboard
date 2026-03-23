@@ -1,5 +1,5 @@
 // app/student/profile/page.tsx (server component)
-import ProfilePage from "../profile/ProfilePage";
+// import ProfilePage from "../profile/ProfilePage";
 import WellBeingPage from "./WellBeingPage";
 import type { Metadata } from "next";
 

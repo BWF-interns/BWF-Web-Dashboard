@@ -60,7 +60,7 @@ export default function Dashboard() {
     <div className="dashboard-layout">
       
       {/* Sidebar */}
-      <aside className="sidebar">
+      {/* <aside className="sidebar">
         <div className="sidebar-logo">
           <div className="logo-icon">BWF</div>
           <h2>BWF</h2>
@@ -71,7 +71,7 @@ export default function Dashboard() {
           <button className="nav-item"><HeartPulse size={20}/> Wellbeing/Help</button>
           <button className="nav-item"><Settings size={20}/> Settings</button>
         </nav>
-      </aside>
+      </aside> */}
 
       {/* Main Content Area */}
       <main className="main-content">
