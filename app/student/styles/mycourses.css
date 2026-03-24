@@ -480,3 +480,91 @@
   from { opacity: 0; transform: translateY(18px); }
   to   { opacity: 1; transform: translateY(0); }
 }
+
+/* ═════════════════════════════════════════
+   MOBILE RESPONSIVENESS
+   ═════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .mc-page { padding: 1.5rem 1.5rem 3.5rem; }
+  .mc-title { font-size: 1.75rem; }
+}
+
+@media (max-width: 768px) {
+  .mc-page { padding: 1.5rem 1rem 2rem; margin-top: 56px; }
+
+  .mc-header { flex-direction: column; align-items: flex-start; margin-bottom: 1.5rem; gap: 1rem; }
+  .mc-title { font-size: 1.5rem; }
+
+  .profile-pill { padding: 0.5rem 0.875rem; }
+  .profile-pill img { width: 28px; height: 28px; }
+  .profile-pill span { font-size: 0.8rem; }
+
+  .mc-hero {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.25rem;
+    border-radius: 1.25rem;
+  }
+
+  .mc-hero .hero-blob-1 { display: none; }
+  .mc-hero .hero-blob-2,
+  .mc-hero .hero-blob-3 { display: none; }
+
+  .hero-inner { gap: 1rem; margin-bottom: 1rem; flex-wrap: wrap; }
+  .hero-zap { width: 40px; height: 40px; font-size: 1.5rem; }
+  .hero-text h2 { font-size: 1rem; }
+  .hero-text p { font-size: 0.8rem; }
+
+  .hero-counter {
+    padding: 0.875rem 1.25rem;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+  .hero-num { font-size: 1.75rem; letter-spacing: -1px; }
+  .hero-slash { font-size: 1.1rem; }
+  .hero-total { font-size: 0.9rem; }
+
+  .hero-track { height: 10px; margin-bottom: 1rem; }
+  .hero-pct { font-size: 0.55rem; }
+
+  .cheer-toast { font-size: 0.8rem; padding: 0.875rem 1.25rem; margin-bottom: 1rem; gap: 0.5rem; }
+
+  .course-grid { grid-template-columns: repeat(2, 1fr); gap: 0.875rem; }
+  .course-card { padding: 1rem; border-radius: 1rem; }
+  .course-title { font-size: 0.9rem; margin-bottom: 0.75rem; }
+  .course-progress { height: 6px; }
+  .course-meta { font-size: 0.7rem; }
+
+  .course-mini { padding: 0.75rem 0.875rem; margin-bottom: 0.75rem; }
+  .course-mini-name { font-size: 0.85rem; margin-bottom: 0.5rem; }
+  .course-mini-prog { font-size: 0.65rem; }
+
+  .undo-banner { padding: 1rem; gap: 0.875rem; margin-bottom: 1rem; border-radius: 1rem; }
+}
+
+@media (max-width: 640px) {
+  .mc-page { padding: 1.25rem 0.75rem 2rem; margin-top: 52px; }
+
+  .mc-header { gap: 0.75rem; }
+  .mc-title { font-size: 1.25rem; }
+  .mc-eyebrow { font-size: 0.6rem; }
+
+  .mc-hero { padding: 0.875rem 1rem; }
+  .hero-inner { gap: 0.75rem; }
+  .hero-zap { width: 36px; height: 36px; }
+  .hero-text h2 { font-size: 0.95rem; }
+  .hero-text p { font-size: 0.75rem; }
+
+  .hero-counter { padding: 0.75rem 1rem; }
+  .hero-num { font-size: 1.5rem; }
+
+  .hero-pct { font-size: 0.5rem; }
+
+  .course-grid { grid-template-columns: 1fr; gap: 0.75rem; }
+  .course-card { padding: 0.875rem; }
+  .course-title { font-size: 0.85rem; margin-bottom: 0.5rem; }
+  .course-progress { height: 5px; }
+
+  .course-mini { padding: 0.6rem 0.75rem; }
+  .course-mini-name { font-size: 0.8rem; }
+}

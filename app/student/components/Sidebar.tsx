@@ -1,6 +1,6 @@
 "use client";
 // app/student/components/Sidebar.tsx
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { Home, BookOpen, Bell, Settings, HeartPulse, Megaphone, Menu, X } from "lucide-react";
@@ -27,17 +27,51 @@ export default function StudentSidebar() {
   const av = getAvatar(avatarId);
   const hasUnread = unreadCount > 0;
 
-  const closeMobile = () => setIsMobileOpen(false);
+  // Add/remove sidebar-open class from html element
+  useEffect(() => {
+    const htmlElement = document.documentElement;
+    if (isMobileOpen) {
+      htmlElement.classList.add("sidebar-open");
+    } else {
+      htmlElement.classList.remove("sidebar-open");
+    }
+    return () => {
+      htmlElement.classList.remove("sidebar-open");
+    };
+  }, [isMobileOpen]);
+
+  const closeMobile = () => {
+    setIsMobileOpen(false);
+  };
+
+  const openMobile = () => {
+    setIsMobileOpen(true);
+  };
+
+  const handleNavClick = () => {
+    // Small delay to ensure smooth transition
+    setTimeout(() => closeMobile(), 100);
+  };
 
   return (
     <>
       {/* ── MOBILE HEADER (Only visible via CSS media query) ── */}
       <div className="mobile-top-bar">
-        <button className="mobile-menu-btn" onClick={() => setIsMobileOpen(true)}>
+        <button 
+          className="mobile-menu-btn" 
+          onClick={openMobile}
+          aria-label="Open menu"
+          type="button"
+        >
           <Menu size={24} />
         </button>
         <div className="mobile-logo-text">BWF</div>
-        <button className="mobile-avatar-btn" onClick={() => router.push("/student/profile")}>
+        <button 
+          className="mobile-avatar-btn" 
+          onClick={() => { router.push("/student/profile"); closeMobile(); }}
+          aria-label="Go to profile"
+          type="button"
+        >
           <span>{av.emoji}</span>
         </button>
       </div>
@@ -45,7 +79,12 @@ export default function StudentSidebar() {
       {/* ── SIDEBAR ── */}
       <aside className={`sidebar ${isMobileOpen ? "mobile-active" : ""}`}>
         {/* Close button for mobile drawer */}
-        <button className="mobile-close-btn" onClick={closeMobile}>
+        <button 
+          className="mobile-close-btn" 
+          onClick={closeMobile}
+          aria-label="Close menu"
+          type="button"
+        >
           <X size={20} />
         </button>
 
@@ -71,7 +110,7 @@ export default function StudentSidebar() {
                 key={href} 
                 href={href} 
                 className={`nav-item${isActive ? " active" : ""}`}
-                onClick={closeMobile} // Closes sidebar on link click (mobile)
+                onClick={handleNavClick} // Closes sidebar on link click (mobile)
               >
                 <span className="nav-icon-wrap">
                   <Icon size={19} />
@@ -88,8 +127,9 @@ export default function StudentSidebar() {
         <div className="sidebar-bottom">
           <button
             className={`sb-bell${hasUnread ? " sb-bell--on" : ""}`}
-            onClick={() => { router.push("/student/noticeboard"); closeMobile(); }}
+            onClick={() => { router.push("/student/noticeboard"); handleNavClick(); }}
             title={hasUnread ? `${unreadCount} unread notices` : "All caught up!"}
+            type="button"
           >
             <Bell size={17} />
             {hasUnread && (
@@ -100,8 +140,9 @@ export default function StudentSidebar() {
           <button
             className="sb-avatar"
             style={{ background: av.bg }}
-            onClick={() => { router.push("/student/profile"); closeMobile(); }}
+            onClick={() => { router.push("/student/profile"); handleNavClick(); }}
             title="My Profile"
+            type="button"
           >
             <span>{av.emoji}</span>
           </button>
@@ -110,8 +151,13 @@ export default function StudentSidebar() {
         <div className="sb-foot-blob" />
       </aside>
 
-      {/* ── OVERLAY (Blurs background when mobile sidebar is open) ── */}
-      {isMobileOpen && <div className="sidebar-overlay" onClick={closeMobile} />}
+      {/* ── OVERLAY (Always in DOM, hidden via CSS) ── */}
+      <div 
+        className={`sidebar-overlay ${isMobileOpen ? "active" : ""}`} 
+        onClick={closeMobile}
+        aria-hidden="true"
+        role="presentation"
+      />
     </>
   );
 }

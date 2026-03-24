@@ -190,7 +190,10 @@
 /* ── BREATHING OVERLAY ── */
 .wb-breathing-overlay {
   position: fixed;
-  inset: 0;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
   background: rgba(0,0,0,0.5);
   backdrop-filter: blur(4px);
   z-index: 100;
@@ -571,4 +574,160 @@
 @keyframes fadeSlideUp {
   from { opacity: 0; transform: translateY(16px); }
   to   { opacity: 1; transform: translateY(0); }
+}
+
+/* ═════════════════════════════════════════
+   MOBILE RESPONSIVENESS
+   ═════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .wb-hero-content { flex-direction: column; justify-content: flex-start; }
+  .wb-lotus { font-size: 2.5rem; }
+}
+
+@media (max-width: 768px) {
+  .wb-page { padding: 1.5rem 1rem 2rem; margin-top: 56px; }
+
+  .wb-header { margin-bottom: 1.5rem; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
+  .wb-title { font-size: 1.5rem; }
+  .wb-eyebrow { font-size: 0.6rem; }
+  .wb-subtitle { font-size: 0.85rem; align-self: flex-start; }
+
+  .wb-hero {
+    padding: 1.25rem 1.5rem;
+    margin-bottom: 1.5rem;
+    border-radius: 1.25rem;
+  }
+
+  .wb-hero .wb-hero-blob-1,
+  .wb-hero .wb-hero-blob-2 { display: none; }
+
+  .wb-hero-content { gap: 1rem; margin-bottom: 1rem; }
+  .wb-hero-text h2 { font-size: 1.25rem; margin-bottom: 0.4rem; }
+  .wb-hero-text p { font-size: 0.85rem; }
+  .wb-lotus { font-size: 2rem; }
+
+  .wb-quick-resources {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 0.75rem;
+  }
+
+  .wb-resource-card {
+    padding: 0.875rem 1rem;
+    border-radius: 1rem;
+  }
+
+  .wb-rc-icon { width: 34px; height: 34px; font-size: 1.1rem; }
+  .wb-rc-label { font-size: 0.75rem; }
+  .wb-rc-sub { font-size: 0.65rem; }
+
+  /* CRITICAL: Main grid collapses to single column */
+  .wb-grid {
+    grid-template-columns: 1fr;
+    gap: 1rem;
+  }
+
+  .wb-col { gap: 1rem; }
+
+  /* Breathing modal responsive */
+/* Breathing modal responsive - CENTERED & POLISHED */
+  .wb-breathing-overlay { 
+    top: 0; bottom: 0; left: 0; right: 0; 
+    align-items: center; /* CRITICAL: This keeps it floating in the middle! */
+    justify-content: center; 
+    background: rgba(0,0,0,0.55); 
+    z-index: 9999;
+  }
+  .wb-breathing-modal { 
+    width: 90%; 
+    max-width: 340px; 
+    max-height: 85vh; 
+    border-radius: 28px; 
+    /* Slightly less padding on the bottom to balance the button's visual weight */
+    padding: 2.5rem 1.5rem 2rem; 
+    margin: 0;
+    box-shadow: 0 20px 60px rgba(0,0,0,0.15); 
+  }
+
+  .wb-breath-circle { width: 130px; height: 130px; margin: 0 auto 1.25rem; flex-shrink: 0; }
+/* Added 0.5rem to top and bottom to space it out nicely */
+  .wb-breath-phase { font-size: 1.4rem; margin: 0.5rem 0 0.5rem; font-weight: 900; color: #1e293b; }
+  /* Reduced margin-bottom from 2rem to 1.5rem to pull the button closer */
+  .wb-breath-count { font-size: 0.9rem; margin-bottom: 1.5rem; color: #64748b; font-weight: 600; }
+  .wb-breath-close { width: 100%; padding: 0.9rem 1.25rem; font-size: 1rem; border-radius: 100px; }
+    /* Mood card responsive */
+  .wb-mood-card { padding: 1rem; }
+  .wb-card-header { margin-bottom: 0.75rem; }
+  .wb-card-title { font-size: 1rem; }
+  .wb-mood-buttons { gap: 0.5rem; }
+  .wb-mood-btn { padding: 0.75rem 1rem; font-size: 0.75rem; }
+  .wb-mood-emoji { font-size: 1.2rem; }
+  .wb-affirmation { padding: 0.75rem; font-size: 0.85rem; }
+  .wb-history-item { padding: 0.75rem; font-size: 0.85rem; }
+  .wb-note-input { font-size: 0.85rem; padding: 0.75rem; }
+  .wb-submit-btn { padding: 0.75rem 1.25rem; font-size: 0.8rem; }
+
+  /* Journal card responsive */
+  .wb-journal-card { padding: 1rem; }
+  .wb-prompt-box { margin-bottom: 1rem; padding: 0.75rem; }
+  .wb-prompt-text { font-size: 0.9rem; }
+  .wb-prompt-next { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
+  .wb-journal-input { min-height: 120px; font-size: 0.85rem; padding: 0.75rem; }
+  .wb-save-btn { padding: 0.75rem 1.25rem; font-size: 0.8rem; }
+
+  /* Grounding card responsive */
+  .wb-ground-card { padding: 1rem; }
+  .wb-ground-steps { gap: 0.75rem; }
+  .wb-ground-step { gap: 0.75rem; padding: 0.75rem; font-size: 0.85rem; }
+  .wb-ground-num { width: 2rem; height: 2rem; font-size: 0.85rem; }
+  .wb-ground-emoji { font-size: 1rem; }
+  .wb-ground-text { font-size: 0.85rem; }
+  .wb-ground-footer { font-size: 0.75rem; margin-top: 0.75rem; }
+}
+
+@media (max-width: 640px) {
+  .wb-page { padding: 1.25rem 0.75rem 2rem; margin-top: 52px; }
+
+  .wb-title { font-size: 1.25rem; }
+  .wb-eyebrow { font-size: 0.55rem; }
+
+  .wb-hero { padding: 0.875rem 1rem; }
+  .wb-hero-text h2 { font-size: 1.1rem; }
+  .wb-hero-text p { font-size: 0.8rem; }
+  .wb-lotus { font-size: 1.75rem; }
+
+  .wb-quick-resources { grid-template-columns: 1fr; gap: 0.5rem; }
+  .wb-resource-card { padding: 0.75rem 0.875rem; }
+  .wb-rc-icon { width: 30px; height: 30px; }
+  .wb-rc-label { font-size: 0.7rem; }
+  .wb-rc-sub { font-size: 0.6rem; }
+
+.wb-breathing-modal { 
+    padding: 2rem 1.25rem 1.5rem; 
+    border-radius: 24px; 
+  }
+  .wb-breath-circle { width: 110px; height: 110px; margin: 0 auto 1rem; }
+/* Same here for smaller phones */
+  .wb-breath-phase { font-size: 1.25rem; margin: 0.5rem 0 0.5rem; }
+  /* Pulled the button closer here as well */
+  .wb-breath-count { font-size: 0.85rem; margin-bottom: 1.25rem; }
+  .wb-breath-close { padding: 0.8rem 1rem; font-size: 0.9rem; }
+    /* Smaller padding on smallest screens */
+  .wb-card { padding: 0.875rem; }
+  .wb-mood-buttons { gap: 0.4rem; }
+  .wb-mood-btn { padding: 0.625rem 0.875rem; font-size: 0.7rem; }
+  .wb-history-item { padding: 0.625rem; font-size: 0.8rem; }
+  .wb-note-input { font-size: 0.8rem; padding: 0.625rem; }
+  .wb-submit-btn { padding: 0.625rem 1rem; font-size: 0.75rem; }
+
+  .wb-prompt-box { padding: 0.625rem; }
+  .wb-prompt-text { font-size: 0.85rem; }
+  .wb-prompt-next { padding: 0.4rem 0.625rem; font-size: 0.7rem; }
+  .wb-journal-input { min-height: 100px; font-size: 0.8rem; padding: 0.625rem; }
+  .wb-save-btn { padding: 0.625rem 1rem; font-size: 0.75rem; }
+
+  .wb-ground-steps { gap: 0.5rem; }
+  .wb-ground-step { gap: 0.5rem; padding: 0.625rem; font-size: 0.8rem; }
+  .wb-ground-num { width: 1.75rem; height: 1.75rem; font-size: 0.75rem; }
+  .wb-ground-footer { font-size: 0.7rem; }
 }
