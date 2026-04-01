@@ -1,8 +1,20 @@
 "use client";
 // app/student/wellbeing/WellBeingPage.tsx
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import {
+  saveMood,
+  getMoodHistory,
+  saveJournal,
+} from "@/app/lib/student/wellbeing";
 import "../styles/wellbeing.css";
-import { MessageCircleHeart, BookHeart, Wind, Sparkles, ChevronRight, Heart } from "lucide-react";
+import {
+  MessageCircleHeart,
+  BookHeart,
+  Wind,
+  Sparkles,
+  ChevronRight,
+  Heart,
+} from "lucide-react";
 
 /* ───────────────────────────────
    TYPES
@@ -19,10 +31,41 @@ interface MoodEntry {
 /* ───────────────────────────────
    STATIC DATA
 ─────────────────────────────── */
-const MOOD_CONFIG: Record<Mood, { emoji: string; label: string; color: string; bg: string; border: string; affirmation: string }> = {
-  "Happy":     { emoji: "😊", label: "Happy",     color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0", affirmation: "That's wonderful! Your joy matters. 🌸"              },
-  "Okay":      { emoji: "😐", label: "Okay",      color: "#d97706", bg: "#fef3c7", border: "#fde68a", affirmation: "It's okay to just be okay. You're doing fine. 💛"    },
-  "Need Help": { emoji: "😨", label: "Need Help", color: "#dc2626", bg: "#fee2e2", border: "#fca5a5", affirmation: "You are never alone. Reaching out is brave. 💜"       },
+const MOOD_CONFIG: Record<
+  Mood,
+  {
+    emoji: string;
+    label: string;
+    color: string;
+    bg: string;
+    border: string;
+    affirmation: string;
+  }
+> = {
+  Happy: {
+    emoji: "😊",
+    label: "Happy",
+    color: "#16a34a",
+    bg: "#dcfce7",
+    border: "#bbf7d0",
+    affirmation: "That's wonderful! Your joy matters. 🌸",
+  },
+  Okay: {
+    emoji: "😐",
+    label: "Okay",
+    color: "#d97706",
+    bg: "#fef3c7",
+    border: "#fde68a",
+    affirmation: "It's okay to just be okay. You're doing fine. 💛",
+  },
+  "Need Help": {
+    emoji: "😨",
+    label: "Need Help",
+    color: "#dc2626",
+    bg: "#fee2e2",
+    border: "#fca5a5",
+    affirmation: "You are never alone. Reaching out is brave. 💜",
+  },
 };
 
 const JOURNALING_PROMPTS = [
@@ -62,50 +105,88 @@ const QUICK_RESOURCES = [
 ];
 
 const INITIAL_HISTORY: MoodEntry[] = [
-  { id: 1, date: "2026-03-18", mood: "Happy",     note: "Finished my Science project!" },
-  { id: 2, date: "2026-03-17", mood: "Okay",      note: "Busy day, but manageable." },
-  { id: 3, date: "2026-03-16", mood: "Need Help", note: "Felt stressed with assignments." },
+  {
+    id: 1,
+    date: "2026-03-18",
+    mood: "Happy",
+    note: "Finished my Science project!",
+  },
+  {
+    id: 2,
+    date: "2026-03-17",
+    mood: "Okay",
+    note: "Busy day, but manageable.",
+  },
+  {
+    id: 3,
+    date: "2026-03-16",
+    mood: "Need Help",
+    note: "Felt stressed with assignments.",
+  },
 ];
 
 /* ───────────────────────────────
    COMPONENT
 ─────────────────────────────── */
 export default function WellBeingPage() {
-  const [selectedMood, setSelectedMood]     = useState<Mood | null>(null);
-  const [note, setNote]                     = useState("");
-  const [moodHistory, setMoodHistory]       = useState<MoodEntry[]>(INITIAL_HISTORY);
-  const [journalText, setJournalText]       = useState("");
-  const [journalSaved, setJournalSaved]     = useState(false);
+  const [selectedMood, setSelectedMood] = useState<Mood | null>(null);
+  const [note, setNote] = useState("");
+  const [moodHistory, setMoodHistory] = useState<MoodEntry[]>(INITIAL_HISTORY);
+  const [journalText, setJournalText] = useState("");
+  const [journalSaved, setJournalSaved] = useState(false);
   const [activePromptIdx, setActivePromptIdx] = useState(0);
-  const [showBreathing, setShowBreathing]   = useState(false);
-  const [breathPhase, setBreathPhase]       = useState<"in" | "hold" | "out">("in");
-  const [breathCount, setBreathCount]       = useState(0);
+  const [showBreathing, setShowBreathing] = useState(false);
+  const [breathPhase, setBreathPhase] = useState<"in" | "hold" | "out">("in");
+  const [breathCount, setBreathCount] = useState(0);
+
+  useEffect(() => {
+    const fetchMood = async () => {
+      try {
+        const res = await getMoodHistory();
+        setMoodHistory(res.data);
+      } catch (err) {
+        console.error("Error fetching mood history", err);
+      }
+    };
+
+    fetchMood();
+  }, []);
 
   /* Mood submit */
-  const handleMoodSubmit = () => {
+  const handleMoodSubmit = async () => {
     if (!selectedMood) return;
-    const entry: MoodEntry = {
-      id: Date.now(),
-      date: new Date().toISOString().split("T")[0],
-      mood: selectedMood,
-      note,
-    };
-    setMoodHistory(prev => [entry, ...prev]);
-    setNote("");
-    setSelectedMood(null);
+
+    try {
+      await saveMood(selectedMood, note);
+
+      const res = await getMoodHistory();
+      setMoodHistory(res.data);
+
+      setNote("");
+      setSelectedMood(null);
+    } catch (err) {
+      console.error("Error saving mood", err);
+    }
   };
 
   /* Journal save */
-  const handleJournalSave = () => {
+  const handleJournalSave = async () => {
     if (!journalText.trim()) return;
-    setJournalSaved(true);
-    setTimeout(() => setJournalSaved(false), 2500);
-    setJournalText("");
+
+    try {
+      await saveJournal(journalText);
+
+      setJournalSaved(true);
+      setTimeout(() => setJournalSaved(false), 2500);
+      setJournalText("");
+    } catch (err) {
+      console.error("Journal save error", err);
+    }
   };
 
   /* Random prompt */
   const nextPrompt = () => {
-    setActivePromptIdx(i => (i + 1) % JOURNALING_PROMPTS.length);
+    setActivePromptIdx((i) => (i + 1) % JOURNALING_PROMPTS.length);
   };
 
   /* Format date */
@@ -118,18 +199,20 @@ export default function WellBeingPage() {
     setBreathPhase("in");
     setBreathCount(0);
     const phases: Array<{ phase: "in" | "hold" | "out"; ms: number }> = [
-      { phase: "in",   ms: 4000 },
+      { phase: "in", ms: 4000 },
       { phase: "hold", ms: 2000 },
-      { phase: "out",  ms: 4000 },
+      { phase: "out", ms: 4000 },
     ];
     let i = 0;
     const run = () => {
       const p = phases[i % phases.length];
       setBreathPhase(p.phase);
-      if (i % phases.length === 0 && i > 0) setBreathCount(c => c + 1);
+      if (i % phases.length === 0 && i > 0) setBreathCount((c) => c + 1);
       i++;
       if (i < phases.length * 4) setTimeout(run, p.ms);
-      else { setTimeout(() => setShowBreathing(false), 1000); }
+      else {
+        setTimeout(() => setShowBreathing(false), 1000);
+      }
     };
     run();
   };
@@ -138,7 +221,6 @@ export default function WellBeingPage() {
 
   return (
     <div className="wb-page">
-
       {/* HEADER */}
       <header className="wb-header">
         <div>
@@ -168,8 +250,16 @@ export default function WellBeingPage() {
             <button
               key={i}
               className="wb-resource-card"
-              style={{ "--rc": r.color, "--rb": r.bg, "--rbd": r.border } as React.CSSProperties}
-              onClick={() => r.label === "Guided Breathing" ? startBreathing() : undefined}
+              style={
+                {
+                  "--rc": r.color,
+                  "--rb": r.bg,
+                  "--rbd": r.border,
+                } as React.CSSProperties
+              }
+              onClick={() =>
+                r.label === "Guided Breathing" ? startBreathing() : undefined
+              }
             >
               <div className="wb-rc-icon">
                 <r.icon size={20} />
@@ -186,14 +276,27 @@ export default function WellBeingPage() {
 
       {/* BREATHING MODAL */}
       {showBreathing && (
-        <div className="wb-breathing-overlay" onClick={() => setShowBreathing(false)}>
-          <div className="wb-breathing-modal" onClick={e => e.stopPropagation()}>
-            <div className={`wb-breath-circle wb-breath-circle--${breathPhase}`}>
+        <div
+          className="wb-breathing-overlay"
+          onClick={() => setShowBreathing(false)}
+        >
+          <div
+            className="wb-breathing-modal"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div
+              className={`wb-breath-circle wb-breath-circle--${breathPhase}`}
+            >
               <span className="wb-breath-emoji">🌬️</span>
             </div>
             <p className="wb-breath-phase">{PHASE_TEXT[breathPhase]}</p>
-            <p className="wb-breath-count">Cycle {Math.min(breathCount + 1, 4)} of 4</p>
-            <button className="wb-breath-close" onClick={() => setShowBreathing(false)}>
+            <p className="wb-breath-count">
+              Cycle {Math.min(breathCount + 1, 4)} of 4
+            </p>
+            <button
+              className="wb-breath-close"
+              onClick={() => setShowBreathing(false)}
+            >
               Done
             </button>
           </div>
@@ -202,10 +305,8 @@ export default function WellBeingPage() {
 
       {/* MAIN GRID */}
       <div className="wb-grid">
-
         {/* LEFT: Mood Tracker */}
         <div className="wb-col">
-
           {/* Mood Check-In */}
           <section className="wb-card wb-mood-card">
             <div className="wb-card-header">
@@ -214,14 +315,20 @@ export default function WellBeingPage() {
             </div>
 
             <div className="wb-mood-buttons">
-              {(Object.keys(MOOD_CONFIG) as Mood[]).map(m => {
+              {(Object.keys(MOOD_CONFIG) as Mood[]).map((m) => {
                 const cfg = MOOD_CONFIG[m];
                 const isSelected = selectedMood === m;
                 return (
                   <button
                     key={m}
                     className={`wb-mood-btn ${isSelected ? "wb-mood-btn--active" : ""}`}
-                    style={{ "--mc": cfg.color, "--mb": cfg.bg, "--mbd": cfg.border } as React.CSSProperties}
+                    style={
+                      {
+                        "--mc": cfg.color,
+                        "--mb": cfg.bg,
+                        "--mbd": cfg.border,
+                      } as React.CSSProperties
+                    }
                     onClick={() => setSelectedMood(m)}
                   >
                     <span className="wb-mood-emoji">{cfg.emoji}</span>
@@ -246,7 +353,7 @@ export default function WellBeingPage() {
                   className="wb-note-input"
                   placeholder="Want to add a note? (optional)"
                   value={note}
-                  onChange={e => setNote(e.target.value)}
+                  onChange={(e) => setNote(e.target.value)}
                   rows={2}
                 />
                 <button className="wb-submit-btn" onClick={handleMoodSubmit}>
@@ -264,28 +371,43 @@ export default function WellBeingPage() {
               <h2 className="wb-card-title">Mood History</h2>
             </div>
             <div className="wb-history-list">
-              {moodHistory.slice(0, 6).map(entry => {
+              {moodHistory.slice(0, 6).map((entry) => {
                 const cfg = MOOD_CONFIG[entry.mood];
                 return (
-                  <div key={entry.id} className="wb-history-item"
-                    style={{ "--mc": cfg.color, "--mb": cfg.bg } as React.CSSProperties}>
+                  <div
+                    key={entry.id}
+                    className="wb-history-item"
+                    style={
+                      {
+                        "--mc": cfg.color,
+                        "--mb": cfg.bg,
+                      } as React.CSSProperties
+                    }
+                  >
                     <span className="wb-hist-emoji">{cfg.emoji}</span>
                     <div className="wb-hist-text">
-                      <span className="wb-hist-mood" style={{ color: cfg.color }}>{entry.mood}</span>
-                      {entry.note && <p className="wb-hist-note">{entry.note}</p>}
+                      <span
+                        className="wb-hist-mood"
+                        style={{ color: cfg.color }}
+                      >
+                        {entry.mood}
+                      </span>
+                      {entry.note && (
+                        <p className="wb-hist-note">{entry.note}</p>
+                      )}
                     </div>
-                    <span className="wb-hist-date">{formatDate(entry.date)}</span>
+                    <span className="wb-hist-date">
+                      {formatDate(entry.date)}
+                    </span>
                   </div>
                 );
               })}
             </div>
           </section>
-
         </div>
 
         {/* RIGHT: Daily Reflection / Journal */}
         <div className="wb-col">
-
           <section className="wb-card wb-journal-card">
             <div className="wb-card-header">
               <span className="wb-card-emoji">📓</span>
@@ -294,7 +416,9 @@ export default function WellBeingPage() {
 
             {/* Rotating prompt */}
             <div className="wb-prompt-box">
-              <p className="wb-prompt-text">"{JOURNALING_PROMPTS[activePromptIdx]}"</p>
+              <p className="wb-prompt-text">
+                "{JOURNALING_PROMPTS[activePromptIdx]}"
+              </p>
               <button className="wb-prompt-next" onClick={nextPrompt}>
                 New prompt ✨
               </button>
@@ -304,7 +428,7 @@ export default function WellBeingPage() {
               className="wb-journal-input"
               placeholder="How are you feeling right now? Write a few thoughts…"
               value={journalText}
-              onChange={e => setJournalText(e.target.value)}
+              onChange={(e) => setJournalText(e.target.value)}
               rows={5}
             />
 
@@ -325,11 +449,11 @@ export default function WellBeingPage() {
             </div>
             <div className="wb-ground-steps">
               {[
-                { n: "5", text: "things you can see",   emoji: "👀" },
+                { n: "5", text: "things you can see", emoji: "👀" },
                 { n: "4", text: "things you can touch", emoji: "✋" },
-                { n: "3", text: "things you can hear",  emoji: "👂" },
+                { n: "3", text: "things you can hear", emoji: "👂" },
                 { n: "2", text: "things you can smell", emoji: "👃" },
-                { n: "1", text: "thing you can taste",  emoji: "👅" },
+                { n: "1", text: "thing you can taste", emoji: "👅" },
               ].map((s, i) => (
                 <div key={i} className="wb-ground-step">
                   <span className="wb-ground-num">{s.n}</span>
@@ -338,12 +462,12 @@ export default function WellBeingPage() {
                 </div>
               ))}
             </div>
-            <p className="wb-ground-footer">This helps bring you back to the present moment. 🌸</p>
+            <p className="wb-ground-footer">
+              This helps bring you back to the present moment. 🌸
+            </p>
           </section>
-
         </div>
       </div>
-
     </div>
   );
 }
