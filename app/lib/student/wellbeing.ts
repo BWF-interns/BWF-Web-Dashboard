@@ -1,13 +1,12 @@
-import api from "../api";
+// app/lib/student/wellbeing.ts
+import api from "@/app/lib/api";
 
-// Mood tracking
 export const saveMood = (mood: string, note: string) =>
   api.post("/student/wellbeing/mood", { mood, note });
 
 export const getMoodHistory = () =>
   api.get("/student/wellbeing/mood");
 
-// Journal entries
 export const saveJournal = (text: string) =>
   api.post("/student/wellbeing/journal", { text });
 

@@ -6,6 +6,7 @@ import {
   getMoodHistory,
   saveJournal,
 } from "@/app/lib/student/wellbeing";
+
 import "../styles/wellbeing.css";
 import {
   MessageCircleHeart,
@@ -142,6 +143,8 @@ export default function WellBeingPage() {
   useEffect(() => {
     const fetchMood = async () => {
       try {
+        console.log("ACCESS TOKEN:", localStorage.getItem("accessToken"));
+
         const res = await getMoodHistory();
         setMoodHistory(res.data);
       } catch (err) {
@@ -155,6 +158,9 @@ export default function WellBeingPage() {
   /* Mood submit */
   const handleMoodSubmit = async () => {
     if (!selectedMood) return;
+
+    console.log("Token at submit time:", localStorage.getItem("accessToken"));
+    console.log("About to call saveMood...");
 
     try {
       await saveMood(selectedMood, note);
