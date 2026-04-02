@@ -1,155 +1,113 @@
 "use client";
 
-import {
-  Users,
-  Clock,
-  DollarSign,
-  AlertCircle,
-  MessageSquare,
-  UserX,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Bell, Search, MoreHorizontal, User } from "lucide-react";
+import StatCard from "../components/StatCard";
+import ActivityChart from "../components/ActivityChart";
+import ActivityPanel from "../components/ActivityPanel";
 
-function Card({ label, value, icon: Icon, color }: any) {
+export default function WardenDashboard() {
+  const [warden, setWarden] = useState<any>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    const fetchProfile = async () => {
+      try {
+        const token = localStorage.getItem("accessToken");
+        const res = await fetch("http://localhost:5000/api/warden/profile", {
+          headers: { Authorization: `Bearer ${token}` },
+        });
+        const data = await res.json();
+        setWarden(data);
+      } catch (err) {
+        console.error(err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchProfile();
+  }, []);
+
   return (
-    <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 flex items-center gap-3 sm:gap-4 shadow-sm">
-      <div className={`p-2 sm:p-3 rounded-xl ${color}`}>
-        <Icon className="text-white" size={18} />
+    <div className="min-h-screen bg-[#f3f6f4] p-8 text-black font-sans">
+      {/* 🔹 HEADER */}
+      <header className="flex items-center justify-between mb-10">
+        <div>
+          <h1 className="text-3xl font-bold tracking-tight">
+            Welcome Back, {warden?.name?.split(" ")[0] || "Warden"} 👋
+          </h1>
+          <p className="text-gray-500 font-medium">
+            Here's what's happening in your hostel today.
+          </p>
+        </div>
+
+        <div className="flex items-center gap-5">
+          <div className="relative hidden md:block">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" size={18} />
+            <input 
+              type="text" 
+              placeholder="Search..." 
+              className="bg-white rounded-2xl py-2.5 pl-10 pr-4 shadow-sm border-none focus:ring-2 focus:ring-green-200 outline-none w-64 text-sm"
+            />
+          </div>
+          <button className="bg-white p-2.5 rounded-2xl shadow-sm hover:bg-gray-50 transition">
+            <Bell size={20} className="text-gray-600" />
+          </button>
+          
+          {/* LinkedIn Style Icon */}
+          <div className="w-12 h-12 rounded-full bg-orange-100 border-2 border-white shadow-sm flex items-center justify-center text-orange-600 font-bold text-lg overflow-hidden cursor-pointer hover:scale-105 transition">
+            {warden?.profilePic ? (
+              <img src={warden.profilePic} alt="profile" className="w-full h-full object-cover" />
+            ) : (
+              warden?.name?.charAt(0) || <User size={24} />
+            )}
+          </div>
+        </div>
+      </header>
+
+      {/* 🔹 STATS GRID */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        <StatCard title="Total Students" value="120" date="March 2026" color="bg-[#fef3c7]" type="Students" />
+        <StatCard title="Pending Complaints" value="08" date="March 2026" color="bg-[#dbeafe]" type="Complaints" />
+        <StatCard title="Monthly Expenses" value="₹32,400" date="March 2026" color="bg-[#fce7f3]" type="Expenses" />
       </div>
-      <div>
-        <p className="text-lg sm:text-xl font-semibold text-gray-900">
-          {value}
-        </p>
-        <p className="text-xs sm:text-sm text-gray-500">{label}</p>
+
+      {/* 🔹 MAIN BENTO GRID */}
+      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
+        <div className="lg:col-span-8 space-y-8">
+            <ActivityChart />
+            
+            {/* Detailed Info Card (From Image 1) */}
+            <div className="bg-white p-8 rounded-4xl shadow-sm border border-gray-50">
+                <div className="flex justify-between items-center mb-6">
+                    <h3 className="text-xl font-bold">Warden Information</h3>
+                    <MoreHorizontal className="text-gray-400 cursor-pointer" />
+                </div>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <InfoRow label="Full Name" value={warden?.name || "Robert Smith"} />
+                    <InfoRow label="Email" value={warden?.email || "robert@hostel.com"} />
+                    <InfoRow label="Contact" value={warden?.phone || "+91 98765 43210"} />
+                    <InfoRow label="Hostel Block" value={warden?.hostelName || "Block-A"} />
+                </div>
+            </div>
+        </div>
+
+        <div className="lg:col-span-4">
+          <ActivityPanel />
+        </div>
       </div>
     </div>
   );
 }
 
-export default function DashboardPage() {
-  const summary = {
-    totalStudents: 3,
-    pendingActivities: 2,
-    pendingPosts: 1,
-    monthlyExpenses: 1700,
-    openComplaints: 2,
-    inactiveStudents: 1,
-  };
-
-  const feed = [
-    {
-      type: "complaint",
-      message: "Arjun Kumar raised a complaint",
-      status: "OPEN",
-    },
-    {
-      type: "complaint",
-      message: "Anonymous complaint raised",
-      status: "OPEN",
-    },
-    {
-      type: "expense",
-      message: "Expense added for Meera Patel: ₹1200 (Education)",
-    },
-    {
-      type: "expense",
-      message: "Expense added for Arjun Kumar: ₹500 (Food)",
-    },
-  ];
-
-  return (
-    <div className="space-y-6 sm:space-y-8">
-      {/* Header */}
-      <div>
-        <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-          Dashboard
-        </h1>
-        <p className="text-sm text-gray-500 mt-1">
-          Overview of your assigned students
-        </p>
-      </div>
-
-      {/* Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-5">
-        <Card
-          label="Total Students"
-          value={summary.totalStudents}
-          icon={Users}
-          color="bg-blue-500"
-        />
-        <Card
-          label="Pending Activities"
-          value={summary.pendingActivities}
-          icon={Clock}
-          color="bg-yellow-500"
-        />
-        <Card
-          label="Pending Posts"
-          value={summary.pendingPosts}
-          icon={MessageSquare}
-          color="bg-purple-500"
-        />
-        <Card
-          label="Monthly Expenses"
-          value={`₹${summary.monthlyExpenses}`}
-          icon={DollarSign}
-          color="bg-green-500"
-        />
-        <Card
-          label="Open Complaints"
-          value={summary.openComplaints}
-          icon={AlertCircle}
-          color="bg-red-500"
-        />
-        <Card
-          label="Inactive Students"
-          value={summary.inactiveStudents}
-          icon={UserX}
-          color="bg-gray-500"
-        />
-      </div>
-
-      {/* Alert */}
-      <div className="bg-yellow-50 border border-yellow-200 rounded-xl p-4 sm:p-5">
-        <p className="font-semibold text-yellow-800 mb-2 text-sm sm:text-base">
-          Attention Required
-        </p>
-        <ul className="text-xs sm:text-sm text-yellow-700 space-y-1">
-          <li>• 2 activities awaiting your approval</li>
-          <li>• 1 posts awaiting moderation</li>
-          <li>• 2 open complaints need attention</li>
-          <li>• 1 students are marked inactive</li>
-        </ul>
-      </div>
-
-      {/* Activity */}
-      <div className="bg-white border border-gray-200 rounded-xl p-4 sm:p-5 shadow-sm">
-        <h2 className="text-base sm:text-lg font-semibold text-gray-900 mb-3 sm:mb-4">
-          Recent Activity
-        </h2>
-
-        <ul className="space-y-3 sm:space-y-4">
-          {feed.map((item, i) => (
-            <li key={i} className="flex items-start gap-3">
-              <div
-                className={`w-2 h-2 rounded-full mt-2 ${
-                  item.type === "expense" ? "bg-green-500" : "bg-red-500"
-                }`}
-              />
-
-              <div className="flex-1 min-w-0">
-                <p className="text-sm text-gray-800 truncate">{item.message}</p>
-                <p className="text-xs text-gray-400">3/18/2026, 6:32:56 PM</p>
-              </div>
-
-              {item.status && (
-                <span className="text-[10px] sm:text-xs px-2 py-1 rounded-full bg-red-100 text-red-600 whitespace-nowrap">
-                  {item.status}
-                </span>
-              )}
-            </li>
-          ))}
-        </ul>
-      </div>
-    </div>
-  );
+function InfoRow({ label, value }: { label: string; value: string }) {
+    return (
+        <div className="flex items-center gap-4 p-4 rounded-2xl bg-gray-50 border border-gray-100 hover:border-green-200 transition">
+            <div className="w-2 h-2 rounded-full bg-black" />
+            <div>
+                <p className="text-xs text-gray-400 uppercase font-bold tracking-wider">{label}</p>
+                <p className="font-semibold text-sm">{value}</p>
+            </div>
+        </div>
+    );
 }

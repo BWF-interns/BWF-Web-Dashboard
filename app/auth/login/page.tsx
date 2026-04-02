@@ -21,12 +21,12 @@ export default function LoginPage() {
 
       // optional: store token
       localStorage.setItem("accessToken", data.accessToken);
-
+      localStorage.setItem("role", data.role);
       // role-based redirect
       if (data.role === "admin") {
         router.push("/admin/dashboard");
       } else if (data.role === "warden") {
-        router.push("/teacher/dashboard");
+        router.push("/warden/dashboard");
       } else {
         router.push("/student/dashboard");
       }

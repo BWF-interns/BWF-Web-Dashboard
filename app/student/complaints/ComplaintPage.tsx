@@ -13,13 +13,23 @@ export default function ComplaintsPage() {
   const { avatarId, name } = useProfile();
   const av = getAvatar(avatarId);
 
+  const [greeting, setGreeting] = useState("Welcome");
+  const firstName = name.split(" ")[0];
+
+  // form state
   const [message, setMessage] = useState("");
   const [anonymous, setAnonymous] = useState(false);
   const [category, setCategory] = useState("other");
   const [priority, setPriority] = useState("medium");
+
   const [complaints, setComplaints] = useState([]);
 
   useEffect(() => {
+    const h = new Date().getHours();
+    if (h < 12) setGreeting("Good morning");
+    else if (h < 18) setGreeting("Good afternoon");
+    else setGreeting("Good evening");
+
     fetchComplaints();
   }, []);
 
@@ -27,7 +37,9 @@ export default function ComplaintsPage() {
     const token = localStorage.getItem("accessToken");
 
     const res = await fetch("http://localhost:5000/student/complaints", {
-      headers: { Authorization: `Bearer ${token}` },
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
     });
 
     const data = await res.json();
@@ -43,7 +55,12 @@ export default function ComplaintsPage() {
         "Content-Type": "application/json",
         Authorization: `Bearer ${token}`,
       },
-      body: JSON.stringify({ message, anonymous, category, priority }),
+      body: JSON.stringify({
+        message,
+        anonymous,
+        category,
+        priority,
+      }),
     });
 
     if (res.ok) {
