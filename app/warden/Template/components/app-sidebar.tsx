@@ -27,16 +27,16 @@ import {
 import { Button } from '@/app/warden/Template/components/ui/button';
 
 const menuItems = [
-  { icon: LayoutDashboard, label: 'Dashboard', href: '/warden/dashboard' },
-  { icon: Users, label: 'Students', href: '/warden/students' },
-  { icon: Calendar, label: 'Activities', href: '/warden/activities' },
-  { icon: DollarSign, label: 'Expenses', href: '/warden/expenses' },
-  { icon: AlertCircle, label: 'Complaints', href: '/warden/complaints' },
-  { icon: MessageSquare, label: 'Moderation', href: '/warden/community' },
-  { icon: User, label: 'Profile', href: '/warden/profile' },
+  { icon: LayoutDashboard, label: 'Dashboard', href: '/' },
+  { icon: Users, label: 'Students', href: '/students' },
+  { icon: Calendar, label: 'Activities', href: '/activities' },
+  { icon: DollarSign, label: 'Expenses', href: '/expenses' },
+  { icon: AlertCircle, label: 'Complaints', href: '/complaints' },
+  { icon: MessageSquare, label: 'Moderation', href: '/moderation' },
+  { icon: User, label: 'Profile', href: '/profile' },
 ];
 
-export function WardenSidebar() {
+export function AppSidebar() {
   const pathname = usePathname();
   const [isMobileOpen, setIsMobileOpen] = useState(false);
 
@@ -74,21 +74,21 @@ export function WardenSidebar() {
             : 'hidden md:flex'
         }`}
       >
-        <SidebarHeader className="border-b border-border py-4 px-6">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 bg-primary/10 rounded-xl flex items-center justify-center flex-shrink-0 animate-pulse-glow">
-              <span className="text-primary font-bold text-lg">W</span>
+        <SidebarHeader className="border-b border-border py-3 px-3">
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 bg-gradient-to-br from-primary via-accent to-primary rounded-md flex items-center justify-center flex-shrink-0">
+              <span className="text-primary-foreground font-bold text-xs">W</span>
             </div>
             <div className="flex-1 min-w-0">
-              <p className="font-bold text-base text-sidebar-foreground truncate tracking-tight">Warden</p>
+              <p className="font-bold text-sm text-sidebar-foreground truncate">Warden</p>
             </div>
           </div>
         </SidebarHeader>
 
-        <SidebarContent className="px-3 py-6">
+        <SidebarContent className="px-2 py-4">
           <SidebarGroup>
             <SidebarGroupContent>
-              <SidebarMenu className="gap-1.5">
+              <SidebarMenu>
                 {menuItems.map((item, index) => {
                   const Icon = item.icon;
                   const isActive = pathname === item.href;
@@ -101,18 +101,18 @@ export function WardenSidebar() {
                       <SidebarMenuButton
                         asChild
                         isActive={isActive}
-                        className={`transition-all duration-300 rounded-xl px-4 py-6 ${
+                        className={`transition-all duration-300 rounded-md ${
                           isActive
-                            ? 'bg-primary/10 text-primary font-semibold shadow-sm overflow-hidden relative after:content-[""] after:absolute after:left-0 after:top-0 after:bottom-0 after:w-1 after:bg-primary'
-                            : 'text-muted-foreground hover:bg-muted/50 hover:text-foreground'
+                            ? 'bg-gradient-to-r from-primary/20 to-primary/10 text-primary shadow-sm'
+                            : 'text-sidebar-foreground hover:bg-secondary/60'
                         }`}
                         onClick={() => setIsMobileOpen(false)}
                       >
-                        <Link href={item.href} className="flex items-center gap-3">
+                        <Link href={item.href} className="flex items-center gap-2.5 px-3 py-2">
                           <Icon className={`w-5 h-5 flex-shrink-0 transition-colors duration-300 ${
                             isActive ? 'text-primary' : 'text-muted-foreground'
                           }`} />
-                          <span className="text-sm">{item.label}</span>
+                          <span className="text-sm font-medium">{item.label}</span>
                         </Link>
                       </SidebarMenuButton>
                     </SidebarMenuItem>
@@ -126,4 +126,3 @@ export function WardenSidebar() {
     </>
   );
 }
-

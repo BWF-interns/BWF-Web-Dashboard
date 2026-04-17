@@ -1,8 +1,8 @@
 "use client";
 
-import { SidebarProvider } from "@/components/ui/sidebar";
+import { SidebarProvider } from "@/app/warden/Template/components/ui/sidebar";
 import { WardenSidebar } from "./components/WardenSidebar";
-import { TopNav } from "@/components/top-nav";
+import { TopNav } from "@/app/warden/Template/components/top-nav";
 import AuthGuard from "./components/AuthGuard";
 
 export default function WardenLayout({
@@ -23,4 +23,4 @@ export default function WardenLayout({
       </SidebarProvider>
     </AuthGuard>
   );
-}
+}

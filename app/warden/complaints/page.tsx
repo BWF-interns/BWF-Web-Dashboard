@@ -2,14 +2,14 @@
 
 import { useMemo, useState } from 'react';
 import { Search, AlertCircle, Plus, CheckCircle2, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
+import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
+import { Button } from '@/app/warden/Template/components/ui/button';
+import { Badge } from '@/app/warden/Template/components/ui/badge';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/warden/Template/components/ui/tabs';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
+import { Input } from '@/app/warden/Template/components/ui/input';
+import { Textarea } from '@/app/warden/Template/components/ui/textarea';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/app/warden/Template/components/ui/alert-dialog';
 
 type Status = 'OPEN' | 'RESOLVED' | 'ESCALATED';
 

@@ -2,13 +2,13 @@
 
 import { useMemo, useState } from 'react';
 import { Search, ChevronLeft, ChevronRight, Check, X, Forward } from 'lucide-react';
-import { Card, CardContent } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Badge } from '@/components/ui/badge';
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/components/ui/dialog';
-import { Textarea } from '@/components/ui/textarea';
+import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
+import { Button } from '@/app/warden/Template/components/ui/button';
+import { Badge } from '@/app/warden/Template/components/ui/badge';
+import { Input } from '@/app/warden/Template/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/app/warden/Template/components/ui/dialog';
+import { Textarea } from '@/app/warden/Template/components/ui/textarea';
 
 type Status = 'Pending' | 'Approved' | 'Rejected' | 'Forwarded';
 

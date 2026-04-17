@@ -11,9 +11,9 @@ import {
   BarChart3,
   PieChart as PieChartIcon,
 } from 'lucide-react'
-import { PremiumStatCard } from '@/components/premium-stat-card'
-import { PremiumCalendar } from '@/components/premium-calendar'
-import { PremiumInbox } from '@/components/premium-inbox'
+import { PremiumStatCard } from '@/app/warden/Template/components/premium-stat-card'
+import { PremiumCalendar } from '@/app/warden/Template/components/premium-calendar'
+import { PremiumInbox } from '@/app/warden/Template/components/premium-inbox'
 import {
   BarChart,
   Bar,
@@ -29,7 +29,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from 'recharts'
-import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
+import { Card, CardContent, CardHeader, CardTitle } from '@/app/warden/Template/components/ui/card'
 
 // Sample data exactly from NewLayout to match user's screenshot
 const expenseTrendData = [

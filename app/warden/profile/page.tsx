@@ -2,15 +2,15 @@
 
 import { useState, useEffect } from 'react';
 import { User, Mail, Phone, MapPin, Lock, Edit2, Save, X } from 'lucide-react';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Badge } from '@/components/ui/badge';
-import { FieldGroup, Field, FieldLabel } from '@/components/ui/field';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/components/ui/alert-dialog';
-import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/app/warden/Template/components/ui/card';
+import { Button } from '@/app/warden/Template/components/ui/button';
+import { Input } from '@/app/warden/Template/components/ui/input';
+import { Textarea } from '@/app/warden/Template/components/ui/textarea';
+import { Badge } from '@/app/warden/Template/components/ui/badge';
+import { FieldGroup, Field, FieldLabel } from '@/app/warden/Template/components/ui/field';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/app/warden/Template/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/app/warden/Template/components/ui/alert-dialog';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/app/warden/Template/components/ui/tabs';
 
 export default function ProfilePage() {
   const [warden, setWarden] = useState<any>(null);
