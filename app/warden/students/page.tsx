@@ -1,93 +1,342 @@
-"use client";
+'use client';
 
-import { useState } from "react";
-import { Plus, Search, User } from "lucide-react";
+import { useState, useEffect, useMemo } from 'react';
+import { Search, Plus, Edit2, Trash2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Card, CardContent } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/components/ui/dialog';
+import { Badge } from '@/components/ui/badge';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Field, FieldLabel } from '@/components/ui/field';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+
+const ITEMS_PER_PAGE = 10;
+
+// Age Calculation Helper
+const calculateAge = (dob: string) => {
+  if (!dob) return '-';
+  const birthDate = new Date(dob);
+  const today = new Date();
+  let age = today.getFullYear() - birthDate.getFullYear();
+  const m = today.getMonth() - birthDate.getMonth();
+  if (m < 0 || (m === 0 && today.getDate() < birthDate.getDate())) age--;
+  return age;
+};
+
+// Reusable Form Content Helper
+const StudentForm = ({ data, onChange }: any) => (
+  <div className="p-6 space-y-8 text-[13px]">
+    <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Full Name *</FieldLabel>
+        <Input value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })} placeholder="e.g. Eleanor Pena" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Class *</FieldLabel>
+        <Select value={data.class} onValueChange={(v) => onChange({ ...data, class: v })}>
+          <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent className="rounded-xl">{[...Array(12)].map((_, i) => (<SelectItem key={i + 1} value={`${i + 1}`}>Class {i + 1}</SelectItem>))}</SelectContent>
+        </Select>
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Date of Birth *</FieldLabel>
+        <Input type="date" value={data.DOB} onChange={(e) => onChange({ ...data, DOB: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Gender *</FieldLabel>
+        <Select value={data.gender} onValueChange={(v) => onChange({ ...data, gender: v })}>
+          <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent className="rounded-xl"><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent>
+        </Select>
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone *</FieldLabel>
+        <Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="10-digit number" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Email (Optional)</FieldLabel>
+        <Input type="email" value={data.email} onChange={(e) => onChange({ ...data, email: e.target.value })} placeholder="Optional email" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field className="md:col-span-2">
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Address (Optional)</FieldLabel>
+        <Input value={data.address} onChange={(e) => onChange({ ...data, address: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">School Name (Optional)</FieldLabel>
+        <Input value={data.schoolName} onChange={(e) => onChange({ ...data, schoolName: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Aadhaar (Optional)</FieldLabel>
+        <Input value={data.adhaarCard} onChange={(e) => onChange({ ...data, adhaarCard: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">PAN (Optional)</FieldLabel>
+        <Input value={data.panCard} onChange={(e) => onChange({ ...data, panCard: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+    </div>
+
+    <div className="pt-6 border-t border-slate-100">
+      <h4 className="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-4">Trusted Person Details (Optional)</h4>
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+        <Field>
+          <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[9px] uppercase">Contact Name</FieldLabel>
+          <Input value={data.trustedPerson.name} onChange={(e) => onChange({ ...data, trustedPerson: { ...data.trustedPerson, name: e.target.value } })} className="h-9 rounded-lg bg-slate-50/50 text-xs font-medium border-none" />
+        </Field>
+        <Field>
+          <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[9px] uppercase">Contact Phone</FieldLabel>
+          <Input value={data.trustedPerson.phone} onChange={(e) => onChange({ ...data, trustedPerson: { ...data.trustedPerson, phone: e.target.value } })} className="h-9 rounded-lg bg-slate-50/50 text-xs font-medium border-none" />
+        </Field>
+        <Field>
+          <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[9px] uppercase">Relation</FieldLabel>
+          <Input value={data.trustedPerson.relation} onChange={(e) => onChange({ ...data, trustedPerson: { ...data.trustedPerson, relation: e.target.value } })} className="h-9 rounded-lg bg-slate-50/50 text-xs font-medium border-none" />
+        </Field>
+      </div>
+    </div>
+  </div>
+);
 
 export default function StudentsPage() {
-  const [query, setQuery] = useState("");
+  const [searchTerm, setSearchTerm] = useState('');
+  const [classFilter, setClassFilter] = useState('all');
+  const [genderFilter, setGenderFilter] = useState('all');
+  const [currentPage, setCurrentPage] = useState(1);
+  const [isAddOpen, setIsAddOpen] = useState(false);
+  const [isDetailOpen, setIsDetailOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
+  const [selectedStudent, setSelectedStudent] = useState<any>(null);
+  const [students, setStudents] = useState<any[]>([]);
 
-  const students = [
-    { name: "Arjun Kumar", age: 16, education: "Class 10" },
-    { name: "Meera Patel", age: 14, education: "Class 8" },
-    { name: "Ravi Singh", age: 17, education: "Class 11" },
-  ];
+  const [formData, setFormData] = useState({
+    name: '', class: '1', gender: 'male', contactNumber: '', DOB: '', email: '', address: '', schoolName: '', adhaarCard: '', panCard: '', trustedPerson: { name: '', phone: '', relation: '' }
+  });
 
-  const filteredStudents = students.filter((s) =>
-    `${s.name} ${s.education}`
-      .toLowerCase()
-      .includes(query.toLowerCase())
-  );
+  useEffect(() => {
+    const mockStudents = [
+      { id: 1, name: "Eleanor Pena", class: "1", gender: "female", contactNumber: "9800000001", DOB: "2019-05-12", email: "", address: "", schoolName: "" },
+      { id: 2, name: "Jessia Rose", class: "2", gender: "female", contactNumber: "9800000002", DOB: "2018-04-03", email: "", address: "", schoolName: "" },
+      { id: 3, name: "Aditya Kumar", class: "3", gender: "male", contactNumber: "9800000003", DOB: "2017-08-15", email: "", address: "", schoolName: "" },
+      { id: 4, name: "Priya Singh", class: "4", gender: "female", contactNumber: "9800000004", DOB: "2016-11-22", email: "", address: "", schoolName: "" },
+      { id: 5, name: "Rohan Verma", class: "5", gender: "male", contactNumber: "9800000005", DOB: "2015-07-08", email: "", address: "", schoolName: "" },
+      { id: 6, name: "Ananya Gupta", class: "6", gender: "female", contactNumber: "9800000006", DOB: "2014-03-18", email: "", address: "", schoolName: "" },
+      { id: 7, name: "Rahul Sharma", class: "7", gender: "male", contactNumber: "9800000007", DOB: "2013-09-25", email: "", address: "", schoolName: "" },
+      { id: 8, name: "Divya Patel", class: "8", gender: "female", contactNumber: "9800000008", DOB: "2012-12-10", email: "", address: "", schoolName: "" },
+      { id: 9, name: "Vikram Singh", class: "9", gender: "male", contactNumber: "9800000009", DOB: "2011-06-14", email: "", address: "", schoolName: "" },
+      { id: 10, name: "Neha Reddy", class: "10", gender: "female", contactNumber: "9800000010", DOB: "2010-02-28", email: "", address: "", schoolName: "" },
+      { id: 11, name: "Arjun Nair", class: "11", gender: "male", contactNumber: "9800000011", DOB: "2009-10-05", email: "", address: "", schoolName: "" },
+      { id: 12, name: "Sara Khan", class: "12", gender: "female", contactNumber: "9800000012", DOB: "2008-01-19", email: "", address: "", schoolName: "" },
+      { id: 13, name: "Harsh Jain", class: "5", gender: "male", contactNumber: "9800000013", DOB: "2015-04-12", email: "", address: "", schoolName: "" },
+      { id: 14, name: "Meera Chopra", class: "8", gender: "female", contactNumber: "9800000014", DOB: "2012-09-30", email: "", address: "", schoolName: "" },
+      { id: 15, name: "Karan Desai", class: "6", gender: "male", contactNumber: "9800000015", DOB: "2014-05-21", email: "", address: "", schoolName: "" },
+    ];
+    setStudents(mockStudents);
+  }, []);
+
+  // Reset to page 1 when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, classFilter, genderFilter]);
+
+  const sortedStudents = useMemo(() => {
+    return [...students].sort((a, b) => {
+      if (parseInt(a.class) !== parseInt(b.class)) return parseInt(a.class) - parseInt(b.class);
+      return a.gender.localeCompare(b.gender);
+    });
+  }, [students]);
+
+  const filteredStudents = useMemo(() => {
+    return sortedStudents.filter((student) => {
+      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.contactNumber.includes(searchTerm);
+      const matchesClass = classFilter === 'all' || student.class === classFilter;
+      const matchesGender = genderFilter === 'all' || student.gender.toLowerCase() === genderFilter.toLowerCase();
+      return matchesSearch && matchesClass && matchesGender;
+    });
+  }, [sortedStudents, searchTerm, classFilter, genderFilter]);
+
+  const totalPages = Math.ceil(filteredStudents.length / ITEMS_PER_PAGE);
+  const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
+  const paginatedStudents = filteredStudents.slice(startIdx, startIdx + ITEMS_PER_PAGE);
+
+  const handleRowClick = (student: any) => {
+    setSelectedStudent(student);
+    setFormData({ ...student, gender: student.gender.toLowerCase(), trustedPerson: student.trustedPerson || { name: '', phone: '', relation: '' } });
+    setIsDetailOpen(true);
+  };
+
+  const validateForm = () => {
+    if (!formData.name || !formData.contactNumber || !formData.DOB || !formData.gender || !formData.class) {
+      alert("Required fields missing.");
+      return false;
+    }
+    // Simple Email/Phone validation
+    if (formData.email && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
+      alert("Invalid email format.");
+      return false;
+    }
+    if (formData.contactNumber.length < 10) {
+      alert("Invalid contact number.");
+      return false;
+    }
+    return true;
+  };
+
+  const handleSave = () => {
+    if (!validateForm()) return;
+    setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, ...formData } : s));
+    setIsDetailOpen(false);
+  };
+
+  const handleRegister = () => {
+    if (!validateForm()) return;
+    setStudents(prev => [...prev, { ...formData, id: Date.now() }]);
+    setIsAddOpen(false);
+  };
+
+  const handleDelete = () => {
+    setStudents(prev => prev.filter(s => s.id !== selectedStudent.id));
+    setIsDeleteConfirmOpen(false);
+    setIsDetailOpen(false);
+  };
 
   return (
-    <div className="space-y-6 text-gray-900">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div className="flex-1 p-4 md:p-6 bg-[#f8fafc] min-h-screen text-[13px]">
+      <div className="flex items-center justify-between mb-6 animate-fade-in">
         <div>
-          <h1 className="text-2xl font-semibold">Students Panel</h1>
-          <p className="text-sm text-gray-500">
-            Manage and register students
-          </p>
+          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Students Management</h1>
+          <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1 font-medium">
+            <span>Home</span> <span className="text-slate-300">/</span> <span className="text-indigo-500 font-semibold">Students</span>
+          </div>
+        </div>
+        <Button
+          onClick={() => {
+            setFormData({ name: '', class: '1', gender: 'male', contactNumber: '', DOB: '', email: '', address: '', schoolName: '', adhaarCard: '', panCard: '', trustedPerson: { name: '', phone: '', relation: '' } });
+            setIsAddOpen(true);
+          }}
+          className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-10 px-8 text-xs font-bold shadow-md transition-all active:scale-95"
+        >
+          <Plus className="w-4 h-4 mr-2" /> Add Students
+        </Button>
+      </div>
+
+      <Card className="border border-slate-200/60 shadow-none rounded-4xl bg-white overflow-hidden animate-scale-in">
+        <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-6 border-b border-slate-50">
+          <div className="flex items-center gap-2">
+            <h2 className="text-base font-bold text-slate-700">Students List</h2>
+            <Badge variant="outline" className="bg-indigo-50 text-indigo-600 border-none font-bold px-2 py-0.5 rounded-md text-[10px]">
+              {filteredStudents.length} Students
+            </Badge>
+          </div>
+
+          <div className="flex flex-1 items-center justify-end gap-3 w-full md:w-auto">
+            <div className="relative w-full md:w-64 group">
+              <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400 group-focus-within:text-indigo-600 transition-colors" />
+              <Input
+                placeholder="Search name or phone..."
+                className="pl-10 h-10 bg-slate-50/50 border-slate-200 rounded-xl text-[12px] placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium transition-all"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+              />
+            </div>
+
+            <Select value={classFilter} onValueChange={setClassFilter}>
+              <SelectTrigger className="h-10 w-32 bg-white border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors px-4"><SelectValue placeholder="All Classes" /></SelectTrigger>
+              <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                <SelectItem value="all">All Classes</SelectItem>
+                {[...Array(12)].map((_, i) => (<SelectItem key={i + 1} value={`${i + 1}`}>Class {i + 1}</SelectItem>))}
+              </SelectContent>
+            </Select>
+
+            <Select value={genderFilter} onValueChange={setGenderFilter}>
+              <SelectTrigger className="h-10 w-32 bg-white border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors px-4"><SelectValue placeholder="All Genders" /></SelectTrigger>
+              <SelectContent className="rounded-xl border-slate-100 shadow-xl">
+                <SelectItem value="all">All Genders</SelectItem>
+                <SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem><SelectItem value="other">Other</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
         </div>
 
-        {/* Register Button */}
-        <button className="flex items-center gap-2 bg-black text-white px-5 py-2.5 rounded-lg text-sm hover:bg-gray-800 transition">
-          <Plus size={16} />
-          Register Student
-        </button>
-      </div>
+        <CardContent className="p-0">
+          <Table>
+            <TableHeader className="bg-slate-50/10">
+              <TableRow className="border-none hover:bg-transparent">
+                <TableHead className="py-4 px-8 font-bold text-slate-400 text-[11px] uppercase tracking-widest border-none">Name</TableHead>
+                <TableHead className="py-4 px-8 font-bold text-slate-400 text-[11px] uppercase tracking-widest border-none text-center">Class</TableHead>
+                <TableHead className="py-4 px-8 font-bold text-slate-400 text-[11px] uppercase tracking-widest border-none text-center">Age</TableHead>
+                <TableHead className="py-4 px-8 font-bold text-slate-400 text-[11px] uppercase tracking-widest border-none">Gender</TableHead>
+                <TableHead className="py-4 px-8 font-bold text-slate-400 text-[11px] uppercase tracking-widest border-none">Phone</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {paginatedStudents.length > 0 ? (
+                paginatedStudents.map((student) => (
+                  <TableRow
+                    key={student.id}
+                    onClick={() => handleRowClick(student)}
+                    className="border-b border-slate-50/50 bg-white hover:bg-slate-50 hover:shadow-sm hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 transform-gpu cursor-pointer group"
+                  >
+                    <TableCell className="py-4 px-8 font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{student.name}</TableCell>
+                    <TableCell className="py-4 px-8 text-center text-slate-600">{student.class}</TableCell>
+                    <TableCell className="py-4 px-8 text-center text-slate-600">{calculateAge(student.DOB)}</TableCell>
+                    <TableCell className="py-4 px-8 text-slate-600 capitalize">{student.gender}</TableCell>
+                    <TableCell className="py-4 px-8 text-slate-600 tracking-wider">{student.contactNumber}</TableCell>
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow><TableCell colSpan={5} className="py-20 text-center text-black font-medium italic">No students found matching your criteria.</TableCell></TableRow>
+              )}
+            </TableBody>
+          </Table>
 
-      {/* Search */}
-      <div className="relative">
-        <Search
-          size={16}
-          className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
-        />
-        <input
-          value={query}
-          onChange={(e) => setQuery(e.target.value)}
-          placeholder="Search students..."
-          className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-black"
-        />
-      </div>
-
-      {/* Grid Panel */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
-        {filteredStudents.length === 0 ? (
-          <p className="text-gray-500 text-sm col-span-full text-center">
-            No students found
-          </p>
-        ) : (
-          filteredStudents.map((s, i) => (
-            <div
-              key={i}
-              className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm hover:shadow-md transition cursor-pointer"
-            >
-              {/* Avatar */}
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center">
-                  <User size={18} />
-                </div>
-                <div>
-                  <p className="font-medium">{s.name}</p>
-                  <p className="text-xs text-gray-500">
-                    {s.education}
-                  </p>
-                </div>
+          <div className="p-6 flex flex-col md:flex-row items-center justify-between gap-4 border-t border-slate-50">
+            <div className="text-[11px] text-slate-400 font-bold tracking-tight uppercase">Showing {filteredStudents.length > 0 ? startIdx + 1 : 0} to {Math.min(startIdx + ITEMS_PER_PAGE, filteredStudents.length)} of {filteredStudents.length} students</div>
+            <div className="flex items-center gap-2">
+              <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.max(1, prev - 1))} disabled={currentPage === 1} className="w-9 h-9 rounded-xl hover:bg-slate-100"><ChevronLeft className="w-4 h-4" /></Button>
+              <div className="flex items-center gap-1.5">
+                {[...Array(totalPages)].map((_, i) => (
+                  <Button key={i + 1} variant={currentPage === i + 1 ? "default" : "ghost"} className={`w-9 h-9 rounded-xl text-[11px] font-bold p-0 transition-all ${currentPage === i + 1 ? "bg-indigo-600 text-white shadow-lg shadow-indigo-100" : "text-slate-500 hover:bg-slate-100"}`} onClick={() => setCurrentPage(i + 1)}>{i + 1}</Button>
+                ))}
               </div>
-
-              {/* Info */}
-              <div className="text-sm text-gray-700">
-                Age: {s.age}
-              </div>
-
-              {/* Action */}
-              <button className="mt-4 text-sm text-blue-600 hover:underline">
-                View Details →
-              </button>
+              <Button variant="ghost" size="icon" onClick={() => setCurrentPage(prev => Math.min(totalPages, prev + 1))} disabled={currentPage === totalPages} className="w-9 h-9 rounded-xl hover:bg-slate-100"><ChevronRight className="w-4 h-4" /></Button>
             </div>
-          ))
-        )}
-      </div>
+          </div>
+        </CardContent>
+      </Card>
+
+      {/* Popups */}
+      <Dialog open={isDetailOpen} onOpenChange={setIsDetailOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] border-none shadow-2xl p-0 bg-white">
+          <div className="p-8 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-10">
+            <DialogHeader><DialogTitle className="text-xl font-bold text-slate-800 tracking-tight">Manage Student Entry</DialogTitle></DialogHeader>
+            <div className="flex gap-2">
+              <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(true)} className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 h-10 px-6 font-bold text-xs transition-all">Delete Account</Button>
+              <Button onClick={handleSave} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-8 font-bold text-xs shadow-md transition-all">Update Student</Button>
+            </div>
+          </div>
+          <StudentForm data={formData} onChange={setFormData} />
+        </DialogContent>
+      </Dialog>
+
+      <Dialog open={isAddOpen} onOpenChange={setIsAddOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto rounded-[2.5rem] border-none shadow-2xl p-0 bg-white">
+          <div className="p-8 border-b border-slate-50 flex items-center justify-between sticky top-0 bg-white/90 backdrop-blur-md z-10">
+            <DialogHeader><DialogTitle className="text-xl font-bold text-slate-800 tracking-tight">Register New Student</DialogTitle></DialogHeader>
+            <div className="flex gap-2">
+              <Button variant="ghost" onClick={() => setIsAddOpen(false)} className="rounded-xl h-10 px-6 text-xs font-bold text-slate-400 hover:bg-slate-50">Cancel</Button>
+              <Button onClick={handleRegister} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-10 font-bold text-xs shadow-lg shadow-indigo-100 transition-all">Complete Registration</Button>
+            </div>
+          </div>
+          <StudentForm data={formData} onChange={setFormData} />
+        </DialogContent>
+      </Dialog>
+
+      <AlertDialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <AlertDialogContent className="rounded-3xl border-none p-8">
+          <AlertDialogHeader><AlertDialogTitle className="text-xl font-heavy">Permanent Deletion?</AlertDialogTitle><AlertDialogDescription className="text-slate-500 font-medium">Are you sure you want to remove {selectedStudent?.name}? This cannot be reverted.</AlertDialogDescription></AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3"><AlertDialogCancel className="rounded-xl border-none bg-slate-100 text-slate-600 font-bold">Nevermind</AlertDialogCancel><AlertDialogAction onClick={handleDelete} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold px-8">Confirm Deletion</AlertDialogAction></AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
