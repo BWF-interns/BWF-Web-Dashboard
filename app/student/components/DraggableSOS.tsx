@@ -3,9 +3,24 @@
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AlertTriangle, X } from "lucide-react";
 
-const ADMIN_EMAIL = "admin@bwf.edu";
-const EDGE_GAP = 24;
-const FAB_SIZE = 58;
+const mockData = {
+  adminEmail: "admin@bwf.edu",
+  edgeGap: 24,
+  fabSize: 58,
+  uiStrings: {
+    tooltipDefault: "Sends a direct emergency alert to Admin",
+    tooltipSuccess: "Alert Sent Successfully!",
+    fabLabel: "SOS",
+    fabLabelSent: "SENT",
+    modalEyebrow: "Emergency Support",
+    modalTitle: "Need urgent help right now?",
+    modalText: "This will send an immediate, direct email to the BWF Founder/Admin. Use this when you or someone else is unsafe.",
+    confirmBtn: "Confirm SOS Alert",
+    sendingBtn: "Sending alert...",
+    emailSubject: "URGENT SOS ALERT - Direct escalation to BWF Founder/Admin",
+    emailBody: "This is an emergency SOS alert from a student. Immediate direct action is requested from the BWF Founder/Admin."
+  }
+};
 
 export default function DraggableSOS() {
   const [open, setOpen] = useState(false);
@@ -36,11 +51,9 @@ export default function DraggableSOS() {
         body: JSON.stringify(payload),
       }).catch(() => null);
 
-      const subject = encodeURIComponent("URGENT SOS ALERT - Direct escalation to BWF Founder/Admin");
-      const body = encodeURIComponent(
-        "This is an emergency SOS alert from a student. Immediate direct action is requested from the BWF Founder/Admin."
-      );
-      window.location.href = `mailto:${ADMIN_EMAIL}?subject=${subject}&body=${body}`;
+      const subject = encodeURIComponent(mockData.uiStrings.emailSubject);
+      const body = encodeURIComponent(mockData.uiStrings.emailBody);
+      window.location.href = `mailto:${mockData.adminEmail}?subject=${subject}&body=${body}`;
       setSent(true);
       setHovered(true); // Show success tooltip
       setTimeout(() => {
@@ -55,18 +68,13 @@ export default function DraggableSOS() {
 
   const clamp = (value: number, min: number, max: number) => Math.max(min, Math.min(value, max));
 
-  const getViewport = () => {
-    const vv = window.visualViewport;
-    const width = vv?.width ?? window.innerWidth;
-    const height = vv?.height ?? window.innerHeight;
-    return { width, height };
-  };
-
   const getBounds = () => {
-    const { width, height } = getViewport();
+    if (typeof window === "undefined") return { maxX: 0, maxY: 0 };
+    const width = window.innerWidth;
+    const height = window.innerHeight;
     return {
-      maxX: Math.max(EDGE_GAP, width - FAB_SIZE - EDGE_GAP),
-      maxY: Math.max(EDGE_GAP, height - FAB_SIZE - EDGE_GAP),
+      maxX: Math.max(mockData.edgeGap, width - mockData.fabSize - mockData.edgeGap),
+      maxY: Math.max(mockData.edgeGap, height - mockData.fabSize - mockData.edgeGap),
     };
   };
 
@@ -86,45 +94,41 @@ export default function DraggableSOS() {
           return { x: maxX, y: maxY };
         }
         return {
-          x: clamp(prev.x, EDGE_GAP, maxX),
-          y: clamp(prev.y, EDGE_GAP, maxY),
+          x: clamp(prev.x, mockData.edgeGap, maxX),
+          y: clamp(prev.y, mockData.edgeGap, maxY),
         };
       });
     };
 
     window.addEventListener("resize", handleResize);
-    window.visualViewport?.addEventListener("resize", handleResize);
-    window.visualViewport?.addEventListener("scroll", handleResize);
     return () => {
       window.removeEventListener("resize", handleResize);
-      window.visualViewport?.removeEventListener("resize", handleResize);
-      window.visualViewport?.removeEventListener("scroll", handleResize);
     };
   }, [hasCustomPosition]);
 
   const startDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (typeof window === "undefined") return;
-    if (window.matchMedia("(max-width: 768px)").matches) {
-      setOpen(true);
-      return;
-    }
-
+    
+    // Prevent default touch/mouse behavior
     event.preventDefault();
-    setDragging(true);
-
+    
     const pointerStart = { x: event.clientX, y: event.clientY };
-    const buttonStart = { ...position };
+    const initialPos = { ...position };
     let moved = false;
 
     const onMove = (moveEvent: PointerEvent) => {
       const deltaX = moveEvent.clientX - pointerStart.x;
       const deltaY = moveEvent.clientY - pointerStart.y;
-      if (Math.abs(deltaX) > 3 || Math.abs(deltaY) > 3) moved = true;
+      
+      if (Math.abs(deltaX) > 4 || Math.abs(deltaY) > 4) {
+        moved = true;
+        setDragging(true);
+      }
 
       const { maxX, maxY } = getBounds();
       setPosition({
-        x: clamp(buttonStart.x + deltaX, EDGE_GAP, maxX),
-        y: clamp(buttonStart.y + deltaY, EDGE_GAP, maxY),
+        x: clamp(initialPos.x + deltaX, mockData.edgeGap, maxX),
+        y: clamp(initialPos.y + deltaY, mockData.edgeGap, maxY),
       });
     };
 
@@ -133,7 +137,9 @@ export default function DraggableSOS() {
       window.removeEventListener("pointermove", onMove);
       window.removeEventListener("pointerup", onUp);
       if (moved) setHasCustomPosition(true);
-      if (!moved) setOpen(true);
+      if (!moved) {
+        setOpen(true);
+      }
     };
 
     window.addEventListener("pointermove", onMove);
@@ -144,19 +150,19 @@ export default function DraggableSOS() {
     <>
       <div
         className="sos-corner-shell"
-        style={ready ? { left: `${position.x}px`, top: `${position.y}px` } : undefined}
+        style={ready ? { 
+          left: `${position.x}px`, 
+          top: `${position.y}px`,
+          position: 'fixed',
+          zIndex: 9999 
+        } : undefined}
       >
         <div className={`sos-tooltip${hovered && !dragging ? " sos-tooltip--visible" : ""}`}>
-          {sent ? "Alert Sent Successfully!" : "Sends a direct emergency alert to Admin"}
+          {sent ? mockData.uiStrings.tooltipSuccess : mockData.uiStrings.tooltipDefault}
         </div>
         <button
           className={`sos-fab ${sent ? "sos-fab--sent" : ""} ${dragging ? "sos-fab--dragging" : ""}`}
           onPointerDown={startDrag}
-          onClick={() => {
-            if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
-              setOpen(true);
-            }
-          }}
           onMouseEnter={() => !sent && setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           onFocus={() => !sent && setHovered(true)}
@@ -164,7 +170,7 @@ export default function DraggableSOS() {
           aria-label="Open emergency alert"
           disabled={sent}
         >
-          <span className="sos-label-compact">{sent ? "SENT" : "SOS"}</span>
+          <span className="sos-label-compact">{sent ? mockData.uiStrings.fabLabelSent : mockData.uiStrings.fabLabel}</span>
         </button>
       </div>
 
@@ -174,15 +180,14 @@ export default function DraggableSOS() {
             <button className="sos-close" onClick={() => setOpen(false)} aria-label="Close">
               <X size={16} />
             </button>
-            <p className="sos-eyebrow">Emergency Support</p>
-            <h3 className="sos-title">Need urgent help right now?</h3>
+            <p className="sos-eyebrow">{mockData.uiStrings.modalEyebrow}</p>
+            <h3 className="sos-title">{mockData.uiStrings.modalTitle}</h3>
             <p className="sos-text">
-              This will send an immediate, direct email to the BWF Founder/Admin.
-              Use this when you or someone else is unsafe.
+              {mockData.uiStrings.modalText}
             </p>
             <button className="sos-confirm" onClick={triggerSOS} disabled={sending}>
               <AlertTriangle size={16} />
-              {sending ? "Sending alert..." : "Confirm SOS Alert"}
+              {sending ? mockData.uiStrings.sendingBtn : mockData.uiStrings.confirmBtn}
             </button>
           </div>
         </div>

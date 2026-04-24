@@ -8,10 +8,37 @@ import { AVATARS, AVATAR_CATEGORIES, getAvatar } from "../constants/avatars";
 import DiaryEntry from "../components/DiaryEntry";
 import Image from "next/image";
 
-const INTEREST_EMOJIS: Record<string,string> = {
-  Drawing:"🎨", Science:"🔬", Music:"🎵", Reading:"📚",
-  Sports:"⚽", Cooking:"🍳", Dancing:"💃", Writing:"✍️",
-  Nature:"🌿", Crafts:"✂️", Singing:"🎤", Gardening:"🌱",
+const mockData = {
+  interestEmojis: {
+    Drawing: "🎨", Science: "🔬", Music: "🎵", Reading: "📚",
+    Sports: "⚽", Cooking: "🍳", Dancing: "💃", Writing: "✍️",
+    Nature: "🌿", Crafts: "✂️", Singing: "🎤", Gardening: "🌱",
+  },
+  initialProfile: {
+    name: "Aisha Sharma",
+    dob: "2010-05-14",
+    classInfo: "10th Grade",
+    interests: ["Drawing", "Science", "Music"],
+    bio: "I love learning new things and believe every day is a chance to grow. 🌸",
+  },
+  uiStrings: {
+    pageEyebrow: "My Account",
+    pageTitle: "My Profile",
+    savedToast: "Saved! ✨",
+    saveBtn: "Save Profile",
+    editBtn: "Edit Profile",
+    avatarTitle: "Tap to change avatar",
+    roleStudent: "Student",
+    bioPlaceholder: "Something about yourself…",
+    tagAddPlaceholder: "+ Add…",
+    pickerTitle: "Choose your avatar ✨",
+    pickerSub: "Pick something that feels like you!",
+    uploadBtn: "Upload my photo",
+    removeBtn: "Remove photo",
+    statClass: "Class",
+    statInterests: "Interests",
+    statInterestsSub: " things I love"
+  }
 };
 
 interface Profile {
@@ -29,11 +56,7 @@ export default function ProfilePage() {
   const [activeCategory, setActiveCat] = useState<string>("Animals");
   const [tagInput, setTagInput]     = useState("");
 
-  const [profile, setProfile] = useState<Profile>({
-    name:"Aisha Sharma", dob:"2010-05-14",
-    classInfo:"10th Grade", interests:["Drawing","Science","Music"],
-    bio:"I love learning new things and believe every day is a chance to grow. 🌸",
-  });
+  const [profile, setProfile] = useState<Profile>(mockData.initialProfile);
 
   const set = (k:keyof Profile, v:any) => setProfile(p=>({...p,[k]:v}));
 
@@ -69,16 +92,16 @@ export default function ProfilePage() {
       {/* HEADER */}
       <header className="prof-header">
         <div>
-          <p className="prof-eyebrow">My Account</p>
-          <h1 className="prof-title">My Profile</h1>
+          <p className="prof-eyebrow">{mockData.uiStrings.pageEyebrow}</p>
+          <h1 className="prof-title">{mockData.uiStrings.pageTitle}</h1>
         </div>
         <div className="prof-header-right">
-          {saved && <div className="prof-toast"><Sparkles size={13}/> Saved! ✨</div>}
+          {saved && <div className="prof-toast"><Sparkles size={13}/> {mockData.uiStrings.savedToast}</div>}
           <button
             className={`prof-edit-btn${editing?" prof-edit-btn--save":""}`}
             onClick={()=>editing?handleSave():setEditing(true)}
           >
-            {editing?<><Save size={15}/>Save Profile</>:<><Edit2 size={15}/>Edit Profile</>}
+            {editing?<><Save size={15}/>{mockData.uiStrings.saveBtn}</>:<><Edit2 size={15}/>{mockData.uiStrings.editBtn}</>}
           </button>
         </div>
       </header>
@@ -93,7 +116,7 @@ export default function ProfilePage() {
             className="prof-av"
             style={{background:av.bg}}
             onClick={()=>editing&&setPickerOpen(o=>!o)}
-            title={editing?"Tap to change avatar":av.label}
+            title={editing?mockData.uiStrings.avatarTitle:av.label}
           >
             {customAvatarUrl ? (
               <Image src={customAvatarUrl} alt="Custom profile photo" fill sizes="96px" className="prof-av-image" />
@@ -112,25 +135,25 @@ export default function ProfilePage() {
             :<h2 className="prof-hero-name">{profile.name}</h2>}
 
           <div className="prof-badges">
-            <span className="prof-badge prof-badge--b"><Star size={11} fill="currentColor"/>Student</span>
+            <span className="prof-badge prof-badge--b"><Star size={11} fill="currentColor"/>{mockData.uiStrings.roleStudent}</span>
             <span className="prof-badge prof-badge--t"><BookOpen size={11}/>{profile.classInfo}</span>
           </div>
 
           {editing
-            ?<input className="prof-bio-input" value={profile.bio} onChange={e=>set("bio",e.target.value)} placeholder="Something about yourself…"/>
+            ?<input className="prof-bio-input" value={profile.bio} onChange={e=>set("bio",e.target.value)} placeholder={mockData.uiStrings.bioPlaceholder}/>
             :<p className="prof-hero-bio">{profile.bio}</p>}
 
           <div className="prof-tags">
             {profile.interests.map(t=>(
               <span key={t} className="prof-tag">
-                {INTEREST_EMOJIS[t]||"🌟"} {t}
+                {(mockData.interestEmojis as any)[t]||"🌟"} {t}
                 {editing&&<button className="prof-tag-rm" onClick={()=>set("interests",profile.interests.filter(x=>x!==t))}>×</button>}
               </span>
             ))}
             {editing&&(
               <input
                 className="prof-tag-add"
-                placeholder="+ Add…"
+                placeholder={mockData.uiStrings.tagAddPlaceholder}
                 value={tagInput}
                 onChange={e=>setTagInput(e.target.value)}
                 onKeyDown={e=>{if(e.key==="Enter")addTag();}}
@@ -145,8 +168,8 @@ export default function ProfilePage() {
         <section className="prof-picker">
           <div className="prof-picker-top">
             <div>
-              <h3 className="prof-picker-title">Choose your avatar ✨</h3>
-              <p className="prof-picker-sub">Pick something that feels like you!</p>
+              <h3 className="prof-picker-title">{mockData.uiStrings.pickerTitle}</h3>
+              <p className="prof-picker-sub">{mockData.uiStrings.pickerSub}</p>
             </div>
             <button className="prof-picker-close" onClick={()=>setPickerOpen(false)}>✕</button>
           </div>
@@ -154,7 +177,7 @@ export default function ProfilePage() {
           <div className="prof-custom-upload-row">
             <label className="prof-custom-upload-btn">
               <Upload size={14} />
-              Upload my photo
+              {mockData.uiStrings.uploadBtn}
               <input
                 type="file"
                 accept="image/*"
@@ -164,7 +187,7 @@ export default function ProfilePage() {
             {customAvatarUrl && (
               <button className="prof-custom-remove-btn" onClick={() => setCustomAvatarUrl(null)}>
                 <Trash2 size={14} />
-                Remove photo
+                {mockData.uiStrings.removeBtn}
               </button>
             )}
           </div>
@@ -205,8 +228,8 @@ export default function ProfilePage() {
       {/* STATS */}
       <div className="prof-stats">
         {[
-          {emoji:"🏫",label:"Class",    value:profile.classInfo},
-          {emoji:"🎯",label:"Interests",value:`${profile.interests.length} things I love`},
+          {emoji:"🏫",label:mockData.uiStrings.statClass,    value:profile.classInfo},
+          {emoji:"🎯",label:mockData.uiStrings.statInterests,value:`${profile.interests.length}${mockData.uiStrings.statInterestsSub}`},
         ].map((s,i)=>(
           <div key={i} className="prof-stat">
             <span className="prof-stat-emoji">{s.emoji}</span>

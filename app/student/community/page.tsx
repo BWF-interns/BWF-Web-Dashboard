@@ -22,65 +22,88 @@ interface Post {
   mediaUrl?: string;
 }
 
-// ── Category config ──
-const CAT_CONFIG: Record<Category, { emoji: string; color: string; bg: string; border: string; label: string }> = {
-  Win: { emoji: "🏆", color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0", label: "Win" },
-  Story: { emoji: "💛", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Story" },
-  Gratitude: { emoji: "🌸", color: "#db2777", bg: "#fce7f3", border: "#fbcfe8", label: "Gratitude" },
-  Highlight: { emoji: "⭐", color: "#2563eb", bg: "#dbeafe", border: "#bfdbfe", label: "Highlight" },
+const mockData = {
+  catConfig: {
+    Win: { emoji: "🏆", color: "#16a34a", bg: "#dcfce7", border: "#bbf7d0", label: "Win" },
+    Story: { emoji: "💛", color: "#d97706", bg: "#fef3c7", border: "#fde68a", label: "Story" },
+    Gratitude: { emoji: "🌸", color: "#db2777", bg: "#fce7f3", border: "#fbcfe8", label: "Gratitude" },
+    Highlight: { emoji: "⭐", color: "#2563eb", bg: "#dbeafe", border: "#bfdbfe", label: "Highlight" },
+  },
+  filters: [
+    { key: "all", label: "All", emoji: "🌟" },
+    { key: "Win", label: "Wins", emoji: "🏆" },
+    { key: "Story", label: "Stories", emoji: "💛" },
+    { key: "Gratitude", label: "Gratitude", emoji: "🌸" },
+    { key: "Highlight", label: "Highlights", emoji: "⭐" },
+  ],
+  verifiedPosts: [
+    {
+      _id: "1",
+      author: "Zoya Khan",
+      avatarId: "bunny",
+      role: "Student",
+      category: "Win",
+      content: "I finally completed my advanced algebra module after weeks of hard work! This journey has taught me that I am capable of more than I thought. Thank you Ms. Dana and everyone who believed in me. 🙏",
+      likes: 47,
+      createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    },
+    {
+      _id: "2",
+      author: "Ms. Dana Elomo",
+      avatarId: "flower",
+      role: "Warden",
+      category: "Highlight",
+      content: "So proud of our students this week — the Science module presentation was outstanding. Every single one of you showed up with courage and curiosity. The BWF family is shining bright. ✨",
+      likes: 93,
+      createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
+    },
+    {
+      _id: "3",
+      author: "Arif Shaikh",
+      avatarId: "rocket",
+      role: "Student",
+      category: "Gratitude",
+      content: "I want to say a big thank you to my warden and the BWF team. A year ago I didn't think school was for me. Today I submitted my first assignment on time and I am really proud of myself. This family made that possible. 💛",
+      likes: 121,
+      createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
+    },
+    {
+      _id: "4",
+      author: "BWF Admin",
+      avatarId: "rocket",
+      role: "Admin",
+      category: "Highlight",
+      content: "This month, 87% of our students completed their modules on time — an all-time record for our community! Every small step each of you takes builds something bigger than you know. Keep going. 🌟",
+      likes: 158,
+      createdAt: new Date(Date.now() - 3600000 * 72).toISOString(),
+    },
+  ],
+  uiStrings: {
+    pageTitle: "BWF Inspiration Wall",
+    pageEyebrow: "Our Community",
+    heroTitle: "Every voice here matters. 🌸",
+    heroSub1: "Wins, moments, gratitude — from our students, wardens, and team.",
+    heroSub2: "All posts are reviewed before they appear here.",
+    storiesShared: "Stories shared",
+    heartsGiven: "Hearts given",
+    emptyState: "No stories in this category yet.",
+    verifiedTag: "Verified post",
+    shareTitle: "✍️ Share your story",
+    shareHint: "Your story and any image are reviewed by your warden before they appear on the wall.",
+    submittedTitle: "Submitted!",
+    submittedDesc: "Your submission is with the warden for review. 🌸",
+    aboutTitle: "🌿 About this wall",
+    aboutSteps: [
+      "You share a story or moment",
+      "Your warden reviews it",
+      "It appears here for the whole BWF community",
+    ],
+    aboutPublicNote: "Only verified posts and media are visible publicly"
+  }
 };
 
-const FILTERS: Array<{ key: "all" | Category; label: string; emoji: string }> = [
-  { key: "all", label: "All", emoji: "🌟" },
-  { key: "Win", label: "Wins", emoji: "🏆" },
-  { key: "Story", label: "Stories", emoji: "💛" },
-  { key: "Gratitude", label: "Gratitude", emoji: "🌸" },
-  { key: "Highlight", label: "Highlights", emoji: "⭐" },
-];
-
-// ── Verified posts (shown to all) ──
-const VERIFIED_POSTS: Post[] = [
-  {
-    _id: "1",
-    author: "Zoya Khan",
-    avatarId: "bunny",
-    role: "Student",
-    category: "Win",
-    content: "I finally completed my advanced algebra module after weeks of hard work! This journey has taught me that I am capable of more than I thought. Thank you Ms. Dana and everyone who believed in me. 🙏",
-    likes: 47,
-    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
-  },
-  {
-    _id: "2",
-    author: "Ms. Dana Elomo",
-    avatarId: "flower",
-    role: "Warden",
-    category: "Highlight",
-    content: "So proud of our students this week — the Science module presentation was outstanding. Every single one of you showed up with courage and curiosity. The BWF family is shining bright. ✨",
-    likes: 93,
-    createdAt: new Date(Date.now() - 3600000 * 24).toISOString(),
-  },
-  {
-    _id: "3",
-    author: "Arif Shaikh",
-    avatarId: "rocket",
-    role: "Student",
-    category: "Gratitude",
-    content: "I want to say a big thank you to my warden and the BWF team. A year ago I didn't think school was for me. Today I submitted my first assignment on time and I am really proud of myself. This family made that possible. 💛",
-    likes: 121,
-    createdAt: new Date(Date.now() - 3600000 * 48).toISOString(),
-  },
-  {
-    _id: "4",
-    author: "BWF Admin",
-    avatarId: "rocket",
-    role: "Admin",
-    category: "Highlight",
-    content: "This month, 87% of our students completed their modules on time — an all-time record for our community! Every small step each of you takes builds something bigger than you know. Keep going. 🌟",
-    likes: 158,
-    createdAt: new Date(Date.now() - 3600000 * 72).toISOString(),
-  },
-];
+// TODO: Replace with GET /api/student/community/posts
+// TODO: Replace submit with POST /api/student/community/posts
 
 function timeAgo(iso: string) {
   const diff = Date.now() - new Date(iso).getTime();
@@ -96,7 +119,7 @@ export default function CommunityPage() {
   const av = getAvatar(avatarId as string);
   const firstName = name.split(" ")[0];
 
-  const [posts, setPosts] = useState<Post[]>(VERIFIED_POSTS);
+  const [posts, setPosts] = useState<Post[]>(mockData.verifiedPosts as Post[]);
   const [filter, setFilter] = useState<"all" | Category>("all");
   const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
 
@@ -147,8 +170,8 @@ export default function CommunityPage() {
       {/* HEADER */}
       <header className="cm-header">
         <div>
-          <p className="cm-eyebrow">Our Community</p>
-          <h1 className="cm-title">BWF Inspiration Wall</h1>
+          <p className="cm-eyebrow">{mockData.uiStrings.pageEyebrow}</p>
+          <h1 className="cm-title">{mockData.uiStrings.pageTitle}</h1>
         </div>
       </header>
 
@@ -157,29 +180,29 @@ export default function CommunityPage() {
         <div className="cm-hero-blob cm-hero-blob-1" />
         <div className="cm-hero-blob cm-hero-blob-2" />
         <div className="cm-hero-text">
-          <h2>Every voice here matters. 🌸</h2>
-          <p>Wins, moments, gratitude — from our students, wardens, and team.</p>
-          <p className="cm-hero-sub">All posts are reviewed before they appear here.</p>
+          <h2>{mockData.uiStrings.heroTitle}</h2>
+          <p>{mockData.uiStrings.heroSub1}</p>
+          <p className="cm-hero-sub">{mockData.uiStrings.heroSub2}</p>
         </div>
         <div className="cm-hero-stats">
           <div className="cm-hero-stat">
             <span className="cm-hero-stat-num">{posts.length}</span>
-            <span className="cm-hero-stat-label">Stories shared</span>
+            <span className="cm-hero-stat-label">{mockData.uiStrings.storiesShared}</span>
           </div>
           <div className="cm-hero-stat">
             <span className="cm-hero-stat-num">{totalLikes}</span>
-            <span className="cm-hero-stat-label">Hearts given</span>
+            <span className="cm-hero-stat-label">{mockData.uiStrings.heartsGiven}</span>
           </div>
         </div>
       </section>
 
       {/* FILTER CHIPS */}
       <div className="cm-filters">
-        {FILTERS.map(f => (
+        {mockData.filters.map(f => (
           <button
             key={f.key}
             className={`cm-chip${filter === f.key ? " cm-chip--active" : ""}`}
-            onClick={() => setFilter(f.key)}
+            onClick={() => setFilter(f.key as "all" | Category)}
           >
             {f.emoji} {f.label}
           </button>
@@ -194,12 +217,12 @@ export default function CommunityPage() {
           {visible.length === 0 ? (
             <div className="cm-empty">
               <span>🌸</span>
-              No stories in this category yet.
+              {mockData.uiStrings.emptyState}
             </div>
           ) : (
             visible.map(post => {
               const postAv = getAvatar(post.avatarId);
-              const cfg = CAT_CONFIG[post.category];
+              const cfg = (mockData.catConfig as any)[post.category];
               const isLiked = likedSet.has(post._id);
               return (
                 <article key={post._id} className="cm-post">
@@ -243,7 +266,7 @@ export default function CommunityPage() {
                       <span>{post.likes}</span>
                     </button>
                     <span className="cm-verified-tag">
-                      <CheckCircle2 size={12} /> Verified post
+                      <CheckCircle2 size={12} /> {mockData.uiStrings.verifiedTag}
                     </span>
                   </div>
                 </article>
@@ -257,17 +280,17 @@ export default function CommunityPage() {
 
           {/* Submit your story */}
           <div className="cm-sidebar-card cm-submit-card">
-            <p className="cm-sidebar-title">✍️ Share your story</p>
+            <p className="cm-sidebar-title">{mockData.uiStrings.shareTitle}</p>
             <p className="cm-submit-hint">
-              Your story and any image are reviewed by your warden before they appear on the wall.
+              {mockData.uiStrings.shareHint}
             </p>
 
             {submitted ? (
               <div className="cm-submit-success">
                 <Sparkles size={16} />
                 <div>
-                  <strong>Submitted!</strong>
-                  <p>Your submission is with the warden for review. 🌸</p>
+                  <strong>{mockData.uiStrings.submittedTitle}</strong>
+                  <p>{mockData.uiStrings.submittedDesc}</p>
                 </div>
               </div>
             ) : (
@@ -287,8 +310,8 @@ export default function CommunityPage() {
                   value={submitCat}
                   onChange={e => setSubmitCat(e.target.value as Category)}
                 >
-                  {(Object.keys(CAT_CONFIG) as Category[]).map(c => (
-                    <option key={c} value={c}>{CAT_CONFIG[c].emoji} {CAT_CONFIG[c].label}</option>
+                  {(Object.keys(mockData.catConfig) as Category[]).map(c => (
+                    <option key={c} value={c}>{(mockData.catConfig as any)[c].emoji} {(mockData.catConfig as any)[c].label}</option>
                   ))}
                 </select>
                 <textarea
@@ -330,23 +353,17 @@ export default function CommunityPage() {
 
           {/* What is this wall */}
           <div className="cm-sidebar-card">
-            <p className="cm-sidebar-title">🌿 About this wall</p>
+            <p className="cm-sidebar-title">{mockData.uiStrings.aboutTitle}</p>
             <div className="cm-about-steps">
-              <div className="cm-about-step">
-                <span className="cm-about-num">1</span>
-                <span>You share a story or moment</span>
-              </div>
-              <div className="cm-about-step">
-                <span className="cm-about-num">2</span>
-                <span>Your warden reviews it</span>
-              </div>
-              <div className="cm-about-step">
-                <span className="cm-about-num">3</span>
-                <span>It appears here for the whole BWF community</span>
-              </div>
+              {mockData.uiStrings.aboutSteps.map((step, idx) => (
+                <div key={idx} className="cm-about-step">
+                  <span className="cm-about-num">{idx + 1}</span>
+                  <span>{step}</span>
+                </div>
+              ))}
               <div className="cm-about-step">
                 <span className="cm-about-num"><ShieldCheck size={14} /></span>
-                <span>Only verified posts and media are visible publicly</span>
+                <span>{mockData.uiStrings.aboutPublicNote}</span>
               </div>
             </div>
           </div>

@@ -16,11 +16,43 @@ interface Props {
   dob: string; // "YYYY-MM-DD"
 }
 
-const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
-const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
-const HISTORY_WINDOW_DAYS = 7;
-const HISTORY_MAX_ITEMS = 50;
-const MAX_STORED_ENTRIES = 300;
+const mockData = {
+  weekdays: ["S", "M", "T", "W", "T", "F", "S"],
+  months: ["January","February","March","April","May","June","July","August","September","October","November","December"],
+  historyWindowDays: 7,
+  historyMaxItems: 50,
+  maxStoredEntries: 300,
+  seedEntries: [
+    { id:"seed1", title:"My first day thoughts", body:"Today was a new beginning. I felt nervous but excited...", date:"2024-09-01", createdAt:"2024-09-01T10:00:00Z" },
+    { id:"seed2", title:"I finished my algebra module!", body:"Finally! It was hard but I did it. Ms. Dana believed in me.", date:"2024-11-14", createdAt:"2024-11-14T14:00:00Z" },
+    { id:"seed3", title:"What I want for my future", body:"One day I want to be a scientist. I wrote this on my birthday...", date:"2024-05-14", createdAt:"2024-05-14T09:00:00Z" },
+  ],
+  uiStrings: {
+    pageTitle: "Personal Journal",
+    pageSubtitle: "Your private space — write, reflect, revisit.",
+    entryLabel: "entry",
+    entriesLabel: "entries",
+    birthdayGreeting: "🎉 Happy Birthday, ",
+    pastLetterTitle: "A letter from past you — ",
+    fullEntryBtn: "Read full entry ✨",
+    noEntryFound: "No entry found from your last birthday",
+    writeForFuture: "Write something today for future you to read next year! 🌸",
+    hasEntryLegend: "has entry",
+    todayLegend: "today",
+    birthdayLegend: "birthday",
+    noEntryDay: "No entry for this day.",
+    savedLabel: "✅ Saved!",
+    titlePlaceholder: "Give this entry a title… (optional)",
+    bodyPlaceholder: (name: string) => `Write freely, ${name}. This is your space.
+
+What happened today? What are you feeling?
+What do you want to tell your future self?`,
+    saveEntryBtn: " Save Entry",
+    recentEntriesTitle: "📚 Recent Entries ",
+    searchPlaceholder: "Search journal…",
+    noEntriesHistory: "No entries yet. Start writing above! 🌸"
+  }
+};
 
 function getTodayStr() { return new Date().toISOString().split("T")[0]; }
 
@@ -44,15 +76,8 @@ function getFirstDayOfMonth(year: number, month: number) {
   return new Date(year, month, 1).getDay();
 }
 
-// --- Mock seed entries so it doesn't look empty ---
-const SEED_ENTRIES: Entry[] = [
-  { id:"seed1", title:"My first day thoughts", body:"Today was a new beginning. I felt nervous but excited...", date:"2024-09-01", createdAt:"2024-09-01T10:00:00Z" },
-  { id:"seed2", title:"I finished my algebra module!", body:"Finally! It was hard but I did it. Ms. Dana believed in me.", date:"2024-11-14", createdAt:"2024-11-14T14:00:00Z" },
-  { id:"seed3", title:"What I want for my future", body:"One day I want to be a scientist. I wrote this on my birthday...", date:"2024-05-14", createdAt:"2024-05-14T09:00:00Z" },
-];
-
 export default function DiaryEntry({ studentName, dob }: Props) {
-  const [entries, setEntries] = useState<Entry[]>(SEED_ENTRIES);
+  const [entries, setEntries] = useState<Entry[]>(mockData.seedEntries);
   const [title, setTitle]       = useState("");
   const [body, setBody]         = useState("");
   const [savedFlash, setSavedFlash] = useState(false);
@@ -80,13 +105,13 @@ export default function DiaryEntry({ studentName, dob }: Props) {
 
   // All entries filtered by search
   const recentEntries = useMemo(()=>{
-    const cutoffTs = Date.now() - HISTORY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
+    const cutoffTs = Date.now() - mockData.historyWindowDays * 24 * 60 * 60 * 1000;
     const q = search.toLowerCase();
     return entries
       .filter(e => new Date(e.createdAt).getTime() >= cutoffTs)
       .filter(e=> !q || e.title.toLowerCase().includes(q) || e.body.toLowerCase().includes(q))
       .sort((a,b)=>b.createdAt.localeCompare(a.createdAt))
-      .slice(0, HISTORY_MAX_ITEMS);
+      .slice(0, mockData.historyMaxItems);
   },[entries, search]);
 
   // Dates that have entries (for calendar dots)
@@ -114,7 +139,7 @@ export default function DiaryEntry({ studentName, dob }: Props) {
       date: selectedDate,
       createdAt: new Date().toISOString(),
     };
-    setEntries(prev => [entry, ...prev].slice(0, MAX_STORED_ENTRIES));
+    setEntries(prev => [entry, ...prev].slice(0, mockData.maxStoredEntries));
     setTitle(""); setBody("");
     setSavedFlash(true);
     setTimeout(()=>setSavedFlash(false), 2500);
@@ -138,11 +163,11 @@ export default function DiaryEntry({ studentName, dob }: Props) {
         <div className="dj-header-left">
           <div className="dj-header-icon"><Feather size={16} color="#7c3aed"/></div>
           <div>
-            <h2 className="dj-title">Personal Journal</h2>
-            <p className="dj-subtitle">Your private space — write, reflect, revisit.</p>
+            <h2 className="dj-title">{mockData.uiStrings.pageTitle}</h2>
+            <p className="dj-subtitle">{mockData.uiStrings.pageSubtitle}</p>
           </div>
         </div>
-        <div className="dj-entry-count">{entries.length} {entries.length === 1 ? "entry" : "entries"}</div>
+        <div className="dj-entry-count">{entries.length} {entries.length === 1 ? mockData.uiStrings.entryLabel : mockData.uiStrings.entriesLabel}</div>
       </div>
 
       {/* === BIRTHDAY TIME CAPSULE === */}
@@ -153,17 +178,17 @@ export default function DiaryEntry({ studentName, dob }: Props) {
             <span className="dj-capsule-emoji">🎂</span>
           </div>
           <div className="dj-capsule-body">
-            <p className="dj-capsule-eyebrow">🎉 Happy Birthday, {studentName.split(" ")[0]}!</p>
+            <p className="dj-capsule-eyebrow">{mockData.uiStrings.birthdayGreeting}{studentName.split(" ")[0]}!</p>
             {capsuleEntry ? (
               <>
-                <p className="dj-capsule-title">A letter from past you — {formatShortDate(lastBdayStr)}</p>
+                <p className="dj-capsule-title">{mockData.uiStrings.pastLetterTitle}{formatShortDate(lastBdayStr)}</p>
                 <p className="dj-capsule-preview">"{capsuleEntry.body.slice(0, 160)}{capsuleEntry.body.length > 160 ? "…" : ""}"</p>
-                <button className="dj-capsule-read" onClick={()=>setReadEntry(capsuleEntry)}>Read full entry ✨</button>
+                <button className="dj-capsule-read" onClick={()=>setReadEntry(capsuleEntry)}>{mockData.uiStrings.fullEntryBtn}</button>
               </>
             ) : (
               <>
-                <p className="dj-capsule-title">No entry found from your last birthday</p>
-                <p className="dj-capsule-preview">Write something today for future you to read next year! 🌸</p>
+                <p className="dj-capsule-title">{mockData.uiStrings.noEntryFound}</p>
+                <p className="dj-capsule-preview">{mockData.uiStrings.writeForFuture}</p>
               </>
             )}
           </div>
@@ -179,13 +204,13 @@ export default function DiaryEntry({ studentName, dob }: Props) {
           {/* Month nav */}
           <div className="dj-cal-nav">
             <button className="dj-cal-nav-btn" onClick={prevMonth}><ChevronLeft size={14}/></button>
-            <span className="dj-cal-month">{MONTHS[calMonth]} {calYear}</span>
+            <span className="dj-cal-month">{mockData.months[calMonth]} {calYear}</span>
             <button className="dj-cal-nav-btn" onClick={nextMonth}><ChevronRight size={14}/></button>
           </div>
 
           {/* Calendar grid */}
           <div className="dj-cal-grid">
-            {WEEKDAYS.map((w,i)=><div key={i} className="dj-cal-weekday">{w}</div>)}
+            {mockData.weekdays.map((w,i)=><div key={i} className="dj-cal-weekday">{w}</div>)}
             {Array.from({length: firstDay}).map((_,i)=><div key={"e"+i}/>)}
             {Array.from({length: daysInMonth}).map((_,i)=>{
               const d = i+1;
@@ -220,15 +245,15 @@ export default function DiaryEntry({ studentName, dob }: Props) {
           <div className="dj-cal-legend">
             <span className="dj-legend-item">
               <span className="dj-legend-dot dj-legend-dot--has" />
-              <span className="dj-legend-text">has entry</span>
+              <span className="dj-legend-text">{mockData.uiStrings.hasEntryLegend}</span>
             </span>
             <span className="dj-legend-item">
               <span className="dj-legend-dot dj-legend-dot--today" />
-              <span className="dj-legend-text">today</span>
+              <span className="dj-legend-text">{mockData.uiStrings.todayLegend}</span>
             </span>
             <span className="dj-legend-item">
               <span className="dj-legend-dot dj-legend-dot--bday">🎂</span>
-              <span className="dj-legend-text">birthday</span>
+              <span className="dj-legend-text">{mockData.uiStrings.birthdayLegend}</span>
             </span>
           </div>
 
@@ -236,7 +261,7 @@ export default function DiaryEntry({ studentName, dob }: Props) {
           <div className="dj-cal-date-section">
             <p className="dj-cal-date-label">📅 {formatShortDate(selectedDate)}</p>
             {dateEntries.length === 0
-              ? <p className="dj-cal-empty">No entry for this day.</p>
+              ? <p className="dj-cal-empty">{mockData.uiStrings.noEntryDay}</p>
               : dateEntries.map(e=>(
                 <button key={e.id} className="dj-cal-entry-item" onClick={()=>setReadEntry(e)}>
                   <p className="dj-cal-entry-title">{e.title}</p>
@@ -255,22 +280,19 @@ export default function DiaryEntry({ studentName, dob }: Props) {
           <div className="dj-paper">
             <div className="dj-paper-top">
               <div className="dj-paper-date">{formatDate(selectedDate)}</div>
-              {savedFlash && <span className="dj-saved-flash">✅ Saved!</span>}
+              {savedFlash && <span className="dj-saved-flash">{mockData.uiStrings.savedLabel}</span>}
             </div>
 
             <input
               className="dj-title-input"
-              placeholder="Give this entry a title… (optional)"
+              placeholder={mockData.uiStrings.titlePlaceholder}
               value={title}
               onChange={e=>setTitle(e.target.value)}
             />
 
             <textarea
               className="dj-body-textarea leading-[32px] bg-[linear-gradient(transparent_31px,_#e2e8f0_32px)] bg-[length:100%_32px] bg-local pt-[8px]"
-              placeholder={`Write freely, ${studentName.split(" ")[0]}. This is your space.
-  
-What happened today? What are you feeling?
-What do you want to tell your future self?`}
+              placeholder={mockData.uiStrings.bodyPlaceholder(studentName.split(" ")[0])}
               value={body}
               onChange={e=>setBody(e.target.value)}
             />
@@ -278,7 +300,7 @@ What do you want to tell your future self?`}
             <div className="dj-paper-foot">
               <span className="dj-char-hint">{body.length} characters</span>
               <button className="dj-save-btn" onClick={handleSave} disabled={!body.trim()}>
-                <Save size={14}/> Save Entry
+                <Save size={14}/> {mockData.uiStrings.saveEntryBtn}
               </button>
             </div>
           </div>
@@ -286,12 +308,12 @@ What do you want to tell your future self?`}
           {/* Past entries list */}
           <div className="dj-history">
             <div className="dj-history-head">
-              <p className="dj-history-title">📚 Recent Entries ({HISTORY_WINDOW_DAYS} days)</p>
+              <p className="dj-history-title">{mockData.uiStrings.recentEntriesTitle}({mockData.historyWindowDays} days)</p>
               <div className="dj-search-wrap">
                 <Search size={13} className="dj-search-icon"/>
                 <input
                   className="dj-search"
-                  placeholder="Search journal…"
+                  placeholder={mockData.uiStrings.searchPlaceholder}
                   value={search}
                   onChange={e=>setSearch(e.target.value)}
                 />
@@ -299,7 +321,7 @@ What do you want to tell your future self?`}
             </div>
 
             {recentEntries.length === 0
-              ? <p className="dj-history-empty">No entries yet. Start writing above! 🌸</p>
+              ? <p className="dj-history-empty">{mockData.uiStrings.noEntriesHistory}</p>
               : (
                 <div className="dj-history-list">
                   {recentEntries.map(e=>(

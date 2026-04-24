@@ -1,8 +1,10 @@
+/* Fix the container anchor */
 .sos-corner-shell {
   position: fixed;
-  left: 0;
-  top: 0;
-  z-index: 1200;
+  right: 20px;  /* Anchor to right */
+  bottom: 20px; /* Anchor to bottom */
+  z-index: 9999;
+  pointer-events: none; /* Let clicks pass through the shell container */
 }
 
 .sos-tooltip {
@@ -40,7 +42,9 @@
   transform: translateY(0);
 }
 
+/* Ensure the button stays within that shell */
 .sos-fab {
+  pointer-events: auto; /* Re-enable clicks for the button specifically */
   position: relative;
   background: linear-gradient(135deg, #ef4444, #dc2626);
   color: #ffffff;
@@ -176,7 +180,9 @@
 
 @media (max-width: 768px) {
   .sos-corner-shell {
-    z-index: 1400;
+    right: 16px;
+    bottom: 16px;
+    z-index: 9999;
   }
 
   .sos-fab {
@@ -198,6 +204,11 @@
     white-space: normal;
   }
 
+  .sos-tooltip--visible {
+    opacity: 1;
+    transform: translateY(0);
+  }
+
   .sos-tooltip::after {
     left: 14px;
     right: auto;
@@ -209,6 +220,12 @@
 }
 
 @media (max-width: 480px) {
+  .sos-corner-shell {
+    right: 12px;
+    bottom: 12px;
+    z-index: 9999;
+  }
+
   .sos-fab {
     width: 52px;
     height: 52px;

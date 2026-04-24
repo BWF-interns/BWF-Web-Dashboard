@@ -23,11 +23,13 @@ interface Complaint {
   _id: string;
   text: string;
   category: string;
-  isAnonymous: boolean;
   status: ComplaintStatus;
   response: string | null;
   createdAt: string;
 }
+
+// TODO: Replace fetch history with GET /api/student/complaints/:auth_id
+// TODO: Replace submit with POST /api/student/complaints/:auth_id
 
 function timeAgo(dateStr: string): string {
   const diff = Date.now() - new Date(dateStr).getTime();
@@ -38,6 +40,32 @@ function timeAgo(dateStr: string): string {
   if (hrs < 24) return `${hrs}h ago`;
   return `${Math.floor(hrs / 24)}d ago`;
 }
+
+const mockData = {
+  eyebrow: "Safe Haven / Support",
+  title: "Raise a Concern 🌿",
+  subtitle: "You deserve to feel safe and heard. What is on your mind today?",
+  formTitle: "Tell us what's happening",
+  formSub: "Your words help us create a safer community.",
+  historyTitle: "Concern History",
+  emptyTitle: "No concerns found",
+  emptyDesc: "Your history is empty. We're here whenever you need a safe space.",
+  loaderText: "Gathering your records...",
+  sidebarHowItWorks: {
+    title: "How it works",
+    steps: [
+      "Your message is encrypted and sent directly to the BWF Warden.",
+      "The Warden will review and assign your concern to a mentor.",
+      "You'll receive feedback and updates directly in this dashboard."
+    ]
+  },
+  sidebarSupport: {
+    badge: "BWF Support",
+    title: "Need to talk now?",
+    desc: "Our team is available 24/7 for emotional and mental health support.",
+    linkText: "Go to Wellbeing Hub"
+  }
+};
 
 const CATEGORIES = [
   { id: "hostel", label: "Hostel & Facilities", icon: "🛏️", color: "#6366f1" },
@@ -63,7 +91,6 @@ export default function ComplaintsPage() {
   // Form State
   const [text, setText] = useState("");
   const [category, setCategory] = useState(CATEGORIES[4].label);
-  const [isAnonymous, setIsAnonymous] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -99,7 +126,7 @@ export default function ComplaintsPage() {
           "Content-Type": "application/json",
           Authorization: `Bearer ${token}`,
         },
-        body: JSON.stringify({ text: text.trim(), category, isAnonymous }),
+        body: JSON.stringify({ text: text.trim(), category }),
       });
       if (!res.ok) throw new Error();
       const data = await res.json();
@@ -116,7 +143,6 @@ export default function ComplaintsPage() {
 
   const resetForm = () => {
     setText("");
-    setIsAnonymous(false);
     setCategory(CATEGORIES[4].label);
     setShowForm(false);
   };
@@ -132,11 +158,9 @@ export default function ComplaintsPage() {
       {/* ── HEADER ── */}
       <header className="rc-header">
         <div className="rc-header-content">
-          <p className="rc-eyebrow">Safe Haven / Support</p>
-          <h1 className="rc-title">Raise a Concern 🌿</h1>
-          <p className="rc-subtitle">
-            You deserve to feel safe and heard. What is on your mind today?
-          </p>
+          <p className="rc-eyebrow">{mockData.eyebrow}</p>
+          <h1 className="rc-title">{mockData.title}</h1>
+          <p className="rc-subtitle">{mockData.subtitle}</p>
         </div>
         {!showForm && (
           <button className="rc-raise-btn" onClick={() => setShowForm(true)}>
@@ -180,8 +204,8 @@ export default function ComplaintsPage() {
                 <div className="rc-form-intro">
                   <MessageCircle size={28} className="rc-form-icon" />
                   <div>
-                    <h2 className="rc-form-title">Tell us what's happening</h2>
-                    <p className="rc-form-sub">Your words help us create a safer community.</p>
+                    <h2 className="rc-form-title">{mockData.formTitle}</h2>
+                    <p className="rc-form-sub">{mockData.formSub}</p>
                   </div>
                 </div>
               </div>
@@ -222,25 +246,6 @@ export default function ComplaintsPage() {
                 </div>
               </div>
 
-              {/* Step 3: Anonymous Toggle */}
-              <div className="rc-anon-control">
-                <div className="rc-anon-info">
-                  <UserSquare2 size={24} className="rc-anon-pic" />
-                  <div>
-                    <p className="rc-anon-head">Submit Anonymously?</p>
-                    <p className="rc-anon-desc">Your identity will be hidden from the Warden.</p>
-                  </div>
-                </div>
-                <label className="rc-switch">
-                  <input
-                    type="checkbox"
-                    checked={isAnonymous}
-                    onChange={e => setIsAnonymous(e.target.checked)}
-                  />
-                  <span className="rc-switch-slider" />
-                </label>
-              </div>
-
               {/* Actions */}
               <div className="rc-form-footer">
                 <button className="rc-btn-cancel" onClick={resetForm}>Discard</button>
@@ -259,7 +264,7 @@ export default function ComplaintsPage() {
               <div className="rc-history-header">
                 <div className="rc-history-title-group">
                   <History size={20} className="rc-history-icon" />
-                  <h2 className="rc-history-title">Concern History</h2>
+                  <h2 className="rc-history-title">{mockData.historyTitle}</h2>
                 </div>
                 <div className="rc-tabs">
                   <button 
@@ -286,13 +291,13 @@ export default function ComplaintsPage() {
               {loading ? (
                 <div className="rc-loader">
                   <div className="rc-loader-ring"></div>
-                  <p>Gathering your records...</p>
+                  <p>{mockData.loaderText}</p>
                 </div>
               ) : filteredComplaints.length === 0 ? (
                 <div className="rc-empty-state">
                   <div className="rc-empty-graphic">🕊️</div>
-                  <h3>No concerns found</h3>
-                  <p>Your history is empty. We're here whenever you need a safe space.</p>
+                  <h3>{mockData.emptyTitle}</h3>
+                  <p>{mockData.emptyDesc}</p>
                 </div>
               ) : (
                 <div className="rc-list">
@@ -308,7 +313,6 @@ export default function ComplaintsPage() {
                               {config.label}
                             </span>
                             <span className="rc-pill-cat">{c.category || "General"}</span>
-                            {c.isAnonymous && <span className="rc-pill-anon">🔒 Anonymous</span>}
                           </div>
                           <span className="rc-card-date">{timeAgo(c.createdAt)}</span>
                         </div>
@@ -336,29 +340,23 @@ export default function ComplaintsPage() {
         <aside className="rc-column-sidebar">
           <div className="rc-sidebar-card rc-sidebar-card--primary">
             <HelpCircle size={24} className="rc-sidebar-icon" />
-            <h3 className="rc-sidebar-title">How it works</h3>
+            <h3 className="rc-sidebar-title">{mockData.sidebarHowItWorks.title}</h3>
             <ul className="rc-sidebar-list">
-              <li>
-                <div className="rc-list-point">1</div>
-                <p>Your message is encrypted and sent directly to the BWF Warden.</p>
-              </li>
-              <li>
-                <div className="rc-list-point">2</div>
-                <p>The Warden will review and assign your concern to a mentor.</p>
-              </li>
-              <li>
-                <div className="rc-list-point">3</div>
-                <p>You'll receive feedback and updates directly in this dashboard.</p>
-              </li>
+              {mockData.sidebarHowItWorks.steps.map((step, idx) => (
+                <li key={idx}>
+                  <div className="rc-list-point">{idx + 1}</div>
+                  <p>{step}</p>
+                </li>
+              ))}
             </ul>
           </div>
 
           <div className="rc-sidebar-card rc-sidebar-card--purple" onClick={() => window.location.href = '/student/wellbeing'}>
-            <div className="rc-sidebar-badge">BWF Support</div>
-            <h3 className="rc-sidebar-title">Need to talk now?</h3>
-            <p className="rc-sidebar-desc">Our team is available 24/7 for emotional and mental health support.</p>
+            <div className="rc-sidebar-badge">{mockData.sidebarSupport.badge}</div>
+            <h3 className="rc-sidebar-title">{mockData.sidebarSupport.title}</h3>
+            <p className="rc-sidebar-desc">{mockData.sidebarSupport.desc}</p>
             <div className="rc-sidebar-link">
-              <span>Go to Wellbeing Hub</span>
+              <span>{mockData.sidebarSupport.linkText}</span>
               <ChevronRight size={16} />
             </div>
           </div>

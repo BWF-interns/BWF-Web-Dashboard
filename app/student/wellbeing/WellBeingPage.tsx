@@ -23,85 +23,100 @@ interface MoodEntry {
   reframe?: string;
 }
 
-/* ───────────────────────────────
-   DATA
-─────────────────────────────── */
-const MOOD_CONFIG: Record<Mood, {
-  emoji: string; label: string; color: string; bg: string;
-  affirmation: string; contextPrompt: string; thoughtPrompt: string; reframePrompt: string;
-}> = {
-  "Happy": {
-    emoji: "😊", label: "Happy", color: "#16a34a", bg: "#dcfce7",
-    affirmation: "That's wonderful! Your joy is precious. 🌸",
-    contextPrompt: "What's making today feel good?",
-    thoughtPrompt: "What positive thought is standing out for you?",
-    reframePrompt: "How can you carry this feeling into tomorrow?",
+const mockData = {
+  moodConfig: {
+    "Happy": {
+      emoji: "😊", label: "Happy", color: "#16a34a", bg: "#dcfce7",
+      affirmation: "That's wonderful! Your joy is precious. 🌸",
+      contextPrompt: "What's making today feel good?",
+      thoughtPrompt: "What positive thought is standing out for you?",
+      reframePrompt: "How can you carry this feeling into tomorrow?",
+    },
+    "Okay": {
+      emoji: "😐", label: "Okay", color: "#d97706", bg: "#fef3c7",
+      affirmation: "It's okay to be okay. You're doing great just by showing up. 💛",
+      contextPrompt: "What's been on your mind today?",
+      thoughtPrompt: "Is there a thought that keeps pulling your attention?",
+      reframePrompt: "What's one small thing going right, even if today feels flat?",
+    },
+    "Need Help": {
+      emoji: "😨", label: "Need Help", color: "#dc2626", bg: "#fee2e2",
+      affirmation: "You're incredibly brave for naming this. Help is right here. 💜",
+      contextPrompt: "What's feeling heavy or hard right now?",
+      thoughtPrompt: "What's the thought that won't leave you alone?",
+      reframePrompt: "What might a kind friend say to you about this situation?",
+    },
   },
-  "Okay": {
-    emoji: "😐", label: "Okay", color: "#d97706", bg: "#fef3c7",
-    affirmation: "It's okay to be okay. You're doing great just by showing up. 💛",
-    contextPrompt: "What's been on your mind today?",
-    thoughtPrompt: "Is there a thought that keeps pulling your attention?",
-    reframePrompt: "What's one small thing going right, even if today feels flat?",
-  },
-  "Need Help": {
-    emoji: "😨", label: "Need Help", color: "#dc2626", bg: "#fee2e2",
-    affirmation: "You're incredibly brave for naming this. Help is right here. 💜",
-    contextPrompt: "What's feeling heavy or hard right now?",
-    thoughtPrompt: "What's the thought that won't leave you alone?",
-    reframePrompt: "What might a kind friend say to you about this situation?",
-  },
+  relaxExercises: [
+    {
+      id: "breathing",
+      title: "4-7-8 Breathing",
+      emoji: "🌬️",
+      tagline: "Calm your nervous system in 2 minutes",
+      color: "#3b82f6",
+      bg: "#dbeafe",
+    },
+    {
+      id: "bodyscan",
+      title: "Body Scan",
+      emoji: "🧘",
+      tagline: "Release tension from head to toe",
+      color: "#8b5cf6",
+      bg: "#ede9fe",
+    },
+    {
+      id: "grounding",
+      title: "5-4-3-2-1 Grounding",
+      emoji: "🌿",
+      tagline: "Come back to the present moment",
+      color: "#10b981",
+      bg: "#d1fae5",
+    },
+  ],
+  bodyScanSteps: [
+    "Close your eyes and take a deep breath in… and slowly out.",
+    "Bring your attention to your feet. Notice any tension — and gently let it go.",
+    "Move up to your calves and knees. Just notice. No judgment.",
+    "Scan your thighs and hips. Take a slow breath and release.",
+    "Notice your belly and lower back. With each exhale, let your muscles soften.",
+    "Bring awareness to your chest and shoulders. Are they tense? Breathe into them.",
+    "Scan your arms all the way to your fingertips. Let them feel heavy and warm.",
+    "Notice your neck and jaw — often where we hold the most stress. Unclench gently.",
+    "Finally, relax your forehead, eyes, and scalp. You're completely here.",
+    "Take one last full breath in… and let it all go. You did it. 🌸",
+  ],
+  groundingSteps: [
+    { label: "5 things you can SEE", emoji: "👁️", color: "#3b82f6" },
+    { label: "4 things you can TOUCH", emoji: "🤚", color: "#8b5cf6" },
+    { label: "3 things you can HEAR", emoji: "👂", color: "#10b981" },
+    { label: "2 things you can SMELL", emoji: "👃", color: "#f59e0b" },
+    { label: "1 thing you can TASTE", emoji: "👅", color: "#ec4899" },
+  ],
+  uiStrings: {
+    pageTitle: "Your Wellness Space",
+    pageSubtitle: "You're safe here. Take care of yourself. 🌸",
+    heroTitle: "You Matter.",
+    heroSub: "Borderless World Foundation is here for you — always listening, always caring.",
+    challengeTitle: "Today's Wellness Challenge",
+    calmCornerTitle: "Calm Corner",
+    calmCornerIntro: "Feeling overwhelmed? Pick an exercise below to find your centre.",
+    talkTitle: "Need to Talk?",
+    talkTagline: "Sometimes we all need a little extra support. Your warden and counsellor are here for you.",
+    cbtTitle: "Understanding Your Day",
+    cbtActionPrompt: "What's one small step you can take right now?",
+    moodJourneyTitle: "Your Mood Journey",
+    requestCounselling: "Request Counselling Session",
+    counsellingSent: "Your request has been sent. Your warden will reach out soon. 💜"
+  }
 };
 
-/* Relaxation exercises config */
-const RELAX_EXERCISES = [
-  {
-    id: "breathing" as RelaxExercise,
-    title: "4-7-8 Breathing",
-    emoji: "🌬️",
-    tagline: "Calm your nervous system in 2 minutes",
-    color: "#3b82f6",
-    bg: "#dbeafe",
-  },
-  {
-    id: "bodyscan" as RelaxExercise,
-    title: "Body Scan",
-    emoji: "🧘",
-    tagline: "Release tension from head to toe",
-    color: "#8b5cf6",
-    bg: "#ede9fe",
-  },
-  {
-    id: "grounding" as RelaxExercise,
-    title: "5-4-3-2-1 Grounding",
-    emoji: "🌿",
-    tagline: "Come back to the present moment",
-    color: "#10b981",
-    bg: "#d1fae5",
-  },
-];
+// TODO: Replace with GET /api/student/wellbeing/:auth_id/history
+// TODO: Replace mood-log with POST /api/student/wellbeing/:auth_id/mood-log
+// TODO: Replace counselling request with POST /api/student/wellbeing/:auth_id/counselling
 
-const BODY_SCAN_STEPS = [
-  "Close your eyes and take a deep breath in… and slowly out.",
-  "Bring your attention to your feet. Notice any tension — and gently let it go.",
-  "Move up to your calves and knees. Just notice. No judgment.",
-  "Scan your thighs and hips. Take a slow breath and release.",
-  "Notice your belly and lower back. With each exhale, let your muscles soften.",
-  "Bring awareness to your chest and shoulders. Are they tense? Breathe into them.",
-  "Scan your arms all the way to your fingertips. Let them feel heavy and warm.",
-  "Notice your neck and jaw — often where we hold the most stress. Unclench gently.",
-  "Finally, relax your forehead, eyes, and scalp. You're completely here.",
-  "Take one last full breath in… and let it all go. You did it. 🌸",
-];
-
-const GROUNDING_STEPS = [
-  { label: "5 things you can SEE", emoji: "👁️", color: "#3b82f6" },
-  { label: "4 things you can TOUCH", emoji: "🤚", color: "#8b5cf6" },
-  { label: "3 things you can HEAR", emoji: "👂", color: "#10b981" },
-  { label: "2 things you can SMELL", emoji: "👃", color: "#f59e0b" },
-  { label: "1 thing you can TASTE", emoji: "👅", color: "#ec4899" },
-];
-
+/* ───────────────────────────────
+   DATA (Internal use only)
+─────────────────────────────── */
 const CATEGORY_ICONS: Record<string, React.ReactNode> = {
   health: <Heart size={12} />,
   mindfulness: <Leaf size={12} />,
@@ -245,21 +260,21 @@ function BreathingExercise({ onClose }: { onClose: () => void }) {
 ─────────────────────────────── */
 function BodyScanExercise({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
-  const done = step >= BODY_SCAN_STEPS.length;
+  const done = step >= mockData.bodyScanSteps.length;
 
   return (
     <div className="wb-relax-exercise">
       {!done ? (
         <>
-          <div className="wb-relax-round-badge">Step {step + 1} of {BODY_SCAN_STEPS.length}</div>
+          <div className="wb-relax-round-badge">Step {step + 1} of {mockData.bodyScanSteps.length}</div>
           <div className="wb-bodyscan-progress">
-            {BODY_SCAN_STEPS.map((_, i) => (
+            {mockData.bodyScanSteps.map((_, i) => (
               <div key={i} className={`wb-bs-dot ${i <= step ? "wb-bs-dot--done" : ""}`} />
             ))}
           </div>
-          <div className="wb-bodyscan-text">{BODY_SCAN_STEPS[step]}</div>
+          <div className="wb-bodyscan-text">{mockData.bodyScanSteps[step]}</div>
           <button className="wb-btn-primary" onClick={() => setStep(s => s + 1)}>
-            {step < BODY_SCAN_STEPS.length - 1 ? "Next Step →" : "Finish"}
+            {step < mockData.bodyScanSteps.length - 1 ? "Next Step →" : "Finish"}
           </button>
         </>
       ) : (
@@ -282,8 +297,8 @@ function BodyScanExercise({ onClose }: { onClose: () => void }) {
 function GroundingExercise({ onClose }: { onClose: () => void }) {
   const [step, setStep] = useState(0);
   const [inputs, setInputs] = useState<string[]>(Array(5).fill(""));
-  const current = GROUNDING_STEPS[step];
-  const done = step >= GROUNDING_STEPS.length;
+  const current = mockData.groundingSteps[step];
+  const done = step >= mockData.groundingSteps.length;
   const count = [5, 4, 3, 2, 1][step] ?? 0;
 
   const handleInput = (val: string) => {
@@ -383,7 +398,7 @@ export default function WellBeingPage() {
   const [activeRelax, setActiveRelax] = useState<RelaxExercise>(null);
 
   /* ── CBT helpers ── */
-  const cbtConfig = cbtMood ? MOOD_CONFIG[cbtMood] : null;
+  const cbtConfig = cbtMood ? mockData.moodConfig[cbtMood] : null;
   const phases: CBTPhase[] = ["mood", "context", "thought", "reframe", "action"];
 
   const CBT_ACTIONS = cbtMood === "Need Help"
@@ -459,8 +474,8 @@ export default function WellBeingPage() {
       {/* ── HEADER ── */}
       <header className="wb-header">
         <p className="wb-eyebrow">Wellbeing / Help</p>
-        <h1 className="wb-title">Your Wellness Space</h1>
-        <p className="wb-subtitle">You're safe here. Take care of yourself. 🌸</p>
+        <h1 className="wb-title">{mockData.uiStrings.pageTitle}</h1>
+        <p className="wb-subtitle">{mockData.uiStrings.pageSubtitle}</p>
       </header>
 
       {/* ── HERO BANNER ── */}
@@ -469,8 +484,8 @@ export default function WellBeingPage() {
         <div className="wb-hero-blob wb-hero-blob-2" />
         <div className="wb-hero-inner">
           <div className="wb-hero-left">
-            <h2>You Matter.</h2>
-            <p>Borderless World Foundation is here for you — always listening, always caring.</p>
+            <h2>{mockData.uiStrings.heroTitle}</h2>
+            <p>{mockData.uiStrings.heroSub}</p>
           </div>
           <div className="wb-hero-lotus">🌸</div>
         </div>
@@ -486,7 +501,7 @@ export default function WellBeingPage() {
           <section className="wb-card">
             <div className="wb-card-header">
               <span className="wb-card-emoji">✨</span>
-              <h2 className="wb-card-title">Today's Wellness Challenge</h2>
+              <h2 className="wb-card-title">{mockData.uiStrings.challengeTitle}</h2>
               <span
                 className="wb-challenge-category-badge"
                 style={{ background: dailyChallenge.bg, color: dailyChallenge.color }}
@@ -529,18 +544,18 @@ export default function WellBeingPage() {
           <section className="wb-card wb-calm-card">
             <div className="wb-card-header">
               <span className="wb-card-emoji">🍃</span>
-              <h2 className="wb-card-title">Calm Corner</h2>
+              <h2 className="wb-card-title">{mockData.uiStrings.calmCornerTitle}</h2>
             </div>
-            <p className="wb-calm-intro">Feeling overwhelmed? Pick an exercise below to find your centre.</p>
+            <p className="wb-calm-intro">{mockData.uiStrings.calmCornerIntro}</p>
 
             {!activeRelax ? (
               <div className="wb-calm-grid">
-                {RELAX_EXERCISES.map(ex => (
+                {mockData.relaxExercises.map(ex => (
                   <button
                     key={ex.id}
                     className="wb-calm-exercise-btn"
                     style={{ "--rex": ex.color, "--rexb": ex.bg } as React.CSSProperties}
-                    onClick={() => setActiveRelax(ex.id)}
+                    onClick={() => setActiveRelax(ex.id as RelaxExercise)}
                   >
                     <span className="wb-calm-ex-emoji">{ex.emoji}</span>
                     <span className="wb-calm-ex-title">{ex.title}</span>
@@ -551,8 +566,8 @@ export default function WellBeingPage() {
             ) : (
               <div className="wb-calm-active">
                 <div className="wb-calm-active-header">
-                  <span>{RELAX_EXERCISES.find(e => e.id === activeRelax)?.emoji}</span>
-                  <strong>{RELAX_EXERCISES.find(e => e.id === activeRelax)?.title}</strong>
+                  <span>{mockData.relaxExercises.find(e => e.id === activeRelax)?.emoji}</span>
+                  <strong>{mockData.relaxExercises.find(e => e.id === activeRelax)?.title}</strong>
                   <button className="wb-calm-back-btn" onClick={() => setActiveRelax(null)}>← Back</button>
                 </div>
                 {activeRelax === "breathing" && <BreathingExercise onClose={() => setActiveRelax(null)} />}
@@ -566,16 +581,16 @@ export default function WellBeingPage() {
           <section className="wb-card wb-counselling-card">
             <div className="wb-card-header">
               <span className="wb-card-emoji">💬</span>
-              <h2 className="wb-card-title">Need to Talk?</h2>
+              <h2 className="wb-card-title">{mockData.uiStrings.talkTitle}</h2>
             </div>
             <p className="wb-counselling-tagline">
-              Sometimes we all need a little extra support. Your warden and counsellor are here for you.
+              {mockData.uiStrings.talkTagline}
             </p>
 
             {!showCounselling ? (
               <button className="wb-counselling-btn" onClick={() => setShowCounselling(true)}>
                 <MessageCircle size={16} />
-                Request Counselling Session
+                {mockData.uiStrings.requestCounselling}
                 <ChevronRight size={14} />
               </button>
             ) : (
@@ -603,7 +618,7 @@ export default function WellBeingPage() {
                 ) : (
                   <div className="wb-counselling-success">
                     <Check size={18} fill="currentColor" />
-                    <span>Your request has been sent. Your warden will reach out soon. 💜</span>
+                    <span>{mockData.uiStrings.counsellingSent}</span>
                   </div>
                 )}
               </div>
@@ -618,7 +633,7 @@ export default function WellBeingPage() {
           <section className="wb-card wb-cbt-card">
             <div className="wb-card-header">
               <span className="wb-card-emoji">🧠</span>
-              <h2 className="wb-card-title">Understanding Your Day</h2>
+              <h2 className="wb-card-title">{mockData.uiStrings.cbtTitle}</h2>
             </div>
 
             {/* Progress bar */}
@@ -646,8 +661,8 @@ export default function WellBeingPage() {
                   <div className="wb-cbt-phase">
                     <p className="wb-cbt-q">{greeting} How are you feeling right now?</p>
                     <div className="wb-cbt-moods">
-                      {(Object.keys(MOOD_CONFIG) as Mood[]).map(m => {
-                        const cfg = MOOD_CONFIG[m];
+                      {(Object.keys(mockData.moodConfig) as Mood[]).map(m => {
+                        const cfg = mockData.moodConfig[m];
                         return (
                           <button
                             key={m}
@@ -664,9 +679,9 @@ export default function WellBeingPage() {
                     {cbtMood && (
                       <div
                         className="wb-cbt-affirmation"
-                        style={{ background: MOOD_CONFIG[cbtMood].bg, borderColor: MOOD_CONFIG[cbtMood].color + "55", color: MOOD_CONFIG[cbtMood].color }}
+                        style={{ background: mockData.moodConfig[cbtMood].bg, borderColor: mockData.moodConfig[cbtMood].color + "55", color: mockData.moodConfig[cbtMood].color }}
                       >
-                        {MOOD_CONFIG[cbtMood].affirmation}
+                        {mockData.moodConfig[cbtMood].affirmation}
                       </div>
                     )}
                   </div>
@@ -730,7 +745,7 @@ export default function WellBeingPage() {
                 {/* Phase 5: Action */}
                 {cbtPhase === "action" && (
                   <div className="wb-cbt-phase">
-                    <p className="wb-cbt-q">What's one small step you can take right now?</p>
+                    <p className="wb-cbt-q">{mockData.uiStrings.cbtActionPrompt}</p>
                     <p className="wb-cbt-sub">Pick one action. Even tiny steps count.</p>
                     <div className="wb-cbt-actions">
                       {CBT_ACTIONS.map(a => (
@@ -786,11 +801,11 @@ export default function WellBeingPage() {
           <section className="wb-card">
             <div className="wb-card-header">
               <span className="wb-card-emoji">📅</span>
-              <h2 className="wb-card-title">Your Mood Journey</h2>
+              <h2 className="wb-card-title">{mockData.uiStrings.moodJourneyTitle}</h2>
             </div>
             <div className="wb-history-list">
               {moodHistory.slice(0, 5).map(entry => {
-                const cfg = MOOD_CONFIG[entry.mood];
+                const cfg = mockData.moodConfig[entry.mood];
                 return (
                   <div
                     key={entry.id}

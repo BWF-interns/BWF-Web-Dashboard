@@ -26,51 +26,84 @@ interface Assignment {
   rejectionNote?: string;
 }
 
-// ─────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────
-const STUDENT_ID = "BWF-2024-001";
+const mockData = {
+  studentId: "BWF-2024-001",
+  undoMs: 5000,
+  months: ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"],
+  seed: [
+    { _id:"1",  title:"Math Worksheet 1",   subject:"Mathematics", status:"verified",          dueDate:"2026-04-24", submittedDate:"2026-04-23" },
+    { _id:"2",  title:"Science Project",    subject:"Science",     status:"verified",          dueDate:"2026-04-23", submittedDate:"2026-04-22" },
+    { _id:"3",  title:"English Essay",      subject:"English",     status:"under_review",      dueDate:"2026-04-25" },
+    { _id:"4",  title:"History Timeline",   subject:"History",     status:"student_submitted", dueDate:"2026-04-24" },
+    { _id:"5",  title:"Biology Notes",      subject:"Science",     status:"todo",              dueDate:"2026-04-26" },
+    { _id:"6",  title:"Grammar Quiz",       subject:"English",     status:"verified",          dueDate:"2026-04-20", submittedDate:"2026-04-20" },
+    { _id:"7",  title:"Algebra Problem Set",subject:"Mathematics", status:"verified",          dueDate:"2026-04-21", submittedDate:"2026-04-21" },
+    { _id:"8",  title:"Chemical Reactions", subject:"Science",     status:"todo",              dueDate:"2026-04-26" },
+    { _id:"9",  title:"Poem Analysis",      subject:"English",     status:"verified",          dueDate:"2026-03-15", submittedDate:"2026-03-15" },
+    { _id:"10", title:"Fractions Worksheet",subject:"Mathematics", status:"verified",          dueDate:"2026-03-10", submittedDate:"2026-03-09" },
+    { _id:"11", title:"History Essay",      subject:"History",     status:"verified",          dueDate:"2026-02-20", submittedDate:"2026-02-19" },
+    { _id:"12", title:"Geometry Practice",  subject:"Mathematics", status:"verified",          dueDate:"2026-02-14", submittedDate:"2026-02-14" },
+  ] as Assignment[],
+  subjectCfg: {
+    Mathematics: { color:"#2563eb", bg:"#dbeafe", emoji:"🔢" },
+    Science:     { color:"#16a34a", bg:"#dcfce7", emoji:"🌿" },
+    English:     { color:"#db2777", bg:"#fce7f3", emoji:"📖" },
+    History:     { color:"#ca8a04", bg:"#fef3c7", emoji:"📜" },
+    Default:     { color:"#6b7280", bg:"#f3f4f6", emoji:"📝" },
+  },
+  statusCfg: {
+    todo:              { label:"To Do",        color:"#dc2626", bg:"#fee2e2", border:"#fca5a5", icon:"📝" },
+    student_submitted: { label:"Submitted",    color:"#92400e", bg:"#fef3c7", border:"#fde68a", icon:"✅" },
+    under_review:      { label:"Under Review", color:"#5b21b6", bg:"#ede9fe", border:"#c4b5fd", icon:"👀" },
+    verified:          { label:"Verified",     color:"#065f46", bg:"#dcfce7", border:"#6ee7b7", icon:"⭐" },
+  },
+  cheers: [
+    "Great work! Keep it up! 💪", "Shabash! You did it! ⭐",
+    "Wah! One more done! 🎉", "You're crushing it! 🔥",
+  ],
+  uiStrings: {
+    pageEyebrow: "My Academic Journey",
+    pageTitle: "Track Your Progress",
+    todayTasks: "Today's Tasks",
+    assignmentTimeline: "Assignment Timeline",
+    yearlyPerformance: "Yearly Performance",
+    allClearToday: "All clear today!",
+    crushedIt: "You crushed it!",
+    todayChallenge: "Today's Challenge",
+    noTasksToday: "No tasks assigned for today 🌸",
+    verifiedSoon: "All tasks done — teacher will verify soon! 🌟",
+    verifiedOf: (v: number, t: number) => `${v} of ${t} verified — keep going!`,
+    markedDone: "Marked as done!",
+    undo: " Undo",
+    yourTasksToday: "Your Tasks Today",
+    enjoyDay: "No tasks today — enjoy your day!",
+    assignmentHistory: "Assignment History",
+    historyRange: (len: number) => `April 2026 · ${len} days`,
+    today: "Today",
+    upcoming: "Upcoming",
+    overdue: "⚠️ Overdue",
+    pendingBadge: (p: number) => `${p} pending`,
+    submitting: "Submitting…",
+    done: "I'm Done",
+    pendingTasks: "⏳ Pending Tasks",
+    totalAssigned: "Total Assigned",
+    verified: "Verified",
+    verifyRate: "Verification Rate",
+    stillPending: "Still Pending",
+    completionTrend: "Monthly Completion Trend",
+    perfBySubject: "Performance by Subject",
+    verifiedSub: (v: number, t: number) => `${v}/${t} verified`,
+    due: "Due",
+    submitted: "Submitted"
+  }
+};
+
+// TODO: Replace with GET /api/student/courses/:auth_id/assignments
+
 const YEAR = new Date().getFullYear();
 const TODAY = new Date().toISOString().split("T")[0]; // "YYYY-MM-DD"
-const UNDO_MS = 5000;
-const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
 
-const SEED: Assignment[] = [
-  { _id:"1",  title:"Math Worksheet 1",   subject:"Mathematics", status:"verified",          dueDate:"2026-04-24", submittedDate:"2026-04-23" },
-  { _id:"2",  title:"Science Project",    subject:"Science",     status:"verified",          dueDate:"2026-04-23", submittedDate:"2026-04-22" },
-  { _id:"3",  title:"English Essay",      subject:"English",     status:"under_review",      dueDate:"2026-04-25" },
-  { _id:"4",  title:"History Timeline",   subject:"History",     status:"student_submitted", dueDate:"2026-04-24" },
-  { _id:"5",  title:"Biology Notes",      subject:"Science",     status:"todo",              dueDate:"2026-04-26" },
-  { _id:"6",  title:"Grammar Quiz",       subject:"English",     status:"verified",          dueDate:"2026-04-20", submittedDate:"2026-04-20" },
-  { _id:"7",  title:"Algebra Problem Set",subject:"Mathematics", status:"verified",          dueDate:"2026-04-21", submittedDate:"2026-04-21" },
-  { _id:"8",  title:"Chemical Reactions", subject:"Science",     status:"todo",              dueDate:"2026-04-26" },
-  { _id:"9",  title:"Poem Analysis",      subject:"English",     status:"verified",          dueDate:"2026-03-15", submittedDate:"2026-03-15" },
-  { _id:"10", title:"Fractions Worksheet",subject:"Mathematics", status:"verified",          dueDate:"2026-03-10", submittedDate:"2026-03-09" },
-  { _id:"11", title:"History Essay",      subject:"History",     status:"verified",          dueDate:"2026-02-20", submittedDate:"2026-02-19" },
-  { _id:"12", title:"Geometry Practice",  subject:"Mathematics", status:"verified",          dueDate:"2026-02-14", submittedDate:"2026-02-14" },
-];
-
-const SUBJECT_CFG: Record<string,{color:string;bg:string;emoji:string}> = {
-  Mathematics: { color:"#2563eb", bg:"#dbeafe", emoji:"🔢" },
-  Science:     { color:"#16a34a", bg:"#dcfce7", emoji:"🌿" },
-  English:     { color:"#db2777", bg:"#fce7f3", emoji:"📖" },
-  History:     { color:"#ca8a04", bg:"#fef3c7", emoji:"📜" },
-  Default:     { color:"#6b7280", bg:"#f3f4f6", emoji:"📝" },
-};
-
-const STATUS_CFG = {
-  todo:              { label:"To Do",        color:"#dc2626", bg:"#fee2e2", border:"#fca5a5", icon:"📝" },
-  student_submitted: { label:"Submitted",    color:"#92400e", bg:"#fef3c7", border:"#fde68a", icon:"✅" },
-  under_review:      { label:"Under Review", color:"#5b21b6", bg:"#ede9fe", border:"#c4b5fd", icon:"👀" },
-  verified:          { label:"Verified",     color:"#065f46", bg:"#dcfce7", border:"#6ee7b7", icon:"⭐" },
-};
-
-const CHEERS = [
-  "Great work! Keep it up! 💪", "Shabash! You did it! ⭐",
-  "Wah! One more done! 🎉", "You're crushing it! 🔥",
-];
-
-function subCfg(s:string) { return SUBJECT_CFG[s] ?? SUBJECT_CFG.Default; }
+function subCfg(s:string) { return (mockData.subjectCfg as any)[s] ?? mockData.subjectCfg.Default; }
 
 function fmtDate(d:string) {
   return new Date(d+"T00:00:00").toLocaleDateString("en-IN",{weekday:"short",day:"numeric",month:"short"});
@@ -92,7 +125,18 @@ export default function AcademicJourney() {
   const firstName = name.split(" ")[0];
 
   const [tab, setTab]               = useState<Tab>("daily");
-  const [assignments, setAssignments] = useState<Assignment[]>(SEED);
+  
+  // 1. Keep the full history for the Graph
+  const allTimeAssignments = mockData.seed; 
+
+  // 2. Keep the filtered history for the Timeline/Tasks (30-day guardrail)
+  const initialAssignments = useMemo(() => {
+    const thirtyDaysAgo = new Date(TODAY);
+    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+    return mockData.seed.filter(a => new Date(a.dueDate) >= thirtyDaysAgo);
+  }, []);
+
+  const [assignments, setAssignments] = useState<Assignment[]>(initialAssignments);
 
   // Tab 1 — expand/undo
   const [expandedId, setExpandedId]   = useState<string|null>(null);
@@ -110,15 +154,15 @@ export default function AcademicJourney() {
     setAssignments(prev =>
       prev.map(a => a._id === id ? { ...a, status: "student_submitted", submittedDate: TODAY } : a)
     );
-    setCheerMsg(CHEERS[Math.floor(Math.random()*CHEERS.length)]);
+    setCheerMsg(mockData.cheers[Math.floor(Math.random()*mockData.cheers.length)]);
     setUndoId(id);
 
     const t = setTimeout(async () => {
       // Real API call goes here:
-      // await api.post(`/student/courses/${STUDENT_ID}/tasks/${id}/submit`);
+      // await api.post(`/student/courses/${mockData.studentId}/tasks/${id}/submit`);
       setUndoId(null);
       setUndoTimer(null);
-    }, UNDO_MS);
+    }, mockData.undoMs);
 
     setUndoTimer(t);
     setTimeout(() => setCheerMsg(null), 3000);
@@ -136,16 +180,13 @@ export default function AcademicJourney() {
   }, [undoId, undoTimer]);
 
   // ─────────────────────────────────────────
-  // TAB 1 DERIVED DATA
+  // TAB 1 & 2 DERIVED DATA (Use 30-day filtered)
   // ─────────────────────────────────────────
   const todayTasks = useMemo(() => assignments.filter(a => a.dueDate === TODAY), [assignments]);
   const verifiedToday = todayTasks.filter(a => a.status === "verified").length;
   const todayPct = todayTasks.length ? Math.round((verifiedToday / todayTasks.length) * 100) : 0;
   const allDone = todayTasks.length > 0 && verifiedToday === todayTasks.length;
 
-  // ─────────────────────────────────────────
-  // TAB 2 DERIVED DATA
-  // ─────────────────────────────────────────
   const timelineGroups = useMemo(() => {
     const map: Record<string, Assignment[]> = {};
     assignments.forEach(a => { if (!map[a.dueDate]) map[a.dueDate]=[]; map[a.dueDate].push(a); });
@@ -169,13 +210,13 @@ export default function AcademicJourney() {
   , [assignments]);
 
   // ─────────────────────────────────────────
-  // TAB 3 DERIVED DATA
+  // TAB 3 DERIVED DATA (Use ALL-TIME history)
   // ─────────────────────────────────────────
   const yearly = useMemo(() => {
     const bySubject: Record<string,{total:number;verified:number}> = {};
     const byMonth:   Record<number,{total:number;verified:number}> = {};
     let verified=0, pending=0, inReview=0;
-    assignments.forEach(a => {
+    allTimeAssignments.forEach(a => { // <-- Use the full history here!
       if (a.status==="verified") verified++;
       else if (a.status==="todo") pending++;
       else inReview++;
@@ -187,20 +228,19 @@ export default function AcademicJourney() {
       byMonth[m].total++;
       if (a.status==="verified") byMonth[m].verified++;
     });
-    return { total:assignments.length, verified, pending, inReview, bySubject, byMonth };
-  }, [assignments]);
+    return { total:allTimeAssignments.length, verified, pending, inReview, bySubject, byMonth };
+  }, [allTimeAssignments]);
 
   const verifyRate = yearly.total ? Math.round((yearly.verified/yearly.total)*100) : 0;
 
   const monthChart = useMemo(() =>
     Object.entries(yearly.byMonth)
       .map(([m,d]) => ({
-        month: MONTHS[Number(m)], idx:Number(m),
+        month: mockData.months[Number(m)], idx:Number(m),
         pct: d.total ? Math.round((d.verified/d.total)*100) : 0,
       }))
       .sort((a,b)=>a.idx-b.idx)
   ,[yearly.byMonth]);
-
   // ─────────────────────────────────────────
   // RENDER
   // ─────────────────────────────────────────
@@ -210,8 +250,8 @@ export default function AcademicJourney() {
       {/* HEADER */}
       <header className="ac-header">
         <div>
-          <p className="ac-eyebrow">My Academic Journey</p>
-          <h1 className="ac-title">Track Your Progress</h1>
+          <p className="ac-eyebrow">{mockData.uiStrings.pageEyebrow}</p>
+          <h1 className="ac-title">{mockData.uiStrings.pageTitle}</h1>
         </div>
         <div className="ac-avatar-pill" style={{background:av.bg}}>
           {customAvatarUrl ? (
@@ -225,12 +265,12 @@ export default function AcademicJourney() {
 
       {/* TABS */}
       <div className="ac-tabs">
-        {([
-          {key:"daily",    label:"Today's Tasks",       icon:<Flame size={14}/>},
-          {key:"timeline", label:"Assignment Timeline", icon:<TrendingUp size={14}/>},
-          {key:"yearly",   label:"Yearly Performance",  icon:<Target size={14}/>},
-        ] as {key:Tab;label:string;icon:React.ReactNode}[]).map(t=>(
-          <button key={t.key} className={`ac-tab${tab===t.key?" ac-tab--on":""}`} onClick={()=>setTab(t.key)}>
+        {[
+          {key:"daily",    label:mockData.uiStrings.todayTasks,       icon:<Flame size={14}/>},
+          {key:"timeline", label:mockData.uiStrings.assignmentTimeline, icon:<TrendingUp size={14}/>},
+          {key:"yearly",   label:mockData.uiStrings.yearlyPerformance,  icon:<Target size={14}/>},
+        ].map(t=>(
+          <button key={t.key} className={`ac-tab${tab===t.key?" ac-tab--on":""}`} onClick={()=>setTab(t.key as Tab)}>
             {t.icon}{t.label}
           </button>
         ))}
@@ -252,14 +292,14 @@ export default function AcademicJourney() {
               </div>
               <div>
                 <h2 className="ac-dh-title">
-                  {todayTasks.length===0 ? "All clear today!" : allDone ? "You crushed it!" : "Today's Challenge"}
+                  {todayTasks.length===0 ? mockData.uiStrings.allClearToday : allDone ? mockData.uiStrings.crushedIt : mockData.uiStrings.todayChallenge}
                 </h2>
                 <p className="ac-dh-sub">
                   {todayTasks.length===0
-                    ? "No tasks assigned for today 🌸"
+                    ? mockData.uiStrings.noTasksToday
                     : allDone
-                      ? "All tasks done — teacher will verify soon! 🌟"
-                      : `${verifiedToday} of ${todayTasks.length} verified — keep going!`}
+                      ? mockData.uiStrings.verifiedSoon
+                      : mockData.uiStrings.verifiedOf(verifiedToday, todayTasks.length)}
                 </p>
               </div>
             </div>
@@ -292,19 +332,19 @@ export default function AcademicJourney() {
           {undoId && (
             <div className="ac-undo-banner">
               <span>✅</span>
-              <span className="ac-undo-text">Marked as done!</span>
+              <span className="ac-undo-text">{mockData.uiStrings.markedDone}</span>
               <button className="ac-undo-btn" onClick={handleUndo}>
-                <RotateCcw size={12}/> Undo
+                <RotateCcw size={12}/> {mockData.uiStrings.undo}
               </button>
-              <div className="ac-undo-bar"><div className="ac-undo-fill" style={{animationDuration:`${UNDO_MS}ms`}}/></div>
+              <div className="ac-undo-bar"><div className="ac-undo-fill" style={{animationDuration:`${mockData.undoMs}ms`}}/></div>
             </div>
           )}
 
           {/* Task list */}
           <section className="ac-tasks-section">
-            <p className="ac-section-label">Your Tasks Today</p>
+            <p className="ac-section-label">{mockData.uiStrings.yourTasksToday}</p>
             {todayTasks.length===0 ? (
-              <div className="ac-empty"><span>🎉</span><p>No tasks today — enjoy your day!</p></div>
+              <div className="ac-empty"><span>🎉</span><p>{mockData.uiStrings.enjoyDay}</p></div>
             ) : (
               <div className="ac-task-list">
                 {todayTasks.map(a => (
@@ -332,8 +372,8 @@ export default function AcademicJourney() {
             {/* Left: history */}
             <div className="ac-tl-main">
               <div className="ac-tl-toprow">
-                <p className="ac-section-label" style={{margin:0}}>Assignment History</p>
-                <span className="ac-tl-range">April 2026 · {timelineGroups.length} days</span>
+                <p className="ac-section-label" style={{margin:0}}>{mockData.uiStrings.assignmentHistory}</p>
+                <span className="ac-tl-range">{mockData.uiStrings.historyRange(timelineGroups.length)}</span>
               </div>
               <div className="ac-tl-list">
                 {timelineGroups.map(g => (
@@ -343,9 +383,9 @@ export default function AcademicJourney() {
                       <div className="ac-tl-head-info">
                         <div className="ac-tl-date-row">
                           <span className="ac-tl-date">{fmtDate(g.date)}</span>
-                          {g.tag==="today"    && <span className="ac-tl-badge ac-tl-badge--today">Today</span>}
-                          {g.tag==="upcoming" && <span className="ac-tl-badge ac-tl-badge--upcoming">Upcoming</span>}
-                          {g.tag==="past" && g.pending>0 && <span className="ac-tl-badge ac-tl-badge--overdue">⚠️ Overdue</span>}
+                          {g.tag==="today"    && <span className="ac-tl-badge ac-tl-badge--today">{mockData.uiStrings.today}</span>}
+                          {g.tag==="upcoming" && <span className="ac-tl-badge ac-tl-badge--upcoming">{mockData.uiStrings.upcoming}</span>}
+                          {g.tag==="past" && g.pending>0 && <span className="ac-tl-badge ac-tl-badge--overdue">{mockData.uiStrings.overdue}</span>}
                         </div>
                         <div className="ac-tl-bar-row">
                           <div className="ac-tl-bar">
@@ -358,7 +398,7 @@ export default function AcademicJourney() {
                         </div>
                       </div>
                       <div className="ac-tl-head-right">
-                        {g.pending>0 && <span className="ac-tl-pending-badge">{g.pending} pending</span>}
+                        {g.pending>0 && <span className="ac-tl-pending-badge">{mockData.uiStrings.pendingBadge(g.pending)}</span>}
                         {expandedDate===g.date ? <ChevronUp size={14}/> : <ChevronDown size={14}/>}
                       </div>
                     </button>
@@ -383,13 +423,13 @@ export default function AcademicJourney() {
                                   disabled={undoId===t._id}
                                 >
                                   <CheckCircle2 size={13}/>
-                                  {undoId===t._id ? "Submitting…" : "I'm Done"}
+                                  {undoId===t._id ? mockData.uiStrings.submitting : mockData.uiStrings.done}
                                 </button>
                               )}
                               {t.status!=="todo" && (
                                 <span className="ac-status-pill ac-status-pill--sm"
-                                  style={{background:STATUS_CFG[t.status].bg, color:STATUS_CFG[t.status].color, borderColor:STATUS_CFG[t.status].border}}>
-                                  {STATUS_CFG[t.status].icon} {STATUS_CFG[t.status].label}
+                                  style={{background:(mockData.statusCfg as any)[t.status].bg, color:(mockData.statusCfg as any)[t.status].color, borderColor:(mockData.statusCfg as any)[t.status].border}}>
+                                  {(mockData.statusCfg as any)[t.status].icon} {(mockData.statusCfg as any)[t.status].label}
                                 </span>
                               )}
                             </div>
@@ -405,14 +445,14 @@ export default function AcademicJourney() {
             {/* Right: pending sidebar */}
             <aside className="ac-tl-sidebar">
               <div className="ac-tl-sidebar-card">
-                <p className="ac-tl-sidebar-title">⏳ Pending Tasks</p>
+                <p className="ac-tl-sidebar-title">{mockData.uiStrings.pendingTasks}</p>
                 {allPending.length===0 ? (
                   <div className="ac-tl-all-clear"><span>🎉</span><p>All clear!</p></div>
                 ) : (
                   <div className="ac-pending-list">
                     {allPending.map(a => {
                       const sc = subCfg(a.subject);
-                      const st = STATUS_CFG[a.status];
+                      const st = (mockData.statusCfg as any)[a.status];
                       const overdue = a.dueDate < TODAY;
                       return (
                         <div key={a._id} className={`ac-pending-item${overdue?" ac-pending-item--overdue":""}`}>
@@ -452,10 +492,10 @@ export default function AcademicJourney() {
           {/* KPI row */}
           <div className="ac-kpi-row">
             {[
-              {icon:"📚",label:"Total Assigned",   value:yearly.total,                       color:"#2563eb",bg:"#dbeafe"},
-              {icon:"⭐",label:"Verified",          value:yearly.verified,                    color:"#16a34a",bg:"#dcfce7"},
-              {icon:"🎯",label:"Verification Rate", value:`${verifyRate}%`,                   color:"#7c3aed",bg:"#ede9fe"},
-              {icon:"⏳",label:"Still Pending",     value:yearly.pending+yearly.inReview,     color:"#d97706",bg:"#fef3c7"},
+              {icon:"📚",label:mockData.uiStrings.totalAssigned,   value:yearly.total,                       color:"#2563eb",bg:"#dbeafe"},
+              {icon:"⭐",label:mockData.uiStrings.verified,          value:yearly.verified,                    color:"#16a34a",bg:"#dcfce7"},
+              {icon:"🎯",label:mockData.uiStrings.verifyRate, value:`${verifyRate}%`,                   color:"#7c3aed",bg:"#ede9fe"},
+              {icon:"⏳",label:mockData.uiStrings.stillPending,     value:yearly.pending+yearly.inReview,     color:"#d97706",bg:"#fef3c7"},
             ].map((k,i)=>(
               <div key={i} className="ac-kpi" style={{"--kpi-color":k.color,"--kpi-bg":k.bg} as React.CSSProperties}>
                 <div className="ac-kpi-icon">{k.icon}</div>
@@ -469,7 +509,7 @@ export default function AcademicJourney() {
 
           {/* Area chart */}
           <section className="ac-yr-section">
-            <div className="ac-yr-head"><TrendingUp size={15} color="#3b82f6"/><h3>Monthly Completion Trend</h3></div>
+            <div className="ac-yr-head"><TrendingUp size={15} color="#3b82f6"/><h3>{mockData.uiStrings.completionTrend}</h3></div>
             <div className="ac-chart-wrap">
               <ResponsiveContainer width="100%" height={220}>
                 <AreaChart data={monthChart} margin={{top:8,right:16,left:-10,bottom:0}}>
@@ -499,7 +539,7 @@ export default function AcademicJourney() {
 
           {/* Subject cards */}
           <section className="ac-yr-section">
-            <div className="ac-yr-head"><BookOpen size={15} color="#7c3aed"/><h3>Performance by Subject</h3></div>
+            <div className="ac-yr-head"><BookOpen size={15} color="#7c3aed"/><h3>{mockData.uiStrings.perfBySubject}</h3></div>
             <div className="ac-subject-grid">
               {Object.entries(yearly.bySubject).map(([subject,data])=>{
                 const pct = data.total ? Math.round((data.verified/data.total)*100) : 0;
@@ -510,7 +550,7 @@ export default function AcademicJourney() {
                       <div className="ac-sub-icon">{cfg.emoji}</div>
                       <div style={{flex:1}}>
                         <p className="ac-sub-name">{subject}</p>
-                        <p className="ac-sub-stat">{data.verified}/{data.total} verified</p>
+                        <p className="ac-sub-stat">{mockData.uiStrings.verifiedSub(data.verified, data.total)}</p>
                       </div>
                       {/* Mini donut */}
                       <div className="ac-sub-ring">
@@ -549,7 +589,7 @@ interface TaskCardProps {
 
 function TaskCard({ a, expanded, isUndo, onToggle, onSubmit }: TaskCardProps) {
   const sc = subCfg(a.subject);
-  const st = STATUS_CFG[a.status];
+  const st = (mockData.statusCfg as any)[a.status];
   return (
     <div className={`ac-task${expanded?" ac-task--open":""}${isUndo?" ac-task--pulse":""}`}
       style={{"--task-accent":sc.color} as React.CSSProperties}>
@@ -564,7 +604,7 @@ function TaskCard({ a, expanded, isUndo, onToggle, onSubmit }: TaskCardProps) {
         {a.status==="todo" ? (
           <button className="ac-done-btn" onClick={onSubmit} disabled={isUndo}>
             <CheckCircle2 size={13}/>
-            {isUndo ? "Submitting…" : "I'm Done!"}
+            {isUndo ? mockData.uiStrings.submitting : mockData.uiStrings.done + "!"}
           </button>
         ) : (
           <span className="ac-status-pill"
@@ -578,8 +618,8 @@ function TaskCard({ a, expanded, isUndo, onToggle, onSubmit }: TaskCardProps) {
       </div>
       {expanded && (
         <div className="ac-task-details">
-          <div className="ac-detail"><span>Due</span><span>{fmtDate(a.dueDate)}</span></div>
-          {a.submittedDate && <div className="ac-detail"><span>Submitted</span><span className="ac-detail--green">{fmtDate(a.submittedDate)}</span></div>}
+          <div className="ac-detail"><span>{mockData.uiStrings.due}</span><span>{fmtDate(a.dueDate)}</span></div>
+          {a.submittedDate && <div className="ac-detail"><span>{mockData.uiStrings.submitted}</span><span className="ac-detail--green">{fmtDate(a.submittedDate)}</span></div>}
           {a.rejectionNote && <div className="ac-detail ac-detail--warn"><AlertCircle size={12}/><span>{a.rejectionNote}</span></div>}
         </div>
       )}

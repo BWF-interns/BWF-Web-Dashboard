@@ -10,20 +10,41 @@ import { getAvatar }   from "../constants/avatars";
 import api from "../../lib/api"; 
 import Image from "next/image";
 
-const STUDENT_ID = "BWF-2024-001";
-const DEFAULT_URL = "https://www.borderlessworldfoundation.org/";
-
-/* ── Fallbacks ── */
-const MOCK_MENTOR = {
-  name:"Ms. Dana", role:"Your Mentor", dateLabel:"Today",
-  avatarUrl:"https://ui-avatars.com/api/?name=Dana+Elomo&background=fce7f3&color=db2777&rounded=true",
-  message:"Hi Aisha! Your group presentation for the Science module was excellent yesterday. Keep up the great momentum.",
+const mockData = {
+  studentId: "BWF-2024-001",
+  defaultUrl: "https://www.borderlessworldfoundation.org/",
+  mentorFallback: {
+    name: "Ms. Dana",
+    role: "Your Mentor",
+    dateLabel: "Today",
+    avatarUrl: "https://ui-avatars.com/api/?name=Dana+Elomo&background=fce7f3&color=db2777&rounded=true",
+    message: "Hi Aisha! Your group presentation for the Science module was excellent yesterday. Keep up the great momentum.",
+  },
+  inspirationQuotes: [
+    { quote: "You are braver than you believe, stronger than you seem, and smarter than you think.", footer: "Take a deep breath." },
+    { quote: "Believe you can and you're halfway there.", footer: "Your mindset is your greatest asset." }
+  ],
+  uiStrings: {
+    welcomeTitle: "Welcome back!",
+    welcomeSub: "Borderless World Foundation (BWF) created a safe space for you.",
+    scheduleTitle: "Today's Schedule",
+    assignmentsTitle: "Recent Assignments",
+    resourcesTitle: "Quick Resources",
+    mentorNoteTitle: "Note from ",
+    dailyInspirationTitle: "Daily Inspiration",
+    loading: "Loading...",
+    allCaughtUp: "All caught up!",
+    joinSession: "Join session",
+    viewDetails: "View details",
+    thanked: "Thanked!",
+    sayThanks: "Say thanks",
+    resourceLibrary: "📚 Library",
+    resourceSyllabus: "📄 Download Syllabus",
+    resourceContact: "💬 Contact Mentor"
+  }
 };
 
-const INSPIRATION_QUOTES = [
-  { quote: "You are braver than you believe, stronger than you seem, and smarter than you think.", footer: "Take a deep breath." },
-  { quote: "Believe you can and you're halfway there.", footer: "Your mindset is your greatest asset." }
-];
+// TODO: Replace fetch with GET /api/student/dashboard/:auth_id
 
 export default function Dashboard() {
   const router = useRouter();
@@ -40,9 +61,9 @@ export default function Dashboard() {
   
   // NEW: Dynamic Resources State
   const [resources, setResources] = useState({
-    library: DEFAULT_URL,
-    syllabus: DEFAULT_URL,
-    contactMentor: DEFAULT_URL
+    library: mockData.defaultUrl,
+    syllabus: mockData.defaultUrl,
+    contactMentor: mockData.defaultUrl
   });
 
   const [isLoading, setIsLoading] = useState(true);
@@ -59,14 +80,25 @@ export default function Dashboard() {
     else setGreeting("Good evening");
 
     const interval = setInterval(() => {
-      setQuoteIndex((prev) => (prev + 1) % INSPIRATION_QUOTES.length);
+      setQuoteIndex((prev) => (prev + 1) % mockData.inspirationQuotes.length);
     }, 10000);
 
     const fetchDashboard = async () => {
       try {
-        const res = await api.get(`/student/dashboard/${STUDENT_ID}`);
+        const res = await api.get(`/student/dashboard/${mockData.studentId}`);
         setSchedule(res.data.schedule || []);
-        setAssignments(res.data.assignments || []);
+        
+        // 30-day Guardrail for Assignments
+        const allAssignments = res.data.assignments || [];
+        const thirtyDaysFromNow = new Date();
+        thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
+        
+        const filteredAssignments = allAssignments.filter((a: any) => {
+          const dueDate = new Date(a.dueDate);
+          return dueDate <= thirtyDaysFromNow;
+        });
+        
+        setAssignments(filteredAssignments);
         
         // Load Mentor Note & "Thanks" state
         const note = res.data.mentorNote || null;
@@ -78,9 +110,9 @@ export default function Dashboard() {
         // NEW: Map dynamic resources from backend if they exist
         if (res.data.resources) {
           setResources({
-            library: res.data.resources.library || DEFAULT_URL,
-            syllabus: res.data.resources.syllabus || DEFAULT_URL,
-            contactMentor: res.data.resources.contactMentor || DEFAULT_URL
+            library: res.data.resources.library || mockData.defaultUrl,
+            syllabus: res.data.resources.syllabus || mockData.defaultUrl,
+            contactMentor: res.data.resources.contactMentor || mockData.defaultUrl
           });
         }
       } catch (error) {
@@ -96,7 +128,7 @@ export default function Dashboard() {
 
   const handleMoodClick = async (mood: string) => {
     try {
-      await api.post(`/student/dashboard/${STUDENT_ID}/mood`, { mood });
+      await api.post(`/student/dashboard/${mockData.studentId}/mood`, { mood });
       setTodayMood(mood);
     } catch (error) {
       console.error("Failed to log mood", error);
@@ -107,7 +139,7 @@ export default function Dashboard() {
     if (!mentorNote?._id || reacted) return;
     try {
       setReacted(true);
-      await api.post(`/student/dashboard/${STUDENT_ID}/mentor-note/${mentorNote._id}/thanks`);
+      await api.post(`/student/dashboard/${mockData.studentId}/mentor-note/${mentorNote._id}/thanks`);
     } catch (error) {
       console.error("Failed to thank mentor", error);
       setReacted(false);
@@ -139,8 +171,8 @@ export default function Dashboard() {
       {/* WELCOME / MOOD */}
       <section className="welcome-banner">
         <div className="welcome-text">
-          <h2>Welcome back!</h2>
-          <p>Borderless World Foundation (BWF) created a safe space for you.</p>
+          <h2>{mockData.uiStrings.welcomeTitle}</h2>
+          <p>{mockData.uiStrings.welcomeSub}</p>
         </div>
         <div className="mood-tracker">
           <button className="mood-btn" onClick={() => handleMoodClick("happy")}>
@@ -158,15 +190,15 @@ export default function Dashboard() {
       {/* GRID */}
       <section className="dashboard-grid">
         <div className="card schedule-card">
-          <h3>Today's Schedule</h3>
+          <h3>{mockData.uiStrings.scheduleTitle}</h3>
           <div className="schedule-list">
-            {isLoading ? <p>Loading...</p> : schedule.map(s => (
+            {isLoading ? <p>{mockData.uiStrings.loading}</p> : schedule.map(s => (
               <div key={s._id} className="schedule-item">
                 <div className="time">{s.startTime}</div>
                 <div className="details">
                   <h4>{s.title}</h4>
                   <button className="btn-primary" onClick={() => s.joinLink && openLink(s.joinLink)}>
-                    {s.joinLink ? "Join session" : "View details"}
+                    {s.joinLink ? mockData.uiStrings.joinSession : mockData.uiStrings.viewDetails}
                   </button>
                 </div>
               </div>
@@ -176,7 +208,7 @@ export default function Dashboard() {
 
         {/* RECENT ASSIGNMENTS */}
         <div className="card assignments-card">
-          <h3>Recent Assignments</h3>
+          <h3>{mockData.uiStrings.assignmentsTitle}</h3>
           <div className="assignment-list">
              {assignments.length > 0 ? assignments.map(a => (
               <div key={a._id} className="assignment-item">
@@ -186,17 +218,17 @@ export default function Dashboard() {
                 </div>
                 <span className="due-date">Due: {a.dueDate}</span>
               </div>
-            )) : <p className="text-sm text-gray-400 mt-2">All caught up!</p>}
+            )) : <p className="text-sm text-gray-400 mt-2">{mockData.uiStrings.allCaughtUp}</p>}
           </div>
         </div>
 
         {/* DYNAMIC RESOURCES */}
         <div className="card resources-card">
-          <h3>Quick Resources</h3>
+          <h3>{mockData.uiStrings.resourcesTitle}</h3>
           <div className="resource-buttons">
-            <button className="resource-btn bg-library" onClick={() => openLink(resources.library)}>📚 Library</button>
-            <button className="resource-btn bg-syllabus" onClick={() => openLink(resources.syllabus)}>📄 Download Syllabus</button>
-            <button className="resource-btn bg-mentor" onClick={() => openLink(resources.contactMentor)}>💬 Contact Mentor</button>
+            <button className="resource-btn bg-library" onClick={() => openLink(resources.library)}>{mockData.uiStrings.resourceLibrary}</button>
+            <button className="resource-btn bg-syllabus" onClick={() => openLink(resources.syllabus)}>{mockData.uiStrings.resourceSyllabus}</button>
+            <button className="resource-btn bg-mentor" onClick={() => openLink(resources.contactMentor)}>{mockData.uiStrings.resourceContact}</button>
           </div>
         </div>
       </section>
@@ -207,29 +239,29 @@ export default function Dashboard() {
           <div className="card-header">
             <div className="mentor-info">
               <div className="mentor-avatar">
-                <img src={MOCK_MENTOR.avatarUrl} alt="Mentor" />
+                <img src={mockData.mentorFallback.avatarUrl} alt="Mentor" />
               </div>
               <div>
-                <h3>Note from {mentorNote?.mentorName || MOCK_MENTOR.name}</h3>
-                <span className="mentor-role-label">{MOCK_MENTOR.role}</span>
+                <h3>{mockData.uiStrings.mentorNoteTitle}{mentorNote?.mentorName || mockData.mentorFallback.name}</h3>
+                <span className="mentor-role-label">{mockData.mentorFallback.role}</span>
               </div>
             </div>
           </div>
           <div className="mentor-message">
-            <p>"{mentorNote?.message || MOCK_MENTOR.message}"</p>
+            <p>"{mentorNote?.message || mockData.mentorFallback.message}"</p>
           </div>
           <div className="mentor-actions">
             <button className={`btn-react${reacted ? " btn-react--active" : ""}`} onClick={handleThanksClick} disabled={reacted}>
               {reacted ? "❤️" : "🤍"}
             </button>
-            <button className="btn-reply" onClick={handleThanksClick}>{reacted ? "Thanked!" : "Say thanks"}</button>
+            <button className="btn-reply" onClick={handleThanksClick}>{reacted ? mockData.uiStrings.thanked : mockData.uiStrings.sayThanks}</button>
           </div>
         </div>
 
         <div className="card mindful-card">
-          <div className="mindful-header"><h3>Daily Inspiration</h3></div>
-          <div className="mindful-body"><p>"{INSPIRATION_QUOTES[quoteIndex].quote}"</p></div>
-          <div className="mindful-footer"><p>{INSPIRATION_QUOTES[quoteIndex].footer}</p></div>
+          <div className="mindful-header"><h3>{mockData.uiStrings.dailyInspirationTitle}</h3></div>
+          <div className="mindful-body"><p>"{mockData.inspirationQuotes[quoteIndex].quote}"</p></div>
+          <div className="mindful-footer"><p>{mockData.inspirationQuotes[quoteIndex].footer}</p></div>
         </div>
       </section>
     </main>

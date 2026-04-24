@@ -16,12 +16,20 @@ interface ProfileContextValue {
   setName: (name: string) => void;
 }
 
+const mockData = {
+  defaultProfile: {
+    avatarId: "cat",
+    customAvatarUrl: null as string | null,
+    name: "Aisha Sharma",
+  }
+};
+
 const ProfileContext = createContext<ProfileContextValue | null>(null);
 
 export function ProfileProvider({ children }: { children: React.ReactNode }) {
-  const [avatarId, setAvatarId] = useState("cat");
-  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(null);
-  const [name, setName]         = useState("Aisha Sharma");
+  const [avatarId, setAvatarId] = useState(mockData.defaultProfile.avatarId);
+  const [customAvatarUrl, setCustomAvatarUrl] = useState<string | null>(mockData.defaultProfile.customAvatarUrl);
+  const [name, setName]         = useState(mockData.defaultProfile.name);
 
   useEffect(() => {
     if (typeof window === "undefined") return;
