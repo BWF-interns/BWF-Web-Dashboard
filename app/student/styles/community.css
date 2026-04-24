@@ -599,6 +599,16 @@
     padding: 1.25rem 1rem 3rem;
   }
 
+  .cm-filters {
+    flex-wrap: wrap;
+    overflow: visible;
+    padding-bottom: 0;
+  }
+
+  .cm-chip {
+    flex: 0 1 auto;
+  }
+
   .cm-hero {
     flex-direction: column;
     align-items: flex-start;

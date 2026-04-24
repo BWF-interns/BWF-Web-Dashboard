@@ -436,7 +436,13 @@ html.sidebar-open {
     display: block;
     position: relative;
     z-index: 1;
-    min-height: calc(100vh - 56px);
+    min-height: 100vh;
+    padding-top: 56px;
+  }
+
+  /* Keep page roots aligned under fixed mobile header */
+  .student-page-area > * {
+    margin-top: 0 !important;
   }
 }
 
@@ -474,6 +480,7 @@ html.sidebar-open {
   }
 
   .student-page-area {
-    min-height: calc(100vh - 52px);
+    min-height: 100vh;
+    padding-top: 52px;
   }
 }

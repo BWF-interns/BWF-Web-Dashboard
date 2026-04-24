@@ -2,7 +2,7 @@
   position: fixed;
   left: 0;
   top: 0;
-  z-index: 100;
+  z-index: 1200;
 }
 
 .sos-tooltip {
@@ -105,7 +105,7 @@
   position: fixed;
   inset: 0;
   background: rgba(15, 23, 42, 0.4);
-  z-index: 200;
+  z-index: 1300;
   display: grid;
   place-items: center;
   padding: 16px;
@@ -175,6 +175,20 @@
 }
 
 @media (max-width: 768px) {
+  .sos-corner-shell {
+    z-index: 1400;
+  }
+
+  .sos-fab {
+    width: 56px;
+    height: 56px;
+  }
+
+  .sos-label-compact {
+    font-size: 1rem;
+    letter-spacing: 0.06em;
+  }
+
   .sos-tooltip {
     right: auto;
     left: 0;
@@ -187,5 +201,21 @@
   .sos-tooltip::after {
     left: 14px;
     right: auto;
+  }
+
+  .sos-fab {
+    touch-action: manipulation;
+  }
+}
+
+@media (max-width: 480px) {
+  .sos-fab {
+    width: 52px;
+    height: 52px;
+    border-width: 1.5px;
+  }
+
+  .sos-label-compact {
+    font-size: 0.92rem;
   }
 }

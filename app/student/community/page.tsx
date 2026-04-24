@@ -106,16 +106,19 @@ export default function CommunityPage() {
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
 
-  const handleLike = (id: string) => {
+  const handleLike = (id: string, isLiked: boolean) => {
     setLikedSet(prev => {
       const next = new Set(prev);
-      const wasLiked = next.has(id);
-      if (wasLiked) next.delete(id); else next.add(id);
-      setPosts(p => p.map(post =>
-        post._id === id ? { ...post, likes: post.likes + (wasLiked ? -1 : 1) } : post
-      ));
+      if (isLiked) next.delete(id);
+      else next.add(id);
       return next;
     });
+
+    setPosts(prev =>
+      prev.map(post =>
+        post._id === id ? { ...post, likes: post.likes + (isLiked ? -1 : 1) } : post
+      )
+    );
   };
 
   const handleSubmit = () => {
@@ -232,7 +235,7 @@ export default function CommunityPage() {
                   <div className="cm-post-foot">
                     <button
                       className={`cm-like-btn${isLiked ? " cm-like-btn--active" : ""}`}
-                      onClick={() => handleLike(post._id)}
+                      onClick={() => handleLike(post._id, isLiked)}
                       aria-label="Like"
                     >
                       <Heart size={15} fill={isLiked ? "currentColor" : "none"} />

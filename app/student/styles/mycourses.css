@@ -1070,7 +1070,18 @@
   .ac-tl-sidebar { position:static; }
   .ac-kpi-row { grid-template-columns:repeat(2,1fr); }
   .ac-page { padding:1.25rem 1rem 3rem; }
-  .ac-tabs { flex-wrap:wrap; width:100%; }
+  .ac-tabs {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 0.35rem;
+  }
+  .ac-tab {
+    justify-content: center;
+    padding: 0.55rem 0.6rem;
+    font-size: 0.76rem;
+    min-width: 0;
+  }
 }
 @media (max-width:560px) {
   .ac-kpi-row { grid-template-columns:1fr 1fr; }

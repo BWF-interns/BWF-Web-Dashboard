@@ -346,4 +346,51 @@
   .rc-header { flex-direction: column; align-items: flex-start; gap: 20px; }
   .rc-raise-btn { width: 100%; justify-content: center; }
   .rc-column-sidebar { grid-template-columns: 1fr; }
+  .rc-tabs {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    overflow: visible;
+    gap: 6px;
+    background: transparent;
+    padding: 0;
+  }
+  .rc-tab {
+    flex: 1 1 calc(33.33% - 6px);
+    min-width: 92px;
+    background: #eef2f6;
+  }
+  .rc-form-container { padding: 22px; border-radius: 16px; }
+  .rc-anon-control { padding: 14px; }
+  .rc-form-footer { gap: 10px; }
+}
+
+@media (max-width: 560px) {
+  .rc-history-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 10px;
+  }
+  .rc-tabs { width: 100%; }
+  .rc-tab { min-width: 0; }
+  .rc-page { padding: 14px; }
+  .rc-form-container { padding: 16px; }
+  .rc-form-intro { gap: 10px; margin-bottom: 20px; }
+  .rc-form-title { font-size: 1.2rem; }
+  .rc-textarea { padding: 12px; font-size: 0.92rem; }
+  .rc-anon-control {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  .rc-anon-info { gap: 10px; }
+  .rc-form-footer {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .rc-btn-cancel,
+  .rc-btn-submit {
+    width: 100%;
+    justify-content: center;
+  }
 }

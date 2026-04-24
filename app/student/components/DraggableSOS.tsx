@@ -104,6 +104,10 @@ export default function DraggableSOS() {
 
   const startDrag = (event: ReactPointerEvent<HTMLButtonElement>) => {
     if (typeof window === "undefined") return;
+    if (window.matchMedia("(max-width: 768px)").matches) {
+      setOpen(true);
+      return;
+    }
 
     event.preventDefault();
     setDragging(true);
@@ -148,6 +152,11 @@ export default function DraggableSOS() {
         <button
           className={`sos-fab ${sent ? "sos-fab--sent" : ""} ${dragging ? "sos-fab--dragging" : ""}`}
           onPointerDown={startDrag}
+          onClick={() => {
+            if (typeof window !== "undefined" && window.matchMedia("(max-width: 768px)").matches) {
+              setOpen(true);
+            }
+          }}
           onMouseEnter={() => !sent && setHovered(true)}
           onMouseLeave={() => setHovered(false)}
           onFocus={() => !sent && setHovered(true)}

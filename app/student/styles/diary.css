@@ -302,9 +302,43 @@
   /* ── MOBILE ── */
   @media (max-width: 768px) {
     .dj-layout { grid-template-columns: 1fr; }
-    .dj-cal-col { border-right: none; border-bottom: 1.5px solid #f1f5f9; }
+    .dj-cal-col {
+      border-right: none;
+      border-bottom: 1.5px solid #f1f5f9;
+      padding: 1.25rem 1.1rem;
+      gap: 1.1rem;
+    }
+    .dj-cal-nav-btn {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+    }
+    .dj-cal-month {
+      font-size: 0.95rem;
+    }
+    .dj-cal-grid {
+      gap: 6px;
+    }
+    .dj-cal-weekday {
+      font-size: 0.72rem;
+      padding: 4px 0;
+    }
+    .dj-cal-day {
+      font-size: 0.9rem;
+      border-radius: 10px;
+    }
+    .dj-cal-day--bday {
+      font-size: 0.78rem;
+    }
     .dj-paper { padding: 1.25rem; background-image: none; }
     .dj-history { padding: 1.25rem; }
     .dj-capsule { margin: 1rem 1rem 0; }
     .dj-header { padding: 1.1rem 1.25rem; }
+  }
+
+  @media (max-width: 480px) {
+    .dj-cal-col { padding: 1rem; }
+    .dj-cal-grid { gap: 5px; }
+    .dj-cal-weekday { font-size: 0.68rem; }
+    .dj-cal-day { font-size: 0.84rem; }
   }

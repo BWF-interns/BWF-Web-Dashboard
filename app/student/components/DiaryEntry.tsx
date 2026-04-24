@@ -18,6 +18,9 @@ interface Props {
 
 const WEEKDAYS = ["S", "M", "T", "W", "T", "F", "S"];
 const MONTHS = ["January","February","March","April","May","June","July","August","September","October","November","December"];
+const HISTORY_WINDOW_DAYS = 7;
+const HISTORY_MAX_ITEMS = 50;
+const MAX_STORED_ENTRIES = 300;
 
 function getTodayStr() { return new Date().toISOString().split("T")[0]; }
 
@@ -77,11 +80,13 @@ export default function DiaryEntry({ studentName, dob }: Props) {
 
   // All entries filtered by search
   const recentEntries = useMemo(()=>{
+    const cutoffTs = Date.now() - HISTORY_WINDOW_DAYS * 24 * 60 * 60 * 1000;
     const q = search.toLowerCase();
     return entries
+      .filter(e => new Date(e.createdAt).getTime() >= cutoffTs)
       .filter(e=> !q || e.title.toLowerCase().includes(q) || e.body.toLowerCase().includes(q))
       .sort((a,b)=>b.createdAt.localeCompare(a.createdAt))
-      .slice(0, 20);
+      .slice(0, HISTORY_MAX_ITEMS);
   },[entries, search]);
 
   // Dates that have entries (for calendar dots)
@@ -109,7 +114,7 @@ export default function DiaryEntry({ studentName, dob }: Props) {
       date: selectedDate,
       createdAt: new Date().toISOString(),
     };
-    setEntries(prev=>[entry,...prev]);
+    setEntries(prev => [entry, ...prev].slice(0, MAX_STORED_ENTRIES));
     setTitle(""); setBody("");
     setSavedFlash(true);
     setTimeout(()=>setSavedFlash(false), 2500);
@@ -281,7 +286,7 @@ What do you want to tell your future self?`}
           {/* Past entries list */}
           <div className="dj-history">
             <div className="dj-history-head">
-              <p className="dj-history-title">📚 All Entries</p>
+              <p className="dj-history-title">📚 Recent Entries ({HISTORY_WINDOW_DAYS} days)</p>
               <div className="dj-search-wrap">
                 <Search size={13} className="dj-search-icon"/>
                 <input
