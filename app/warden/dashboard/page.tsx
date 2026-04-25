@@ -136,7 +136,7 @@ export default function WardenDashboard() {
             Dashboard
           </h1>
           <p className="text-muted-foreground">
-            Welcome back{profile ? `, ${profile.name.split(' ')[0]}` : ''}! Here's your hostel overview.
+            Welcome back{profile ? `, ${profile.name.split(' ')[0]}` : ''}! Here's your hostel overview !!!.
           </p>
         </div>
 
