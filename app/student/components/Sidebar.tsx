@@ -14,6 +14,7 @@ import {
   X, 
   Users,   
   MessageSquareWarning,
+  LogOut,
 } from "lucide-react";
 import { useNotices } from "../context/NoticeContext";
 import { useProfile } from "../context/ProfileContext";
@@ -21,13 +22,13 @@ import { getAvatar } from "../constants/avatars";
 import Image from 'next/image';
 
 const NAV_LINKS = [
-  { href: "/student/dashboard",   label: "Home",            Icon: Home       },
-  { href: "/student/mycourses",   label: "My Courses",      Icon: BookOpen   },
-  { href: "/student/noticeboard", label: "Notice Board",    Icon: Megaphone  },
-  { href: "/student/wellbeing",   label: "Wellbeing/Help",  Icon: HeartPulse },
-  { href: "/student/community",   label: "Community",       Icon: Users      },
-  { href: "/student/complaints",  label: "Raise a Concern", Icon: MessageSquareWarning   },
-  { href: "/student/profile",      label: "Profile",         Icon: Settings   }
+  { href: "/student/community",   label: "Community",                Icon: Users      },
+  { href: "/student/dashboard",   label: "Home",                     Icon: Home       },
+  { href: "/student/mycourses",   label: "Assignments",              Icon: BookOpen   },
+  { href: "/student/noticeboard", label: "Notice Board",             Icon: Megaphone  },
+  { href: "/student/wellbeing",   label: "Wellbeing/Help",           Icon: HeartPulse },
+  { href: "/student/complaints",  label: "Activities & Complaints",  Icon: MessageSquareWarning   },
+  { href: "/student/profile",     label: "Profile",                  Icon: Settings   }
 ];
 
 export default function StudentSidebar() {
@@ -64,6 +65,12 @@ export default function StudentSidebar() {
   const handleNavClick = () => {
     // Small delay to ensure smooth transition
     setTimeout(() => closeMobile(), 100);
+  };
+
+  const handleLogout = () => {
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("role");
+    router.push("/auth/login");
   };
 
   return (
@@ -166,6 +173,16 @@ export default function StudentSidebar() {
             ) : (
               <span>{av.emoji}</span>
             )}
+          </button>
+
+          <button
+            className="sb-bell"
+            style={{ color: "#ef4444" }}
+            onClick={handleLogout}
+            title="Log Out"
+            type="button"
+          >
+            <LogOut size={17} />
           </button>
         </div>
 

@@ -167,10 +167,54 @@
 .rc-form-section { margin-bottom: 24px; }
 .rc-section-label { display: block; font-size: 0.875rem; font-weight: 700; color: var(--rc-text-main); margin-bottom: 12px; }
 
+/* Type Selector Grid */
+.rc-type-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+
+.rc-type-item {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 16px;
+  background: white;
+  border: 1.5px solid var(--rc-border);
+  border-radius: 14px;
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4, 0, 0.2, 1);
+  font-weight: 800;
+  color: var(--rc-text-sub);
+  font-family: inherit;
+}
+
+.rc-type-item svg {
+  transition: transform 0.2s ease;
+}
+
+.rc-type-item:hover {
+  border-color: #cbd5e1;
+  background: #fafafa;
+}
+
+.rc-type-item--active {
+  background: var(--rc-teal-light);
+  border-color: var(--rc-teal);
+  color: var(--rc-teal);
+  box-shadow: 0 4px 12px rgba(13, 148, 136, 0.1);
+}
+
+.rc-type-item--active svg {
+  transform: scale(1.1);
+}
+
 /* Category Grid */
 .rc-category-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+  grid-template-columns: repeat(auto-fill, minmax(130px, 1fr));
   gap: 12px;
 }
 

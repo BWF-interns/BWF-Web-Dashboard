@@ -5,11 +5,11 @@ import "../styles/noticeboard.css";
 import { Bell, X, CheckCheck, Calendar } from "lucide-react";
 import { useNotices } from "../context/NoticeContext";
 
-type Category = "event" | "academic" | "welfare" | "general";
+type Category = "events" | "academic" | "welfare" | "general";
 
 const mockData = {
   cat: {
-    event:    { label:"Event",    emoji:"🎉", color:"#db2777", bg:"#fce7f3", border:"#fbcfe8" },
+    events:    { label:"Event",    emoji:"🎉", color:"#db2777", bg:"#fce7f3", border:"#fbcfe8" },
     academic: { label:"Academic", emoji:"📚", color:"#2563eb", bg:"#dbeafe", border:"#bfdbfe" },
     welfare:  { label:"Welfare",  emoji:"💚", color:"#16a34a", bg:"#dcfce7", border:"#bbf7d0" },
     general:  { label:"General",  emoji:"📢", color:"#d97706", bg:"#fef3c7", border:"#fde68a" },
@@ -17,7 +17,7 @@ const mockData = {
   filters: [
     { key:"all",      label:"All",      emoji:"📋" },
     { key:"academic", label:"Academic", emoji:"📚" },
-    { key:"event",    label:"Events",   emoji:"🎉" },
+    { key:"events",   label:"Events",   emoji:"🎉" },
     { key:"welfare",  label:"Welfare",  emoji:"💚" },
     { key:"general",  label:"General",  emoji:"📢" },
   ],
@@ -38,19 +38,19 @@ export default function NoticeBoardPage() {
   const { notices, unreadCount, markAsRead, markAllRead, deleteNotice } = useNotices();
 
   const [filter, setFilter]       = useState<"all" | Category>("all");
-  const [expandedId, setExpanded] = useState<number | null>(null);
-  const [leavingId, setLeaving]   = useState<number | null>(null);
+  const [expandedId, setExpanded] = useState<string | null>(null);
+  const [leavingId, setLeaving]   = useState<string | null>(null);
 
   const visible = filter === "all" ? notices : notices.filter(n => n.category === filter);
 
-  const handleExpand = (id: number) => {
+  const handleExpand = (id: string) => {
     const isExpanding = expandedId !== id;
     setExpanded(isExpanding ? id : null);
     // Mark as read when the user opens a notice
     if (isExpanding) markAsRead(id);
   };
 
-  const handleDelete = (id: number) => {
+  const handleDelete = (id: string) => {
     setLeaving(id);
     setTimeout(() => {
       deleteNotice(id);
@@ -109,19 +109,19 @@ export default function NoticeBoardPage() {
 
         {visible.map(n => {
           const meta    = (mockData.cat as any)[n.category];
-          const isOpen  = expandedId === n.id;
-          const leaving = leavingId === n.id;
+          const isOpen  = expandedId === n._id;
+          const leaving = leavingId === n._id;
 
           return (
             <div
-              key={n.id}
+              key={n._id}
               className={[
                 "nb-card",
                 n.isRead ? "nb-card--read" : "nb-card--unread",
                 leaving ? "nb-card--leaving" : "",
               ].filter(Boolean).join(" ")}
               style={{ "--cc":meta.color,"--cb":meta.bg,"--cbd":meta.border } as React.CSSProperties}
-              onClick={() => handleExpand(n.id)}
+              onClick={() => handleExpand(n._id)}
             >
               {!n.isRead && <span className="nb-dot" />}
               <div className="nb-strip" />
@@ -145,7 +145,7 @@ export default function NoticeBoardPage() {
 
               <button
                 className="nb-del"
-                onClick={e => { e.stopPropagation(); handleDelete(n.id); }}
+                onClick={e => { e.stopPropagation(); handleDelete(n._id); }}
                 aria-label="Dismiss"
               >
                 <X size={13} />

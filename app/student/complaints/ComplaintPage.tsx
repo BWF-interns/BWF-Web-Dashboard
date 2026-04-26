@@ -42,14 +42,14 @@ function timeAgo(dateStr: string): string {
 }
 
 const mockData = {
-  eyebrow: "Safe Haven / Support",
-  title: "Raise a Concern 🌿",
-  subtitle: "You deserve to feel safe and heard. What is on your mind today?",
-  formTitle: "Tell us what's happening",
-  formSub: "Your words help us create a safer community.",
-  historyTitle: "Concern History",
-  emptyTitle: "No concerns found",
-  emptyDesc: "Your history is empty. We're here whenever you need a safe space.",
+  eyebrow: "Permissions & Support",
+  title: "Activities & Complaints 🌿",
+  subtitle: "Request activity permissions or share a personal concern with the Warden.",
+  formTitle: "What can we help you with?",
+  formSub: "Your requests and concerns are handled securely by our team.",
+  historyTitle: "Request History",
+  emptyTitle: "No records found",
+  emptyDesc: "Your history is empty. We're here whenever you need assistance.",
   loaderText: "Gathering your records...",
   sidebarHowItWorks: {
     title: "How it works",
@@ -67,12 +67,18 @@ const mockData = {
   }
 };
 
-const CATEGORIES = [
+const ACTIVITY_CATEGORIES = [
+  { id: "activity", label: "Activity Approval", icon: "🎉", color: "#8b5cf6" },
+  { id: "outing", label: "Day Outing", icon: "🏙️", color: "#8b5cf6" },
+  { id: "event", label: "Personal Event", icon: "🎂", color: "#f59e0b" },
+];
+
+const COMPLAINT_CATEGORIES = [
   { id: "hostel", label: "Hostel & Facilities", icon: "🛏️", color: "#6366f1" },
   { id: "academic", label: "Academic Pressure", icon: "📚", color: "#f59e0b" },
   { id: "peer", label: "Peer Conflict", icon: "🤝", color: "#ec4899" },
   { id: "safety", label: "Safety/Personal", icon: "⚠️", color: "#ef4444" },
-  { id: "other", label: "Other/Something Else", icon: "❓", color: "#64748b" }
+  { id: "other", label: "Other", icon: "❓", color: "#64748b" }
 ];
 
 const STATUS_CONFIG: Record<ComplaintStatus, { label: string; icon: any; class: string }> = {
@@ -89,8 +95,9 @@ export default function ComplaintsPage() {
   const [activeTab, setActiveTab] = useState<"all" | "open" | "resolved">("all");
   
   // Form State
+  const [type, setType] = useState<"activity" | "complaint">("complaint");
   const [text, setText] = useState("");
-  const [category, setCategory] = useState(CATEGORIES[4].label);
+  const [category, setCategory] = useState(COMPLAINT_CATEGORIES[0].label);
   const [submitting, setSubmitting] = useState(false);
   const [submitted, setSubmitted] = useState(false);
 
@@ -143,7 +150,8 @@ export default function ComplaintsPage() {
 
   const resetForm = () => {
     setText("");
-    setCategory(CATEGORIES[4].label);
+    setType("complaint");
+    setCategory(COMPLAINT_CATEGORIES[0].label);
     setShowForm(false);
   };
 
@@ -165,7 +173,7 @@ export default function ComplaintsPage() {
         {!showForm && (
           <button className="rc-raise-btn" onClick={() => setShowForm(true)}>
             <Plus size={20} />
-            Write a New Concern
+            New Request / Concern
           </button>
         )}
       </header>
@@ -212,11 +220,32 @@ export default function ComplaintsPage() {
                 </div>
               </div>
 
-              {/* Step 1: Category */}
+              {/* Step 1: Type Selection */}
               <div className="rc-form-section">
-                <label className="rc-section-label">What is this regarding?</label>
+                <label className="rc-section-label">Select Request Type</label>
+                <div className="rc-type-grid">
+                  <button 
+                    className={`rc-type-item ${type === 'activity' ? 'rc-type-item--active' : ''}`}
+                    onClick={() => { setType('activity'); setCategory(ACTIVITY_CATEGORIES[0].label); }}
+                  >
+                    <Plus size={20} />
+                    <span>Activity Approval</span>
+                  </button>
+                  <button 
+                    className={`rc-type-item ${type === 'complaint' ? 'rc-type-item--active' : ''}`}
+                    onClick={() => { setType('complaint'); setCategory(COMPLAINT_CATEGORIES[0].label); }}
+                  >
+                    <ShieldAlert size={20} />
+                    <span>Personal Complaint</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2: Category */}
+              <div className="rc-form-section">
+                <label className="rc-section-label">Category</label>
                 <div className="rc-category-grid">
-                  {CATEGORIES.map(cat => (
+                  {(type === 'activity' ? ACTIVITY_CATEGORIES : COMPLAINT_CATEGORIES).map(cat => (
                     <button
                       key={cat.id}
                       className={`rc-cat-item ${category === cat.label ? 'rc-cat-item--active' : ''}`}
@@ -256,7 +285,7 @@ export default function ComplaintsPage() {
                   disabled={submitting || !text.trim()} 
                   onClick={handleSubmit}
                 >
-                  {submitting ? "Sending..." : "Send Secure Alert"}
+                  {submitting ? "Sending..." : "Submit Request"}
                   {!submitting && <Send size={16} />}
                 </button>
               </div>

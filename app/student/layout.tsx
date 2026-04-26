@@ -11,8 +11,8 @@ import DraggableSOS from "./components/DraggableSOS";
 
 export default function StudentLayout({ children }: { children: React.ReactNode }) {
   return (
-    <NoticeProvider>
-      <ProfileProvider>
+    <ProfileProvider>
+      <NoticeProvider>
         <DraggableSOS />
         <div className="student-shell">
           <StudentSidebar />
@@ -20,7 +20,7 @@ export default function StudentLayout({ children }: { children: React.ReactNode 
             {children}
           </div>
         </div>
-      </ProfileProvider>
-    </NoticeProvider>
+      </NoticeProvider>
+    </ProfileProvider>
   );
 }
