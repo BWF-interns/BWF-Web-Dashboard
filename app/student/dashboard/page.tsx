@@ -47,7 +47,7 @@ const mockData = {
 export default function Dashboard() {
   const router = useRouter();
   const { unreadCount } = useNotices();
-  const { avatarId, customAvatarUrl, name } = useProfile();
+  const { avatarId, customAvatarUrl, name, authId } = useProfile();
   const av = getAvatar(avatarId);
   const hasUnread = unreadCount > 0;
 
@@ -81,11 +81,14 @@ export default function Dashboard() {
 
     const fetchDashboard = async () => {
       try {
-        const res = await api.get(`/student/dashboard/${mockData.studentId}`);
+        const res = await api.get(`/student/dashboard/${authId}`);
+
         setSchedule(res.data.schedule || []);
         
         // 30-day Guardrail for Assignments
         const allAssignments = res.data.assignments || [];
+        console.log("All assignments:", allAssignments);
+
         const thirtyDaysFromNow = new Date();
         thirtyDaysFromNow.setDate(thirtyDaysFromNow.getDate() + 30);
         
@@ -94,6 +97,7 @@ export default function Dashboard() {
           return dueDate <= thirtyDaysFromNow;
         });
         
+        console.log("Filtered assignments:", filteredAssignments);
         setAssignments(filteredAssignments);
         
         // Load Mentor Note & "Thanks" state
@@ -103,7 +107,7 @@ export default function Dashboard() {
         
         setTodayMood(res.data.todayMood || null);
 
-        // NEW: Map dynamic resources from backend if they exist
+        // Map dynamic resources from backend if they exist
         if (res.data.resources) {
           setResources({
             library: res.data.resources.library || mockData.defaultUrl,
@@ -118,12 +122,12 @@ export default function Dashboard() {
       }
     };
 
-    fetchDashboard();
-  }, []);
+    if (authId) fetchDashboard();
+  }, [authId]);
 
   const handleMoodClick = async (mood: string) => {
     try {
-      await api.post(`/student/dashboard/${mockData.studentId}/mood`, { mood });
+      await api.post(`/student/dashboard/${authId}/mood`, { mood });
       setTodayMood(mood);
     } catch (error) {
       console.error("Failed to log mood", error);
@@ -134,7 +138,7 @@ export default function Dashboard() {
     if (!mentorNote?._id || reacted) return;
     try {
       setReacted(true);
-      await api.post(`/student/dashboard/${mockData.studentId}/mentor-note/${mentorNote._id}/thanks`);
+      await api.post(`/student/dashboard/${authId}/mentor-note/${mentorNote._id}/thanks`);
     } catch (error) {
       console.error("Failed to thank mentor", error);
       setReacted(false);

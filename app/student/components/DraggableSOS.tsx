@@ -2,6 +2,8 @@
 
 import { useEffect, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { AlertTriangle, X } from "lucide-react";
+import { useProfile } from "../context/ProfileContext";
+import api from "../../lib/api";
 
 const mockData = {
   adminEmail: "admin@bwf.edu",
@@ -32,35 +34,32 @@ export default function DraggableSOS() {
   const [hovered, setHovered] = useState(false);
   const [hasCustomPosition, setHasCustomPosition] = useState(false);
 
+  // SOS Message state
+  const [sosMessage, setSosMessage] = useState("");
+  const { authId } = useProfile();
+
   const triggerSOS = async () => {
     setSending(true);
     try {
       const payload = {
         type: "STUDENT_EMERGENCY",
-        message: "Student requested immediate direct escalation to BWF Founder/Admin.",
+        message: sosMessage.trim() || "Student requested immediate help from SOS button.",
         createdAt: new Date().toISOString(),
       };
 
-      const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-      await fetch("/api/student/sos", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          ...(token ? { Authorization: `Bearer ${token}` } : {}),
-        },
-        body: JSON.stringify(payload),
-      }).catch(() => null);
+      await api.post("/student/sos", payload);
 
-      const subject = encodeURIComponent(mockData.uiStrings.emailSubject);
-      const body = encodeURIComponent(mockData.uiStrings.emailBody);
-      window.location.href = `mailto:${mockData.adminEmail}?subject=${subject}&body=${body}`;
       setSent(true);
       setHovered(true); // Show success tooltip
+      setSosMessage(""); // Clear message
       setTimeout(() => {
         setSent(false);
         setHovered(false);
       }, 5000);
       setOpen(false);
+    } catch (err) {
+      console.error("SOS Error:", err);
+      alert("System Error: Emergency alert could not be sent electronically. Please contact the warden immediately.");
     } finally {
       setSending(false);
     }
@@ -180,6 +179,15 @@ export default function DraggableSOS() {
             <p className="sos-text">
               {mockData.uiStrings.modalText}
             </p>
+            
+            <textarea
+              className="sos-message-input"
+              placeholder="What's the emergency? (optional)"
+              value={sosMessage}
+              onChange={(e) => setSosMessage(e.target.value)}
+              rows={3}
+            />
+
             <button className="sos-confirm" onClick={triggerSOS} disabled={sending}>
               <AlertTriangle size={16} />
               {sending ? mockData.uiStrings.sendingBtn : mockData.uiStrings.confirmBtn}

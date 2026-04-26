@@ -21,13 +21,13 @@ import { getAvatar } from "../constants/avatars";
 import Image from 'next/image';
 
 const NAV_LINKS = [
-  { href: "/student/dashboard",   label: "Home",            Icon: Home       },
-  { href: "/student/mycourses",   label: "My Courses",      Icon: BookOpen   },
-  { href: "/student/noticeboard", label: "Notice Board",    Icon: Megaphone  },
-  { href: "/student/wellbeing",   label: "Wellbeing/Help",  Icon: HeartPulse },
-  { href: "/student/community",   label: "Community",       Icon: Users      },
-  { href: "/student/complaints",  label: "Raise a Concern", Icon: MessageSquareWarning   },
-  { href: "/student/profile",      label: "Profile",         Icon: Settings   }
+  { href: "/student/community",   label: "Community",                Icon: Users      },
+  { href: "/student/dashboard",   label: "Home",                     Icon: Home       },
+  { href: "/student/mycourses",   label: "Assignments",              Icon: BookOpen   },
+  { href: "/student/noticeboard", label: "Notice Board",             Icon: Megaphone  },
+  { href: "/student/wellbeing",   label: "Wellbeing/Help",           Icon: HeartPulse },
+  { href: "/student/complaints",  label: "Activities & Complaints",  Icon: MessageSquareWarning   },
+  { href: "/student/profile",     label: "Profile",                  Icon: Settings   }
 ];
 
 export default function StudentSidebar() {

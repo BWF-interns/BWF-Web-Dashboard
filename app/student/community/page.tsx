@@ -85,7 +85,6 @@ const mockData = {
     heroSub1: "Wins, moments, gratitude — from our students, wardens, and team.",
     heroSub2: "All posts are reviewed before they appear here.",
     storiesShared: "Stories shared",
-    heartsGiven: "Hearts given",
     emptyState: "No stories in this category yet.",
     verifiedTag: "Verified post",
     shareTitle: "✍️ Share your story",
@@ -121,7 +120,6 @@ export default function CommunityPage() {
 
   const [posts, setPosts] = useState<Post[]>(mockData.verifiedPosts as Post[]);
   const [filter, setFilter] = useState<"all" | Category>("all");
-  const [likedSet, setLikedSet] = useState<Set<string>>(new Set());
 
   // Submit form state
   const [submitText, setSubmitText] = useState("");
@@ -129,21 +127,6 @@ export default function CommunityPage() {
   const [submitted, setSubmitted] = useState(false);
   const [mediaFile, setMediaFile] = useState<File | null>(null);
   const [mediaPreview, setMediaPreview] = useState<string | null>(null);
-
-  const handleLike = (id: string, isLiked: boolean) => {
-    setLikedSet(prev => {
-      const next = new Set(prev);
-      if (isLiked) next.delete(id);
-      else next.add(id);
-      return next;
-    });
-
-    setPosts(prev =>
-      prev.map(post =>
-        post._id === id ? { ...post, likes: post.likes + (isLiked ? -1 : 1) } : post
-      )
-    );
-  };
 
   const handleSubmit = () => {
     if (!submitText.trim() && !mediaFile) return;
@@ -161,8 +144,6 @@ export default function CommunityPage() {
   }, [mediaPreview]);
 
   const visible = filter === "all" ? posts : posts.filter(p => p.category === filter);
-
-  const totalLikes = posts.reduce((acc, p) => acc + p.likes, 0);
 
   return (
     <div className="cm-page">
@@ -188,10 +169,6 @@ export default function CommunityPage() {
           <div className="cm-hero-stat">
             <span className="cm-hero-stat-num">{posts.length}</span>
             <span className="cm-hero-stat-label">{mockData.uiStrings.storiesShared}</span>
-          </div>
-          <div className="cm-hero-stat">
-            <span className="cm-hero-stat-num">{totalLikes}</span>
-            <span className="cm-hero-stat-label">{mockData.uiStrings.heartsGiven}</span>
           </div>
         </div>
       </section>
@@ -223,7 +200,6 @@ export default function CommunityPage() {
             visible.map(post => {
               const postAv = getAvatar(post.avatarId);
               const cfg = (mockData.catConfig as any)[post.category];
-              const isLiked = likedSet.has(post._id);
               return (
                 <article key={post._id} className="cm-post">
                   <div className="cm-post-stripe" style={{ background: cfg.border }} />
@@ -257,14 +233,6 @@ export default function CommunityPage() {
 
                   {/* Footer */}
                   <div className="cm-post-foot">
-                    <button
-                      className={`cm-like-btn${isLiked ? " cm-like-btn--active" : ""}`}
-                      onClick={() => handleLike(post._id, isLiked)}
-                      aria-label="Like"
-                    >
-                      <Heart size={15} fill={isLiked ? "currentColor" : "none"} />
-                      <span>{post.likes}</span>
-                    </button>
                     <span className="cm-verified-tag">
                       <CheckCircle2 size={12} /> {mockData.uiStrings.verifiedTag}
                     </span>
