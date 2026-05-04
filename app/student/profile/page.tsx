@@ -5,7 +5,7 @@ import type { Metadata } from "next";
 export const metadata: Metadata = {
   title: "Aisha Sharma - Profile",
   description:
-    "View and edit your personal information, contact details, and interests.",
+    "View your profile, interests, and personal journal reflections.",
 };
 
 export default function ServerProfilePage() {

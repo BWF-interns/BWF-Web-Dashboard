@@ -1,243 +1,397 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { useRouter } from "next/navigation";
-import { Bell } from "lucide-react";
-import { useNotices } from "../context/NoticeContext";
-import { useProfile } from "../context/ProfileContext";
-import { getAvatar } from "../constants/avatars";
+import "../styles/complaints.css";
+import { 
+  ShieldAlert, 
+  MessageSquarePlus, 
+  CheckCircle2, 
+  Clock, 
+  History, 
+  UserSquare2, 
+  X, 
+  Plus,
+  Send,
+  MessageCircle,
+  HelpCircle,
+  ChevronRight
+} from "lucide-react";
+
+type ComplaintStatus = "open" | "resolved" | "escalated";
+
+interface Complaint {
+  _id: string;
+  text: string;
+  category: string;
+  status: ComplaintStatus;
+  response: string | null;
+  createdAt: string;
+}
+
+// TODO: Replace fetch history with GET /api/student/complaints/:auth_id
+// TODO: Replace submit with POST /api/student/complaints/:auth_id
+
+function timeAgo(dateStr: string): string {
+  const diff = Date.now() - new Date(dateStr).getTime();
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "Just now";
+  if (mins < 60) return `${mins}m ago`;
+  const hrs = Math.floor(mins / 60);
+  if (hrs < 24) return `${hrs}h ago`;
+  return `${Math.floor(hrs / 24)}d ago`;
+}
+
+const mockData = {
+  eyebrow: "Permissions & Support",
+  title: "Activities & Complaints 🌿",
+  subtitle: "Request activity permissions or share a personal concern with the Warden.",
+  formTitle: "What can we help you with?",
+  formSub: "Your requests and concerns are handled securely by our team.",
+  historyTitle: "Request History",
+  emptyTitle: "No records found",
+  emptyDesc: "Your history is empty. We're here whenever you need assistance.",
+  loaderText: "Gathering your records...",
+  sidebarHowItWorks: {
+    title: "How it works",
+    steps: [
+      "Your message is sent securely and directly to the BWF Warden.",
+      "The Warden will review and assign your concern to a mentor.",
+      "You'll receive feedback and updates directly in this dashboard."
+    ]
+  },
+  sidebarSupport: {
+    badge: "BWF Support",
+    title: "Need to talk now?",
+    desc: "Our team is available 24/7 for emotional and mental health support.",
+    linkText: "Go to Wellbeing Hub"
+  }
+};
+
+const ACTIVITY_CATEGORIES = [
+  { id: "activity", label: "Activity Approval", icon: "🎉", color: "#8b5cf6" },
+  { id: "outing", label: "Day Outing", icon: "🏙️", color: "#8b5cf6" },
+  { id: "event", label: "Personal Event", icon: "🎂", color: "#f59e0b" },
+];
+
+const COMPLAINT_CATEGORIES = [
+  { id: "hostel", label: "Hostel & Facilities", icon: "🛏️", color: "#6366f1" },
+  { id: "academic", label: "Academic Pressure", icon: "📚", color: "#f59e0b" },
+  { id: "peer", label: "Peer Conflict", icon: "🤝", color: "#ec4899" },
+  { id: "safety", label: "Safety/Personal", icon: "⚠️", color: "#ef4444" },
+  { id: "other", label: "Other", icon: "❓", color: "#64748b" }
+];
+
+const STATUS_CONFIG: Record<ComplaintStatus, { label: string; icon: any; class: string }> = {
+  open: { label: "Received", icon: Clock, class: "rc-status--open" },
+  resolved: { label: "Resolved", icon: CheckCircle2, class: "rc-status--resolved" },
+  escalated: { label: "In Review", icon: ShieldAlert, class: "rc-status--escalated" },
+};
 
 export default function ComplaintsPage() {
-  const router = useRouter();
-  const { unreadCount } = useNotices();
-  const { avatarId, name } = useProfile();
-  const av = getAvatar(avatarId);
-
-  const [greeting, setGreeting] = useState("Welcome");
-  const firstName = name.split(" ")[0];
-
-  // form state
-  const [message, setMessage] = useState("");
-  const [anonymous, setAnonymous] = useState(false);
-  const [category, setCategory] = useState("other");
-  const [priority, setPriority] = useState("medium");
-
-  const [complaints, setComplaints] = useState([]);
+  const [complaints, setComplaints] = useState<Complaint[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [showForm, setShowForm] = useState(false);
+  const [activeTab, setActiveTab] = useState<"all" | "open" | "resolved">("all");
+  
+  // Form State
+  const [type, setType] = useState<"activity" | "complaint">("complaint");
+  const [text, setText] = useState("");
+  const [category, setCategory] = useState(COMPLAINT_CATEGORIES[0].label);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitted, setSubmitted] = useState(false);
 
   useEffect(() => {
-    const h = new Date().getHours();
-    if (h < 12) setGreeting("Good morning");
-    else if (h < 18) setGreeting("Good afternoon");
-    else setGreeting("Good evening");
-
     fetchComplaints();
   }, []);
 
-  const fetchComplaints = async () => {
-    const token = localStorage.getItem("accessToken");
+  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
+  const authId = typeof window !== "undefined" ? localStorage.getItem("auth_id") : null;
 
-    const res = await fetch("http://localhost:5000/student/complaints", {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    });
-
-    const data = await res.json();
-    if (res.ok) setComplaints(data);
-  };
-
-  const submitComplaint = async () => {
-    const token = localStorage.getItem("accessToken");
-
-    const res = await fetch("http://localhost:5000/student/complaints", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify({
-        message,
-        anonymous,
-        category,
-        priority,
-      }),
-    });
-
-    if (res.ok) {
-      setMessage("");
-      fetchComplaints();
+  async function fetchComplaints() {
+    try {
+      const res = await fetch(`/api/student/complaints/${authId}`, {
+        headers: { Authorization: `Bearer ${token}` }
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setComplaints(data.complaints || []);
+    } catch {
+      setError("Unable to load history. Please refresh.");
+    } finally {
+      setLoading(false);
     }
+  }
+
+  async function handleSubmit() {
+    if (!text.trim()) return;
+    setSubmitting(true);
+    try {
+      const res = await fetch(`/api/student/complaints/${authId}`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ text: text.trim(), category }),
+      });
+      if (!res.ok) throw new Error();
+      const data = await res.json();
+      setComplaints(prev => [data.complaint, ...prev]);
+      resetForm();
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch {
+      setError("Failed to send concern. Check your connection.");
+    } finally {
+      setSubmitting(false);
+    }
+  }
+
+  const resetForm = () => {
+    setText("");
+    setType("complaint");
+    setCategory(COMPLAINT_CATEGORIES[0].label);
+    setShowForm(false);
   };
+
+  const filteredComplaints = complaints.filter(c => {
+    if (activeTab === "all") return true;
+    if (activeTab === "open") return c.status === "open" || c.status === "escalated";
+    return c.status === "resolved";
+  });
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50 px-6 py-8">
-      {/* CONTAINER */}
-      <div className="max-w-6xl mx-auto space-y-8">
-        {/* HEADER */}
-        <header className="flex justify-between items-end flex-wrap gap-4">
-          <div>
-            <p className="text-[11px] font-extrabold tracking-widest text-blue-600 uppercase">
-              Support
-            </p>
+    <main className="rc-page">
+      {/* ── HEADER ── */}
+      <header className="rc-header">
+        <div className="rc-header-content">
+          <p className="rc-eyebrow">{mockData.eyebrow}</p>
+          <h1 className="rc-title">{mockData.title}</h1>
+          <p className="rc-subtitle">{mockData.subtitle}</p>
+        </div>
+        {!showForm && (
+          <button className="rc-raise-btn" onClick={() => setShowForm(true)}>
+            <Plus size={20} />
+            New Request / Concern
+          </button>
+        )}
+      </header>
 
-            <h1 className="text-3xl font-black text-gray-800">Complaints</h1>
-
-            <p className="text-sm text-gray-500 mt-1">
-              Raise and track your issues
-            </p>
+      {/* ── ALERTS ── */}
+      {submitted && (
+        <div className="rc-banner rc-banner--success">
+          <div className="rc-banner-inner">
+            <CheckCircle2 size={18} />
+            <span>Thank you for sharing. We've received your concern and will review it soon.</span>
           </div>
+          <button onClick={() => setSubmitted(false)} className="rc-banner-close"><X size={16} /></button>
+        </div>
+      )}
 
-          <div className="flex items-center gap-3">
-            {unreadCount > 0 && (
-              <div className="flex items-center gap-1 bg-pink-100 text-pink-600 border border-pink-200 text-xs font-bold px-3 py-1 rounded-full">
-                <Bell size={14} />
-                {unreadCount}
-              </div>
-            )}
-
-            <button
-              onClick={() => router.push("/student/noticeboard")}
-              className="w-10 h-10 rounded-xl border bg-white flex items-center justify-center hover:bg-blue-50 transition"
-            >
-              <Bell size={18} />
-            </button>
-
-            <button
-              onClick={() => router.push("/student/profile")}
-              style={{ background: av.bg }}
-              className="w-10 h-10 rounded-xl flex items-center justify-center text-lg shadow"
-            >
-              {av.emoji}
-            </button>
+      {error && (
+        <div className="rc-banner rc-banner--error">
+          <div className="rc-banner-inner">
+            <ShieldAlert size={18} />
+            <span>{error}</span>
           </div>
-        </header>
+          <button className="rc-banner-close" onClick={() => setError(null)} aria-label="Close">
+            <X size={16} />
+          </button>
+        </div>
+      )}
 
-        {/* BANNER */}
-        <section className="bg-white border border-blue-100 rounded-2xl p-6 shadow-sm flex justify-between items-center">
-          <div>
-            <h2 className="text-lg font-semibold text-gray-800">
-              Need help or want to share something?
-            </h2>
-            <p className="text-sm text-gray-500 mt-1">
-              Your voice matters. We're here to support you 💙
-            </p>
-          </div>
-          <span className="text-4xl">🛟</span>
-        </section>
-
-        {/* GRID */}
-        <section className="grid md:grid-cols-2 gap-8">
-          {/* FORM */}
-          <div className="bg-white rounded-2xl border border-gray-200 p-6 shadow-sm space-y-5">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Raise a Complaint
-            </h3>
-
-            <textarea
-              className="w-full rounded-xl border border-gray-200 p-4 text-sm bg-gray-50 focus:ring-2 focus:ring-blue-500 outline-none"
-              rows={4}
-              placeholder="Tell us what's bothering you..."
-              value={message}
-              onChange={(e) => setMessage(e.target.value)}
-            />
-
-            <div className="flex gap-3 flex-wrap">
-              <select
-                value={category}
-                onChange={(e) => setCategory(e.target.value)}
-                className="flex-1 min-w-[140px] rounded-xl border border-gray-200 p-3 text-sm bg-white focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="safety">🛡️ Safety</option>
-                <option value="infrastructure">🏠 Infrastructure</option>
-                <option value="food">🍽️ Food</option>
-                <option value="other">📌 Other</option>
-              </select>
-
-              <select
-                value={priority}
-                onChange={(e) => setPriority(e.target.value)}
-                className="flex-1 min-w-[140px] rounded-xl border border-gray-200 p-3 text-sm bg-white focus:ring-2 focus:ring-blue-500"
-              >
-                <option value="low">🟢 Low</option>
-                <option value="medium">🟡 Medium</option>
-                <option value="high">🔴 High</option>
-              </select>
-            </div>
-
-            <label className="flex items-center gap-2 text-sm text-gray-600">
-              <input
-                type="checkbox"
-                checked={anonymous}
-                onChange={() => setAnonymous(!anonymous)}
-                className="accent-blue-600"
-              />
-              Submit anonymously
-            </label>
-
-            <button
-              onClick={submitComplaint}
-              className="w-full bg-blue-600 hover:bg-blue-700 transition text-white py-3 rounded-xl text-sm font-medium shadow-sm hover:scale-[1.02]"
-            >
-              Submit Complaint
-            </button>
-          </div>
-
-          {/* LIST */}
-          <div className="space-y-4">
-            <h3 className="text-lg font-semibold text-gray-800">
-              Your Complaints
-            </h3>
-
-            {complaints.length === 0 ? (
-              <div className="bg-white border border-gray-200 rounded-2xl p-10 text-center text-gray-500 text-sm shadow-sm">
-                <span className="text-3xl block mb-2">😌</span>
-                No complaints yet
-                <p className="text-xs text-gray-400 mt-1">
-                  You're all good for now!
-                </p>
-              </div>
-            ) : (
-              complaints.map((c: any) => (
-                <div
-                  key={c._id}
-                  className="bg-white border border-gray-200 rounded-2xl p-4 shadow-sm hover:shadow-md transition"
-                >
-                  <div className="flex justify-between gap-3">
-                    <p className="text-sm font-medium text-gray-800 line-clamp-2">
-                      {c.message}
-                    </p>
-
-                    <span
-                      className={`text-xs px-2 py-1 rounded-full whitespace-nowrap font-medium
-                      ${
-                        c.status === "OPEN"
-                          ? "bg-blue-100 text-blue-600"
-                          : c.status === "RESOLVED"
-                            ? "bg-green-100 text-green-600"
-                            : "bg-purple-100 text-purple-600"
-                      }`}
-                    >
-                      {c.status}
-                    </span>
-                  </div>
-
-                  <div className="flex justify-between items-center mt-3 text-xs text-gray-500">
-                    <div className="flex gap-2 flex-wrap">
-                      <span className="bg-gray-100 px-2 py-1 rounded-full">
-                        {c.category}
-                      </span>
-                      <span className="bg-gray-100 px-2 py-1 rounded-full">
-                        {c.priority}
-                      </span>
-                    </div>
-
-                    <span>{new Date(c.createdAt).toLocaleDateString()}</span>
+      {/* ── MAIN CONTENT ── */}
+      <div className="rc-grid">
+        {/* Left Column: Form / Info */}
+        <section className="rc-column-main">
+          {showForm ? (
+            <div className="rc-form-container">
+              <div className="rc-form-header">
+                <button className="rc-back-btn" onClick={resetForm}>
+                  ← Back to My History
+                </button>
+                <div className="rc-form-intro">
+                  <MessageCircle size={28} className="rc-form-icon" />
+                  <div>
+                    <h2 className="rc-form-title">{mockData.formTitle}</h2>
+                    <p className="rc-form-sub">{mockData.formSub}</p>
                   </div>
                 </div>
-              ))
-            )}
-          </div>
+              </div>
+
+              {/* Step 1: Type Selection */}
+              <div className="rc-form-section">
+                <label className="rc-section-label">Select Request Type</label>
+                <div className="rc-type-grid">
+                  <button 
+                    className={`rc-type-item ${type === 'activity' ? 'rc-type-item--active' : ''}`}
+                    onClick={() => { setType('activity'); setCategory(ACTIVITY_CATEGORIES[0].label); }}
+                  >
+                    <Plus size={20} />
+                    <span>Activity Approval</span>
+                  </button>
+                  <button 
+                    className={`rc-type-item ${type === 'complaint' ? 'rc-type-item--active' : ''}`}
+                    onClick={() => { setType('complaint'); setCategory(COMPLAINT_CATEGORIES[0].label); }}
+                  >
+                    <ShieldAlert size={20} />
+                    <span>Personal Complaint</span>
+                  </button>
+                </div>
+              </div>
+
+              {/* Step 2: Category */}
+              <div className="rc-form-section">
+                <label className="rc-section-label">Category</label>
+                <div className="rc-category-grid">
+                  {(type === 'activity' ? ACTIVITY_CATEGORIES : COMPLAINT_CATEGORIES).map(cat => (
+                    <button
+                      key={cat.id}
+                      className={`rc-cat-item ${category === cat.label ? 'rc-cat-item--active' : ''}`}
+                      onClick={() => setCategory(cat.label)}
+                    >
+                      <span className="rc-cat-icon">{cat.icon}</span>
+                      <span className="rc-cat-label">{cat.label}</span>
+                      {category === cat.label && <div className="rc-cat-check"><CheckCircle2 size={12} /></div>}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Step 2: Message */}
+              <div className="rc-form-section">
+                <label className="rc-section-label">Your message</label>
+                <div className="rc-textarea-wrapper">
+                  <textarea
+                    className="rc-textarea"
+                    placeholder="Provide as much detail as you're comfortable sharing..."
+                    value={text}
+                    onChange={e => setText(e.target.value)}
+                    rows={6}
+                    maxLength={1000}
+                  />
+                  <div className="rc-textarea-footer">
+                    <span>{text.length} / 1000 characters</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Actions */}
+              <div className="rc-form-footer">
+                <button className="rc-btn-cancel" onClick={resetForm}>Discard</button>
+                <button 
+                  className="rc-btn-submit" 
+                  disabled={submitting || !text.trim()} 
+                  onClick={handleSubmit}
+                >
+                  {submitting ? "Sending..." : "Submit Request"}
+                  {!submitting && <Send size={16} />}
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="rc-history">
+              <div className="rc-history-header">
+                <div className="rc-history-title-group">
+                  <History size={20} className="rc-history-icon" />
+                  <h2 className="rc-history-title">{mockData.historyTitle}</h2>
+                </div>
+                <div className="rc-tabs">
+                  <button 
+                    className={`rc-tab ${activeTab === "all" ? "rc-tab--active" : ""}`}
+                    onClick={() => setActiveTab("all")}
+                  >
+                    All
+                  </button>
+                  <button 
+                    className={`rc-tab ${activeTab === "open" ? "rc-tab--active" : ""}`}
+                    onClick={() => setActiveTab("open")}
+                  >
+                    Active
+                  </button>
+                  <button 
+                    className={`rc-tab ${activeTab === "resolved" ? "rc-tab--active" : ""}`}
+                    onClick={() => setActiveTab("resolved")}
+                  >
+                    Resolved
+                  </button>
+                </div>
+              </div>
+
+              {loading ? (
+                <div className="rc-loader">
+                  <div className="rc-loader-ring"></div>
+                  <p>{mockData.loaderText}</p>
+                </div>
+              ) : filteredComplaints.length === 0 ? (
+                <div className="rc-empty-state">
+                  <div className="rc-empty-graphic">🕊️</div>
+                  <h3>{mockData.emptyTitle}</h3>
+                  <p>{mockData.emptyDesc}</p>
+                </div>
+              ) : (
+                <div className="rc-list">
+                  {filteredComplaints.map(c => {
+                    const config = STATUS_CONFIG[c.status];
+                    const Icon = config.icon;
+                    return (
+                      <div key={c._id} className={`rc-card rc-card--${c.status}`}>
+                        <div className="rc-card-header">
+                          <div className="rc-card-badges">
+                            <span className={`rc-pill-status ${config.class}`}>
+                              <Icon size={12} />
+                              {config.label}
+                            </span>
+                            <span className="rc-pill-cat">{c.category || "General"}</span>
+                          </div>
+                          <span className="rc-card-date">{timeAgo(c.createdAt)}</span>
+                        </div>
+                        <p className="rc-card-body">{c.text}</p>
+                        
+                        {c.response && (
+                          <div className="rc-mentor-response">
+                            <div className="rc-mentor-head">
+                              <MessageSquarePlus size={14} />
+                              <span>Mentor Feedback</span>
+                            </div>
+                            <p className="rc-mentor-body">{c.response}</p>
+                          </div>
+                        )}
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </section>
+
+        {/* Right Column: Support / Guidance */}
+        <aside className="rc-column-sidebar">
+          <div className="rc-sidebar-card rc-sidebar-card--primary">
+            <HelpCircle size={24} className="rc-sidebar-icon" />
+            <h3 className="rc-sidebar-title">{mockData.sidebarHowItWorks.title}</h3>
+            <ul className="rc-sidebar-list">
+              {mockData.sidebarHowItWorks.steps.map((step, idx) => (
+                <li key={idx}>
+                  <div className="rc-list-point">{idx + 1}</div>
+                  <p>{step}</p>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <div className="rc-sidebar-card rc-sidebar-card--purple" onClick={() => window.location.href = '/student/wellbeing'}>
+            <div className="rc-sidebar-badge">{mockData.sidebarSupport.badge}</div>
+            <h3 className="rc-sidebar-title">{mockData.sidebarSupport.title}</h3>
+            <p className="rc-sidebar-desc">{mockData.sidebarSupport.desc}</p>
+            <div className="rc-sidebar-link">
+              <span>{mockData.sidebarSupport.linkText}</span>
+              <ChevronRight size={16} />
+            </div>
+          </div>
+        </aside>
       </div>
     </main>
   );

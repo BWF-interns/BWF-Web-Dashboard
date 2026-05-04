@@ -31,16 +31,28 @@
 
 html { font-size: 16px; }
 
-* { box-sizing: border-box; }
-/* * { box-sizing: border-box; margin: 0; padding: 0; } */
+* { box-sizing: border-box; margin: 0; padding: 0; }
 
 body {
-  font-family: 'Nunito', sans-serif;
+  font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+  font-size: 16px;
+  line-height: 1.6;
+  letter-spacing: 0.02em;
   background-color: var(--bg-main);
   color: var(--text-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   overflow-x: hidden;
+}
+
+p, label, input, button, textarea, small {
+  font-size: 1rem;
+  line-height: 1.5;
+}
+
+h1, h2, h3, h4, h5, h6 {
+  font-family: 'Nunito', 'Segoe UI', Arial, sans-serif;
+  letter-spacing: 0.01em;
 }
 
 h1, h2, h3, h4, h5, h6 {

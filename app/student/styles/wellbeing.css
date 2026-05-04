@@ -1,733 +1,586 @@
-/* =========================================
-   BWF WELLBEING PAGE — SAFE · WARM · GENTLE
-   ========================================= */
-
-.wb-page {
-  padding: 36px 40px 56px;
-  min-height: 100vh;
-  background: var(--bg-main);
-}
-
-/* ── HEADER ── */
-.wb-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: flex-end;
-  margin-bottom: 24px;
-  flex-wrap: wrap;
-  gap: 8px;
-  animation: fadeSlideUp 0.45s ease-out both;
-}
-
-.wb-eyebrow {
-  font-size: 0.7rem;
-  font-weight: 800;
-  text-transform: uppercase;
-  letter-spacing: 2.5px;
-  color: #db2777;
-  margin-bottom: 5px;
-}
-
-.wb-title {
-  font-size: 2.1rem;
-  font-weight: 900;
-  color: var(--text-primary);
-  letter-spacing: -0.8px;
-  line-height: 1;
-}
-
-.wb-subtitle {
-  font-size: 0.92rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  align-self: flex-end;
-  padding-bottom: 4px;
-}
-
-/* ── HERO BANNER ── */
-.wb-hero {
-  position: relative;
-  background: linear-gradient(130deg, #fce7f3 0%, #dbeafe 50%, #d1fae5 100%);
-  border-radius: 28px;
-  padding: 28px 30px 24px;
-  margin-bottom: 28px;
-  overflow: hidden;
-  border: 1.5px solid rgba(255,255,255,0.9);
-  box-shadow: 0 12px 40px rgba(219,39,119,0.07), 0 2px 8px rgba(0,0,0,0.03);
-  animation: fadeSlideUp 0.5s ease-out 0.06s both;
-}
-
-.wb-hero-blob {
-  position: absolute;
-  border-radius: 50%;
-  pointer-events: none;
-}
-
-.wb-hero-blob-1 {
-  width: 200px; height: 200px;
-  top: -70px; right: -60px;
-  background: radial-gradient(circle, rgba(255,255,255,0.5) 0%, transparent 70%);
-}
-
-.wb-hero-blob-2 {
-  width: 100px; height: 100px;
-  bottom: -30px; left: 20%;
-  background: radial-gradient(circle, rgba(219,39,119,0.06) 0%, transparent 70%);
-}
-
-.wb-hero-content {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 24px;
-  position: relative;
-  z-index: 1;
-}
-
-.wb-hero-text h2 {
-  font-size: 1.6rem;
-  font-weight: 900;
-  color: #831843;
-  margin-bottom: 6px;
-  letter-spacing: -0.4px;
-}
-
-.wb-hero-text p {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #be185d;
-}
-
-.wb-hero-illustration { flex-shrink: 0; }
-
-.wb-lotus {
-  font-size: 3.5rem;
-  line-height: 1;
-  animation: floatLotus 3s ease-in-out infinite;
-  filter: drop-shadow(0 4px 12px rgba(219,39,119,0.2));
-}
-
-@keyframes floatLotus {
-  0%, 100% { transform: translateY(0); }
-  50%       { transform: translateY(-8px); }
-}
-
-/* Quick resource cards row */
-.wb-quick-resources {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 12px;
-  position: relative;
-  z-index: 1;
-}
-
-.wb-resource-card {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: rgba(255,255,255,0.8);
-  backdrop-filter: blur(6px);
-  border: 1.5px solid var(--rbd, #fbcfe8);
-  border-radius: 18px;
-  padding: 14px 16px;
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  text-align: left;
-}
-
-.wb-resource-card:hover {
-  transform: translateY(-3px);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-  background: white;
-}
-
-.wb-rc-icon {
-  width: 38px; height: 38px;
-  border-radius: 12px;
-  background: var(--rb, #fce7f3);
-  color: var(--rc, #db2777);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-}
-
-.wb-rc-text {
-  flex: 1;
-  min-width: 0;
-}
-
-.wb-rc-label {
-  display: block;
-  font-size: 0.82rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  margin-bottom: 2px;
-}
-
-.wb-rc-sub {
-  display: block;
-  font-size: 0.7rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  white-space: nowrap;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-.wb-rc-chevron {
-  color: var(--text-secondary);
-  flex-shrink: 0;
-  transition: transform 0.2s ease;
-}
-
-.wb-resource-card:hover .wb-rc-chevron { transform: translateX(3px); }
-
-/* ── BREATHING OVERLAY ── */
-.wb-breathing-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0,0,0,0.5);
-  backdrop-filter: blur(4px);
-  z-index: 100;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  animation: fadeIn 0.3s ease both;
-}
-
-@keyframes fadeIn {
-  from { opacity: 0; }
-  to   { opacity: 1; }
-}
-
-.wb-breathing-modal {
-  background: white;
-  border-radius: 32px;
-  padding: 48px 40px;
-  text-align: center;
-  box-shadow: 0 24px 80px rgba(0,0,0,0.2);
-  max-width: 340px;
-  width: 90%;
-}
-
-.wb-breath-circle {
-  width: 140px; height: 140px;
-  border-radius: 50%;
-  margin: 0 auto 28px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  background: linear-gradient(135deg, #dbeafe, #d1fae5);
-  transition: transform 4s cubic-bezier(0.4, 0, 0.2, 1), background 1s ease;
-}
-
-.wb-breath-circle--in {
-  transform: scale(1.3);
-  background: linear-gradient(135deg, #dbeafe, #c7d2fe);
-}
-
-.wb-breath-circle--hold {
-  transform: scale(1.3);
-  background: linear-gradient(135deg, #d1fae5, #bbf7d0);
-}
-
-.wb-breath-circle--out {
-  transform: scale(1);
-  background: linear-gradient(135deg, #fce7f3, #dbeafe);
-}
-
-.wb-breath-emoji { font-size: 2.5rem; }
-
-.wb-breath-phase {
-  font-size: 1.3rem;
-  font-weight: 900;
-  color: var(--text-primary);
-  margin-bottom: 8px;
-}
-
-.wb-breath-count {
-  font-size: 0.85rem;
-  font-weight: 600;
-  color: var(--text-secondary);
-  margin-bottom: 28px;
-}
-
-.wb-breath-close {
-  background: var(--brand-blue);
-  color: white;
-  border: none;
-  padding: 12px 32px;
-  border-radius: 40px;
-  font-weight: 800;
-  font-size: 0.9rem;
-  font-family: 'Nunito', sans-serif;
-  cursor: pointer;
-  transition: all 0.22s ease;
-}
-
-.wb-breath-close:hover {
-  background: #2563eb;
-  transform: scale(1.04);
-}
-
-/* ── MAIN GRID ── */
-.wb-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 22px;
-}
-
-.wb-col { display: flex; flex-direction: column; gap: 22px; }
-
-/* ── CARDS ── */
-.wb-card {
-  background: var(--bg-card);
-  border-radius: 24px;
-  padding: 26px;
-  border: 1.5px solid #f0f4fb;
-  box-shadow: 0 4px 20px rgba(0,0,0,0.04);
-  animation: fadeSlideUp 0.5s ease-out both;
-  transition: box-shadow 0.3s ease, transform 0.3s ease;
-}
-
-.wb-card:hover {
-  box-shadow: 0 10px 36px rgba(0,0,0,0.07);
-  transform: translateY(-2px);
-}
-
-.wb-card:nth-child(1) { animation-delay: 0.1s; }
-.wb-card:nth-child(2) { animation-delay: 0.2s; }
-
-.wb-card-header {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 20px;
-}
-
-.wb-card-emoji { font-size: 1.3rem; }
-
-.wb-card-title {
-  font-size: 1rem;
-  font-weight: 800;
-  color: var(--text-primary);
-  letter-spacing: -0.2px;
-}
-
-/* ── MOOD BUTTONS ── */
-.wb-mood-buttons {
-  display: flex;
-  gap: 10px;
-  margin-bottom: 16px;
-}
-
-.wb-mood-btn {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6px;
-  padding: 16px 10px;
-  border-radius: 18px;
-  border: 2px solid var(--mbd, #e2e8f0);
-  background: var(--bg-main);
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.wb-mood-btn:hover {
-  transform: translateY(-4px) scale(1.03);
-  background: var(--mb, #f8fafc);
-  border-color: var(--mc, #3b82f6);
-  box-shadow: 0 8px 24px rgba(0,0,0,0.08);
-}
-
-.wb-mood-btn--active {
-  background: var(--mb, #dbeafe);
-  border-color: var(--mc, #3b82f6);
-  box-shadow: 0 4px 16px rgba(0,0,0,0.1);
-  transform: translateY(-2px);
-}
-
-.wb-mood-emoji { font-size: 2rem; line-height: 1; }
-.wb-mood-label { font-size: 0.75rem; font-weight: 800; color: var(--text-primary); }
-
-/* Affirmation */
-.wb-affirmation {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(120deg, #fef9c3, #fef3c7);
-  border: 1.5px solid #fde68a;
-  color: #78350f;
-  font-size: 0.85rem;
-  font-weight: 700;
-  padding: 12px 16px;
-  border-radius: 16px;
-  margin-bottom: 14px;
-  animation: fadeSlideUp 0.35s ease-out both;
-}
-
-/* Note input */
-.wb-note-input {
-  width: 100%;
-  border: 1.5px solid #e8edf5;
-  border-radius: 14px;
-  padding: 12px 14px;
-  font-family: 'Nunito', sans-serif;
-  font-size: 0.88rem;
-  font-weight: 500;
-  color: var(--text-primary);
-  background: var(--bg-main);
-  resize: none;
-  outline: none;
-  margin-bottom: 12px;
-  transition: border-color 0.2s ease;
-}
-
-.wb-note-input:focus { border-color: var(--brand-blue); background: white; }
-
-/* Submit mood button */
-.wb-submit-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  background: linear-gradient(135deg, #fce7f3, #fbcfe8);
-  color: #9d174d;
-  border: 1.5px solid #fbcfe8;
-  padding: 11px 22px;
-  border-radius: 40px;
-  cursor: pointer;
-  font-weight: 800;
-  font-size: 0.85rem;
-  font-family: 'Nunito', sans-serif;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-}
-
-.wb-submit-btn:hover {
-  background: #db2777;
-  color: white;
-  border-color: #db2777;
-  transform: scale(1.04);
-  box-shadow: 0 6px 20px rgba(219,39,119,0.25);
-}
-
-/* ── MOOD HISTORY ── */
-.wb-history-list { display: flex; flex-direction: column; gap: 10px; }
-
-.wb-history-item {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 12px 14px;
-  background: var(--mb, #f8fafc);
-  border-radius: 16px;
-  border: 1.5px solid transparent;
-  transition: border-color 0.2s ease;
-}
-
-.wb-history-item:hover { border-color: var(--mc, #e2e8f0); }
-
-.wb-hist-emoji { font-size: 1.3rem; flex-shrink: 0; }
-.wb-hist-text  { flex: 1; min-width: 0; }
-.wb-hist-mood  { font-size: 0.85rem; font-weight: 800; display: block; margin-bottom: 2px; }
-.wb-hist-note  { font-size: 0.75rem; font-weight: 500; color: var(--text-secondary); margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.wb-hist-date  { font-size: 0.72rem; font-weight: 700; color: var(--text-secondary); flex-shrink: 0; }
-
-/* ── JOURNAL CARD ── */
-.wb-journal-card { }
-
-.wb-prompt-box {
-  background: linear-gradient(120deg, #f0fdf4, #dcfce7);
-  border: 1.5px solid #bbf7d0;
-  border-radius: 18px;
-  padding: 16px 18px;
-  margin-bottom: 16px;
-}
-
-.wb-prompt-text {
-  font-size: 0.9rem;
-  font-weight: 600;
-  color: #14532d;
-  font-style: italic;
-  font-family: 'Lora', serif;
-  line-height: 1.5;
-  margin-bottom: 10px;
-}
-
-.wb-prompt-next {
-  background: none;
-  border: none;
-  font-size: 0.75rem;
-  font-weight: 800;
-  color: #16a34a;
-  cursor: pointer;
-  font-family: 'Nunito', sans-serif;
-  padding: 0;
-  transition: opacity 0.2s;
-}
-
-.wb-prompt-next:hover { opacity: 0.7; }
-
-.wb-journal-input {
-  width: 100%;
-  border: 1.5px solid #e8edf5;
-  border-radius: 16px;
-  padding: 14px 16px;
-  font-family: 'Lora', serif;
-  font-size: 0.9rem;
-  color: var(--text-primary);
-  background: var(--bg-main);
-  resize: none;
-  outline: none;
-  margin-bottom: 14px;
-  transition: border-color 0.2s ease;
-  line-height: 1.6;
-}
-
-.wb-journal-input:focus { border-color: #16a34a; background: white; }
-
-.wb-save-btn {
-  background: linear-gradient(135deg, #d1fae5, #bbf7d0);
-  color: #065f46;
-  border: 1.5px solid #bbf7d0;
-  padding: 11px 24px;
-  border-radius: 40px;
-  cursor: pointer;
-  font-weight: 800;
-  font-size: 0.85rem;
-  font-family: 'Nunito', sans-serif;
-  transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
-  display: block;
-  width: 100%;
-}
-
-.wb-save-btn:hover:not(:disabled) {
-  background: #16a34a;
-  color: white;
-  border-color: #16a34a;
-  transform: scale(1.02);
-  box-shadow: 0 6px 20px rgba(22,163,74,0.25);
-}
-
-.wb-save-btn:disabled { opacity: 0.5; cursor: not-allowed; }
-
-.wb-save-btn--saved {
-  background: linear-gradient(135deg, #16a34a, #15803d) !important;
-  color: white !important;
-  border-color: #16a34a !important;
-}
-
-/* ── GROUNDING CARD ── */
-.wb-ground-card {
-  background: linear-gradient(135deg, #fff7fb 0%, #fce7f3 100%);
-  border-color: #fbcfe8;
-}
-
-.wb-ground-steps { display: flex; flex-direction: column; gap: 10px; margin-bottom: 16px; }
-
-.wb-ground-step {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  padding: 10px 14px;
-  background: rgba(255,255,255,0.7);
-  border-radius: 14px;
-  border: 1px solid rgba(255,255,255,0.8);
-}
-
-.wb-ground-num {
-  width: 28px; height: 28px;
-  background: linear-gradient(135deg, #db2777, #ec4899);
-  color: white;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 0.85rem;
-  font-weight: 900;
-  flex-shrink: 0;
-}
-
-.wb-ground-emoji { font-size: 1.1rem; flex-shrink: 0; }
-.wb-ground-text  { font-size: 0.85rem; font-weight: 600; color: #831843; }
-
-.wb-ground-footer {
-  font-size: 0.8rem;
-  font-weight: 600;
-  color: #be185d;
-  font-family: 'Lora', serif;
-  font-style: italic;
-  margin: 0;
-  text-align: center;
-}
-
-@keyframes fadeSlideUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-
-/* ═════════════════════════════════════════
-   MOBILE RESPONSIVENESS
-   ═════════════════════════════════════════ */
-
-@media (max-width: 1024px) {
-  .wb-hero-content { flex-direction: column; justify-content: flex-start; }
-  .wb-lotus { font-size: 2.5rem; }
-}
-
-@media (max-width: 768px) {
-  .wb-page { padding: 1.5rem 1rem 2rem; margin-top: 56px; }
-
-  .wb-header { margin-bottom: 1.5rem; flex-direction: column; align-items: flex-start; gap: 0.75rem; }
-  .wb-title { font-size: 1.5rem; }
-  .wb-eyebrow { font-size: 0.6rem; }
-  .wb-subtitle { font-size: 0.85rem; align-self: flex-start; }
-
-  .wb-hero {
-    padding: 1.25rem 1.5rem;
-    margin-bottom: 1.5rem;
-    border-radius: 1.25rem;
+/* ═══════════════════════════════════════════════════════════════════════════════
+   BWF WELLBEING HUB — PREMIUM, WARM, TRAUMA-AWARE
+   Safe space for kids 7-18 with CBT journaling, daily challenges, counselling
+   v2: confetti, calm corner, enhanced CBT, reframe step, relaxation exercises
+   ═══════════════════════════════════════════════════════════════════════════════ */
+
+   .wb-page {
+    padding: 36px 40px 56px;
+    min-height: 100vh;
+    background: var(--bg-main);
+    position: relative;
+    overflow-x: hidden;
   }
-
-  .wb-hero .wb-hero-blob-1,
-  .wb-hero .wb-hero-blob-2 { display: none; }
-
-  .wb-hero-content { gap: 1rem; margin-bottom: 1rem; }
-  .wb-hero-text h2 { font-size: 1.25rem; margin-bottom: 0.4rem; }
-  .wb-hero-text p { font-size: 0.85rem; }
-  .wb-lotus { font-size: 2rem; }
-
-  .wb-quick-resources {
-    grid-template-columns: repeat(2, 1fr);
-    gap: 0.75rem;
-  }
-
-  .wb-resource-card {
-    padding: 0.875rem 1rem;
-    border-radius: 1rem;
-  }
-
-  .wb-rc-icon { width: 34px; height: 34px; font-size: 1.1rem; }
-  .wb-rc-label { font-size: 0.75rem; }
-  .wb-rc-sub { font-size: 0.65rem; }
-
-  /* CRITICAL: Main grid collapses to single column */
-  .wb-grid {
-    grid-template-columns: 1fr;
-    gap: 1rem;
-  }
-
-  .wb-col { gap: 1rem; }
-
-  /* Breathing modal responsive */
-/* Breathing modal responsive - CENTERED & POLISHED */
-  .wb-breathing-overlay { 
-    top: 0; bottom: 0; left: 0; right: 0; 
-    align-items: center; /* CRITICAL: This keeps it floating in the middle! */
-    justify-content: center; 
-    background: rgba(0,0,0,0.55); 
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* CONFETTI                                                                   */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-confetti-container {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 0;
+    pointer-events: none;
     z-index: 9999;
   }
-  .wb-breathing-modal { 
-    width: 90%; 
-    max-width: 340px; 
-    max-height: 85vh; 
-    border-radius: 28px; 
-    /* Slightly less padding on the bottom to balance the button's visual weight */
-    padding: 2.5rem 1.5rem 2rem; 
-    margin: 0;
-    box-shadow: 0 20px 60px rgba(0,0,0,0.15); 
+  
+  .wb-confetti-piece {
+    position: absolute;
+    top: -10px;
+    animation: confettiFall linear forwards;
+  }
+  
+  @keyframes confettiFall {
+    0%   { transform: translateY(0) rotate(0deg) scale(1); opacity: 1; }
+    80%  { opacity: 1; }
+    100% { transform: translateY(100vh) rotate(720deg) scale(0.6); opacity: 0; }
+  }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* HEADER                                                                     */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-header {
+    margin-bottom: 28px;
+    animation: fsup 0.5s ease-out both;
+  }
+  
+  .wb-eyebrow {
+    font-size: 0.7rem;
+    font-weight: 800;
+    text-transform: uppercase;
+    letter-spacing: 2.5px;
+    color: var(--brand-blue);
+    margin-bottom: 6px;
+  }
+  
+  .wb-title {
+    font-size: 2.2rem;
+    font-weight: 900;
+    color: var(--text-primary);
+    letter-spacing: -0.8px;
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+  
+  .wb-subtitle {
+    font-size: 0.9rem;
+    font-weight: 600;
+    color: var(--text-secondary);
+  }
+  
+  @keyframes fsup {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* HERO                                                                       */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-hero {
+    position: relative;
+    background: linear-gradient(130deg, #fce7f3 0%, #dbeafe 50%, #dcfce7 100%);
+    border-radius: 24px;
+    padding: 32px;
+    margin-bottom: 28px;
+    overflow: hidden;
+    border: 1.5px solid rgba(255, 255, 255, 0.8);
+    box-shadow: 0 10px 32px rgba(236, 72, 153, 0.08);
+    animation: cardpop 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  
+  @keyframes cardpop {
+    0%   { opacity: 0; transform: scale(0.95) translateY(16px); }
+    100% { opacity: 1; transform: scale(1) translateY(0); }
+  }
+  
+  .wb-hero-blob { position: absolute; border-radius: 50%; pointer-events: none; }
+  .wb-hero-blob-1 {
+    width: 200px; height: 200px; top: -80px; right: -60px;
+    background: radial-gradient(circle, rgba(255,255,255,0.35), transparent 70%);
+  }
+  .wb-hero-blob-2 {
+    width: 150px; height: 150px; bottom: -40px; left: 40px;
+    background: radial-gradient(circle, rgba(99,102,241,0.06), transparent 70%);
+  }
+  
+  .wb-hero-inner {
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 24px; position: relative; z-index: 1;
+  }
+  
+  .wb-hero-left h2 {
+    font-size: 1.55rem; font-weight: 900; color: #831843;
+    margin-bottom: 8px; letter-spacing: -0.4px;
+  }
+  .wb-hero-left p {
+    font-size: 0.95rem; font-weight: 600; color: #9d174d;
+    line-height: 1.5; max-width: 320px;
+  }
+  .wb-hero-lotus { font-size: 4rem; flex-shrink: 0; }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* GRID LAYOUT                                                                */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; }
+  .wb-col  { display: flex; flex-direction: column; gap: 20px; }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* CARD BASE                                                                  */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-card {
+    background: var(--bg-card);
+    border: 1.5px solid #eff0f7;
+    border-radius: 20px;
+    padding: 22px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+    transition: all 0.25s ease;
+    animation: fsup 0.4s ease-out backwards;
+  }
+  .wb-card:nth-child(1) { animation-delay: 0.10s; }
+  .wb-card:nth-child(2) { animation-delay: 0.15s; }
+  .wb-card:nth-child(3) { animation-delay: 0.20s; }
+  .wb-card:hover { border-color: #dde3f0; box-shadow: 0 8px 24px rgba(59,130,246,0.08); transform: translateY(-2px); }
+  
+  .wb-card-header {
+    display: flex; align-items: center; gap: 10px; margin-bottom: 18px; flex-wrap: wrap;
+  }
+  .wb-card-emoji { font-size: 1.4rem; flex-shrink: 0; }
+  .wb-card-title { font-size: 1rem; font-weight: 900; color: var(--text-primary); letter-spacing: -0.2px; flex: 1; }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* DAILY CHALLENGE                                                            */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-challenge-category-badge {
+    display: inline-flex; align-items: center; gap: 4px;
+    font-size: 0.68rem; font-weight: 800; text-transform: capitalize;
+    padding: 4px 10px; border-radius: 100px; letter-spacing: 0.3px;
+  }
+  
+  .wb-challenge-box {
+    background: var(--chb);
+    border: 2px solid var(--ch);
+    border-radius: 16px; padding: 24px; text-align: center;
+    margin-bottom: 12px;
+    animation: challengepop 0.5s cubic-bezier(0.34,1.56,0.64,1) both;
+  }
+  
+  @keyframes challengepop {
+    0%   { opacity: 0; transform: scale(0.92) rotateX(-10deg); }
+    100% { opacity: 1; transform: scale(1) rotateX(0); }
+  }
+  
+  .wb-challenge-emoji {
+    font-size: 3.2rem; display: block; margin-bottom: 12px;
+    animation: bounce 2s ease-in-out infinite;
+  }
+  
+  @keyframes bounce {
+    0%,100% { transform: translateY(0); }
+    50%     { transform: translateY(-12px); }
+  }
+  
+  .wb-challenge-title  { font-size: 1.3rem; font-weight: 900; color: var(--ch); margin-bottom: 6px; letter-spacing: -0.3px; }
+  .wb-challenge-desc   { font-size: 0.9rem; font-weight: 600; color: var(--ch); margin-bottom: 12px; opacity: 0.85; }
+  .wb-challenge-instr  { font-size: 0.85rem; color: var(--ch); font-weight: 600; margin-bottom: 16px; opacity: 0.75; font-style: italic; }
+  
+  .wb-challenge-btn {
+    background: var(--ch); color: white; border: none;
+    padding: 12px 24px; border-radius: 50px; font-weight: 800;
+    font-size: 0.9rem; cursor: pointer;
+    display: inline-flex; align-items: center; gap: 8px;
+    transition: all 0.25s ease; font-family: 'Nunito', sans-serif; letter-spacing: -0.2px;
+  }
+  .wb-challenge-btn:hover  { transform: scale(1.08); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .wb-challenge-btn:active { transform: scale(0.96); }
+  
+  .wb-challenge-done {
+    display: flex; align-items: center; justify-content: center; gap: 10px;
+    background: var(--ch); color: white; padding: 12px 24px;
+    border-radius: 50px; font-weight: 800; font-size: 0.9rem;
+    animation: slideup 0.4s ease-out;
+  }
+  
+  .wb-challenge-hint {
+    font-size: 0.8rem; color: var(--text-secondary);
+    text-align: center; font-weight: 600;
+  }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* CALM CORNER (RELAXATION)                                                   */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-calm-card { background: linear-gradient(135deg, #f0f9ff 0%, #f5f3ff 100%); }
+  
+  .wb-calm-intro {
+    font-size: 0.88rem; color: var(--text-secondary);
+    font-weight: 600; margin-bottom: 16px; line-height: 1.5;
+  }
+  
+  .wb-calm-grid {
+    display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px;
+  }
+  
+  .wb-calm-exercise-btn {
+    background: var(--rexb, #f0f9ff);
+    border: 2px solid transparent;
+    border-radius: 14px; padding: 14px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; transition: all 0.22s ease;
+    text-align: center;
+  }
+  .wb-calm-exercise-btn:hover {
+    border-color: var(--rex, #3b82f6);
+    transform: translateY(-3px);
+    box-shadow: 0 8px 20px rgba(0,0,0,0.08);
+  }
+  
+  .wb-calm-ex-emoji  { font-size: 1.8rem; }
+  .wb-calm-ex-title  { font-size: 0.78rem; font-weight: 900; color: var(--rex, #3b82f6); line-height: 1.2; }
+  .wb-calm-ex-tagline { font-size: 0.68rem; font-weight: 600; color: var(--text-secondary); line-height: 1.3; }
+  
+  .wb-calm-active { animation: fsup 0.3s ease-out; }
+  .wb-calm-active-header {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 16px; font-size: 0.95rem; font-weight: 800;
+    color: var(--text-primary);
+  }
+  .wb-calm-back-btn {
+    margin-left: auto; background: #f1f5f9; border: 1.5px solid #e2e8f0;
+    border-radius: 8px; padding: 4px 10px; font-size: 0.78rem;
+    font-weight: 700; cursor: pointer; color: var(--text-secondary);
+    font-family: 'Nunito', sans-serif;
+    transition: all 0.2s ease;
+  }
+  .wb-calm-back-btn:hover { background: white; }
+  
+  /* Relaxation exercise inner */
+  .wb-relax-exercise {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 16px; text-align: center; padding: 12px 0;
+    animation: fsup 0.4s ease-out;
+  }
+  
+  .wb-relax-round-badge {
+    font-size: 0.72rem; font-weight: 800; color: #4f46e5;
+    background: #eef2ff; padding: 5px 14px; border-radius: 100px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+  
+  /* Breathing orb */
+  .wb-breath-orb {
+    width: 140px; height: 140px; border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, #ecf9ff, #dbeafe);
+    border: 4px solid #3b82f6;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 2.8rem;
+    box-shadow: 0 0 40px rgba(59, 130, 246, 0.15), inset 0 0 20px rgba(255, 255, 255, 0.5);
+    margin: 10px 0;
+    position: relative;
   }
 
-  .wb-breath-circle { width: 130px; height: 130px; margin: 0 auto 1.25rem; flex-shrink: 0; }
-/* Added 0.5rem to top and bottom to space it out nicely */
-  .wb-breath-phase { font-size: 1.4rem; margin: 0.5rem 0 0.5rem; font-weight: 900; color: #1e293b; }
-  /* Reduced margin-bottom from 2rem to 1.5rem to pull the button closer */
-  .wb-breath-count { font-size: 0.9rem; margin-bottom: 1.5rem; color: #64748b; font-weight: 600; }
-  .wb-breath-close { width: 100%; padding: 0.9rem 1.25rem; font-size: 1rem; border-radius: 100px; }
-    /* Mood card responsive */
-  .wb-mood-card { padding: 1rem; }
-  .wb-card-header { margin-bottom: 0.75rem; }
-  .wb-card-title { font-size: 1rem; }
-  .wb-mood-buttons { gap: 0.5rem; }
-  .wb-mood-btn { padding: 0.75rem 1rem; font-size: 0.75rem; }
-  .wb-mood-emoji { font-size: 1.2rem; }
-  .wb-affirmation { padding: 0.75rem; font-size: 0.85rem; }
-  .wb-history-item { padding: 0.75rem; font-size: 0.85rem; }
-  .wb-note-input { font-size: 0.85rem; padding: 0.75rem; }
-  .wb-submit-btn { padding: 0.75rem 1.25rem; font-size: 0.8rem; }
-
-  /* Journal card responsive */
-  .wb-journal-card { padding: 1rem; }
-  .wb-prompt-box { margin-bottom: 1rem; padding: 0.75rem; }
-  .wb-prompt-text { font-size: 0.9rem; }
-  .wb-prompt-next { padding: 0.5rem 0.75rem; font-size: 0.75rem; }
-  .wb-journal-input { min-height: 120px; font-size: 0.85rem; padding: 0.75rem; }
-  .wb-save-btn { padding: 0.75rem 1.25rem; font-size: 0.8rem; }
-
-  /* Grounding card responsive */
-  .wb-ground-card { padding: 1rem; }
-  .wb-ground-steps { gap: 0.75rem; }
-  .wb-ground-step { gap: 0.75rem; padding: 0.75rem; font-size: 0.85rem; }
-  .wb-ground-num { width: 2rem; height: 2rem; font-size: 0.85rem; }
-  .wb-ground-emoji { font-size: 1rem; }
-  .wb-ground-text { font-size: 0.85rem; }
-  .wb-ground-footer { font-size: 0.75rem; margin-top: 0.75rem; }
-}
-
-@media (max-width: 640px) {
-  .wb-page { padding: 1.25rem 0.75rem 2rem; margin-top: 52px; }
-
-  .wb-title { font-size: 1.25rem; }
-  .wb-eyebrow { font-size: 0.55rem; }
-
-  .wb-hero { padding: 0.875rem 1rem; }
-  .wb-hero-text h2 { font-size: 1.1rem; }
-  .wb-hero-text p { font-size: 0.8rem; }
-  .wb-lotus { font-size: 1.75rem; }
-
-  .wb-quick-resources { grid-template-columns: 1fr; gap: 0.5rem; }
-  .wb-resource-card { padding: 0.75rem 0.875rem; }
-  .wb-rc-icon { width: 30px; height: 30px; }
-  .wb-rc-label { font-size: 0.7rem; }
-  .wb-rc-sub { font-size: 0.6rem; }
-
-.wb-breathing-modal { 
-    padding: 2rem 1.25rem 1.5rem; 
-    border-radius: 24px; 
+  .wb-breath-orb::after {
+    content: "";
+    position: absolute;
+    inset: -10px;
+    border-radius: 50%;
+    border: 2px dashed rgba(59, 130, 246, 0.2);
+    animation: rotate 20s linear infinite;
   }
-  .wb-breath-circle { width: 110px; height: 110px; margin: 0 auto 1rem; }
-/* Same here for smaller phones */
-  .wb-breath-phase { font-size: 1.25rem; margin: 0.5rem 0 0.5rem; }
-  /* Pulled the button closer here as well */
-  .wb-breath-count { font-size: 0.85rem; margin-bottom: 1.25rem; }
-  .wb-breath-close { padding: 0.8rem 1rem; font-size: 0.9rem; }
-    /* Smaller padding on smallest screens */
-  .wb-card { padding: 0.875rem; }
-  .wb-mood-buttons { gap: 0.4rem; }
-  .wb-mood-btn { padding: 0.625rem 0.875rem; font-size: 0.7rem; }
-  .wb-history-item { padding: 0.625rem; font-size: 0.8rem; }
-  .wb-note-input { font-size: 0.8rem; padding: 0.625rem; }
-  .wb-submit-btn { padding: 0.625rem 1rem; font-size: 0.75rem; }
 
-  .wb-prompt-box { padding: 0.625rem; }
-  .wb-prompt-text { font-size: 0.85rem; }
-  .wb-prompt-next { padding: 0.4rem 0.625rem; font-size: 0.7rem; }
-  .wb-journal-input { min-height: 100px; font-size: 0.8rem; padding: 0.625rem; }
-  .wb-save-btn { padding: 0.625rem 1rem; font-size: 0.75rem; }
+  @keyframes rotate { from { transform: rotate(0); } to { transform: rotate(360deg); } }
+  
+  .wb-breath-phase-label { font-size: 1.25rem; font-weight: 900; color: #1d4ed8; letter-spacing: -0.5px; }
 
-  .wb-ground-steps { gap: 0.5rem; }
-  .wb-ground-step { gap: 0.5rem; padding: 0.625rem; font-size: 0.8rem; }
-  .wb-ground-num { width: 1.75rem; height: 1.75rem; font-size: 0.75rem; }
-  .wb-ground-footer { font-size: 0.7rem; }
-}
+  .wb-breath-count-display {
+    display: flex; align-items: baseline; gap: 2px;
+    background: #1e3a8a; color: white; padding: 4px 18px; border-radius: 14px;
+    box-shadow: 0 4px 12px rgba(30, 58, 138, 0.2);
+  }
+  .wb-breath-count-number { font-size: 2.4rem; font-weight: 900; font-variant-numeric: tabular-nums; }
+  .wb-breath-count-unit   { font-size: 1rem; font-weight: 700; opacity: 0.8; }
+  
+  .wb-breath-phase-pills { display: flex; gap: 10px; }
+  .wb-breath-pill {
+    font-size: 0.75rem; font-weight: 800; padding: 4px 12px;
+    border-radius: 100px; background: #e2e8f0; color: #475569;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    opacity: 0.6;
+  }
+  .wb-breath-pill--active { background: #3b82f6; color: white; opacity: 1; transform: scale(1.1); }
+  
+  /* Body scan */
+  .wb-bodyscan-progress { display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; margin-bottom: 8px; }
+  .wb-bs-dot {
+    width: 12px; height: 12px; border-radius: 50%;
+    background: #e2e8f0; transition: all 0.4s ease;
+  }
+  .wb-bs-dot--done { background: #8b5cf6; transform: scale(1.15); box-shadow: 0 2px 8px rgba(139, 92, 246, 0.3); }
+  
+  .wb-bodyscan-text {
+    font-size: 1rem; font-weight: 600; color: var(--text-primary);
+    line-height: 1.7; padding: 20px; background: #faf5ff;
+    border-radius: 16px; border: 2px solid #ddd6fe;
+    animation: fsup 0.4s ease-out; margin-bottom: 8px;
+    box-shadow: inset 0 2px 4px rgba(139, 92, 246, 0.03);
+  }
+  
+  /* Grounding */
+  .wb-grounding-icon {
+    width: 72px; height: 72px; border-radius: 50%;
+    display: flex; align-items: center; justify-content: center;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.05);
+    margin-bottom: 4px;
+  }
+  .wb-grounding-label { font-size: 1.15rem; font-weight: 900; letter-spacing: -0.3px; }
+  .wb-grounding-sub   { font-size: 0.88rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 4px; }
+  
+  .wb-exercise-nav {
+    display: flex; width: 100%; gap: 12px; align-items: center; 
+    justify-content: space-between; margin-top: 8px;
+  }
+
+  .wb-nav-btn-shell {
+    flex: 1; display: flex;
+  }
+  .wb-nav-btn-shell:last-child { justify-content: flex-end; }
+
+  .wb-btn-nav-prev {
+    background: #f8fafc; color: #64748b; border: 2px solid #e2e8f0;
+    padding: 10px 14px; border-radius: 12px; font-weight: 800; font-size: 0.82rem;
+    cursor: pointer; transition: all 0.2s ease; white-space: nowrap;
+  }
+  .wb-btn-nav-prev:hover { background: #fff; border-color: #cbd5e1; color: #475569; }
+
+  .wb-btn-nav-next {
+    flex: 2; color: white; border: none;
+    padding: 12px 20px; border-radius: 12px; font-weight: 800; font-size: 0.95rem;
+    cursor: pointer; transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+    box-shadow: 0 4px 14px rgba(0,0,0,0.1);
+    white-space: nowrap;
+  }
+  .wb-btn-nav-next:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 8px 20px rgba(0,0,0,0.15); }
+  .wb-btn-nav-next:disabled { opacity: 0.4; cursor: not-allowed; }
+
+  /* Done state */
+  .wb-relax-done { display: flex; flex-direction: column; align-items: center; gap: 12px; padding: 12px 0; }
+  .wb-relax-done-emoji  { font-size: 3.5rem; animation: bounce 1.8s ease-in-out infinite; }
+  .wb-relax-done-title  { font-size: 1.3rem; font-weight: 900; color: var(--text-primary); letter-spacing: -0.5px; }
+  .wb-relax-done-sub    { font-size: 0.95rem; color: var(--text-secondary); font-weight: 600; line-height: 1.6; max-width: 300px; }
+  
+  .wb-btn-close-exercise {
+    background: transparent; color: #94a3b8; border: 1.5px solid #e2e8f0;
+    padding: 6px 16px; border-radius: 100px; font-size: 0.78rem; font-weight: 800;
+    cursor: pointer; transition: all 0.2s ease; margin-top: 8px;
+    letter-spacing: 0.2px; text-transform: uppercase;
+  }
+  .wb-btn-close-exercise:hover { background: white; border-color: #cbd5e1; color: #64748b; }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* COUNSELLING                                                                */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-counselling-tagline {
+    font-size: 0.88rem; color: var(--text-secondary);
+    font-weight: 600; margin-bottom: 16px; line-height: 1.5;
+  }
+  
+  .wb-counselling-btn {
+    width: 100%;
+    background: linear-gradient(130deg, #fce7f3, #f8d7ed);
+    border: 1.5px solid #fbcfe8; padding: 16px 18px; border-radius: 14px;
+    display: flex; align-items: center; justify-content: space-between; gap: 12px;
+    cursor: pointer; font-weight: 800; font-size: 0.95rem;
+    color: #be185d; transition: all 0.25s ease;
+    font-family: 'Nunito', sans-serif; letter-spacing: -0.2px;
+  }
+  .wb-counselling-btn:hover {
+    border-color: #f472b6;
+    background: linear-gradient(130deg, #fbcfe8, #f8d7ed);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 20px rgba(236,72,153,0.12);
+  }
+  
+  .wb-counselling-form { animation: fsup 0.3s ease-out; }
+  .wb-counselling-info { font-size: 0.88rem; color: var(--text-secondary); margin-bottom: 14px; font-weight: 600; line-height: 1.5; }
+  .wb-counselling-input {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid #eff0f7; border-radius: 12px;
+    font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    color: var(--text-primary); resize: vertical; margin-bottom: 14px;
+    transition: border-color 0.22s;
+  }
+  .wb-counselling-input:focus { outline: none; border-color: #db2777; box-shadow: 0 0 0 3px rgba(219,39,119,0.1); }
+  .wb-counselling-actions { display: flex; gap: 10px; }
+  .wb-counselling-success {
+    display: flex; align-items: center; gap: 10px;
+    background: #d1fae5; border: 1.5px solid #6ee7b7;
+    color: #065f46; padding: 12px 16px; border-radius: 12px;
+    font-weight: 700; font-size: 0.9rem; animation: slideup 0.3s ease-out;
+  }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* CBT CHECK-IN                                                               */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-cbt-card { background: linear-gradient(135deg, #fdfcff 0%, #f0f9ff 100%); }
+  
+  .wb-cbt-progress-bar {
+    display: flex; gap: 6px; margin-bottom: 18px;
+  }
+  .wb-cbt-progress-step {
+    flex: 1; height: 5px; border-radius: 100px;
+    background: #e2e8f0; transition: background 0.4s ease;
+  }
+  .wb-cbt-progress-step--done { background: #3b82f6; }
+  
+  .wb-cbt-success {
+    display: flex; align-items: center; gap: 12px;
+    background: #fef3c7; border: 1.5px solid #fde68a;
+    color: #92400e; padding: 16px; border-radius: 12px;
+    font-weight: 700; font-size: 0.9rem;
+    animation: slideup 0.4s ease-out;
+  }
+  
+  .wb-cbt-phase { animation: fsup 0.3s ease-out; }
+  .wb-cbt-q    { font-size: 0.98rem; font-weight: 900; color: var(--text-primary); margin-bottom: 6px; }
+  .wb-cbt-sub  { font-size: 0.82rem; color: var(--text-secondary); font-weight: 600; margin-bottom: 14px; line-height: 1.5; }
+  
+  .wb-cbt-moods { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; margin-bottom: 14px; }
+  
+  .wb-cbt-mood-btn {
+    background: var(--mb); border: 2px solid transparent;
+    border-radius: 14px; padding: 14px 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; transition: all 0.22s ease;
+  }
+  .wb-cbt-mood-btn:hover     { border-color: var(--mc); transform: translateY(-2px); }
+  .wb-cbt-mood-btn--active   { border-color: var(--mc); box-shadow: 0 4px 16px rgba(0,0,0,0.1); transform: scale(1.04); }
+  
+  .wb-cbt-emoji { font-size: 1.8rem; }
+  .wb-cbt-label { font-size: 0.78rem; font-weight: 800; color: var(--mc); }
+  
+  .wb-cbt-affirmation {
+    padding: 12px 14px; border-radius: 10px;
+    border: 1.5px solid transparent;
+    font-size: 0.9rem; font-weight: 700;
+    text-align: center; margin-bottom: 14px;
+    animation: slideup 0.3s ease-out;
+  }
+  
+  .wb-cbt-input {
+    width: 100%; padding: 12px 14px;
+    border: 1.5px solid #eff0f7; border-radius: 10px;
+    font-family: 'Nunito', sans-serif; font-size: 0.9rem;
+    color: var(--text-primary); resize: vertical; margin-bottom: 14px;
+    transition: border-color 0.22s;
+  }
+  .wb-cbt-input:focus { outline: none; border-color: #3b82f6; box-shadow: 0 0 0 3px rgba(59,130,246,0.1); }
+  
+  /* Thought echo for reframe step */
+  .wb-cbt-thought-echo {
+    background: #f8fafc; border: 1.5px solid #e2e8f0;
+    border-radius: 10px; padding: 10px 14px;
+    font-size: 0.82rem; color: #64748b;
+    margin-bottom: 12px; display: flex; flex-direction: column; gap: 4px;
+  }
+  .wb-cbt-thought-echo-label {
+    font-size: 0.68rem; font-weight: 800; text-transform: uppercase;
+    letter-spacing: 1.5px; color: #94a3b8;
+  }
+  
+  .wb-cbt-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 14px; }
+  .wb-cbt-action {
+    background: #f8fafc; border: 2px solid #e2e8f0;
+    padding: 14px 12px; border-radius: 10px;
+    display: flex; flex-direction: column; align-items: center; gap: 6px;
+    cursor: pointer; font-size: 0.8rem; font-weight: 700;
+    color: var(--text-primary); transition: all 0.22s ease;
+  }
+  .wb-cbt-action:hover        { border-color: #cbd5e1; background: white; transform: translateY(-2px); }
+  .wb-cbt-action--selected    { border-color: #3b82f6; background: #eff6ff; color: #1d4ed8; }
+  .wb-cbt-action-emoji        { font-size: 1.6rem; }
+  
+  .wb-cbt-nav { display: flex; gap: 10px; }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* BUTTONS                                                                    */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-btn-primary {
+    flex: 1; background: var(--brand-blue); color: white; border: none;
+    padding: 11px 16px; border-radius: 10px; font-weight: 800; font-size: 0.85rem;
+    cursor: pointer; display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; transition: all 0.22s ease;
+    font-family: 'Nunito', sans-serif; letter-spacing: -0.1px;
+  }
+  .wb-btn-primary:hover:not(:disabled) { transform: scale(1.04); box-shadow: 0 6px 16px rgba(59,130,246,0.25); }
+  .wb-btn-primary:disabled { opacity: 0.4; cursor: not-allowed; }
+  
+  .wb-btn-secondary {
+    flex: 1; background: #f1f5f9; color: var(--text-primary);
+    border: 1.5px solid #e2e8f0; padding: 11px 16px; border-radius: 10px;
+    font-weight: 800; font-size: 0.85rem; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    gap: 6px; transition: all 0.22s ease;
+    font-family: 'Nunito', sans-serif; letter-spacing: -0.1px;
+  }
+  .wb-btn-secondary:hover { background: white; border-color: #cbd5e1; transform: translateY(-1px); }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* MOOD HISTORY                                                               */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  .wb-history-list { display: flex; flex-direction: column; gap: 10px; }
+  
+  .wb-history-item {
+    display: flex; align-items: flex-start; gap: 12px;
+    background: var(--mb); padding: 14px; border-radius: 12px;
+    border: 1.5px solid transparent; transition: all 0.22s ease;
+  }
+  .wb-history-item:hover { border-color: var(--mc); transform: translateX(4px); }
+  
+  .wb-hist-emoji  { font-size: 1.8rem; flex-shrink: 0; }
+  .wb-hist-text   { flex: 1; min-width: 0; }
+  .wb-hist-mood   { font-weight: 800; font-size: 0.85rem; display: block; margin-bottom: 2px; }
+  .wb-hist-note   { font-size: 0.8rem; color: var(--mc); margin: 0; font-weight: 600; opacity: 0.85; }
+  .wb-hist-reframe {
+    font-size: 0.78rem; color: #6366f1; margin: 4px 0 0;
+    font-weight: 600; font-style: italic;
+  }
+  .wb-hist-date   { font-size: 0.75rem; color: var(--mc); font-weight: 700; flex-shrink: 0; opacity: 0.7; }
+  .wb-hist-empty  { font-size: 0.88rem; color: var(--text-secondary); font-weight: 600; text-align: center; padding: 16px 0; }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* SHARED ANIMATIONS                                                          */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  @keyframes slideup {
+    from { opacity: 0; transform: translateY(12px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  /* RESPONSIVE                                                                 */
+  /* ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━ */
+  @media (max-width: 1024px) {
+    .wb-grid { grid-template-columns: 1fr; }
+    .wb-calm-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  
+  @media (max-width: 768px) {
+    .wb-page { padding: 1.5rem 1rem 2rem; margin-top: 56px; }
+    .wb-title { font-size: 1.6rem; }
+    .wb-hero-inner { flex-direction: column; text-align: center; }
+    .wb-hero-left p { max-width: 100%; }
+    .wb-hero-lotus { font-size: 3rem; }
+    .wb-card { padding: 18px; }
+    .wb-challenge-emoji { font-size: 2.8rem; }
+    .wb-cbt-moods { grid-template-columns: 1fr 1fr; }
+    .wb-cbt-actions { grid-template-columns: 1fr; }
+    .wb-calm-grid { grid-template-columns: 1fr 1fr 1fr; }
+  }
+  
+  @media (max-width: 640px) {
+    .wb-page { padding: 1.25rem 0.75rem 1.5rem; margin-top: 52px; }
+    .wb-title { font-size: 1.35rem; }
+    .wb-card { padding: 16px; }
+    .wb-card-title { font-size: 0.95rem; }
+    .wb-cbt-q { font-size: 0.95rem; }
+    .wb-challenge-title { font-size: 1.1rem; }
+    .wb-calm-grid { grid-template-columns: 1fr 1fr; }
+  }

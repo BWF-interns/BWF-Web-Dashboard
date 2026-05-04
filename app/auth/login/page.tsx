@@ -22,13 +22,14 @@ export default function LoginPage() {
       // optional: store token
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("role", data.role);
+      localStorage.setItem("studentId", studentId); 
       // role-based redirect
       if (data.role === "admin") {
         router.push("/admin/dashboard");
       } else if (data.role === "warden") {
         router.push("/warden/dashboard");
       } else {
-        router.push("/student/dashboard");
+        router.push("/student/community");
       }
     } catch (err: any) {
       setError(err.message || "Login failed");

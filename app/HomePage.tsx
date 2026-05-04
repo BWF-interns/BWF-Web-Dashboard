@@ -23,7 +23,7 @@ export default function HomePage() {
       title: "Student Portal",
       description: "Access your courses, assignments, and profile",
       icon: <GraduationCap size={24} />,
-      route: "/student/dashboard",
+      route: "/student/community",
       color: "bg-blue-500",
     },
     {

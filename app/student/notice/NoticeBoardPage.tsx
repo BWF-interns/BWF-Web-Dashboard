@@ -1,51 +1,58 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Bell, X } from "lucide-react";
+import api from "../../lib/api"; // Note: Adjust the relative path to your api.ts file if needed
+
+// Using your test user ID for now
+const STUDENT_ID = "BWF-2024-001";
 
 interface Notice {
-  id: number;
+  _id: string;
   title: string;
-  description: string;
-  date: string;
+  body: string; // Updated to match your backend DB schema
+  publishedDate: string; // Updated to match your backend DB schema
   isRead: boolean;
 }
 
 export default function NoticeBoardPage() {
-  const [notices, setNotices] = useState<Notice[]>([
-    {
-      id: 1,
-      title: "New Workshop on Life Skills",
-      description:
-        "A workshop on time management and productivity will be held in Room 101.",
-      date: "2026-03-18",
-      isRead: false,
-    },
-    {
-      id: 2,
-      title: "Library Maintenance",
-      description: "The library will be closed for maintenance on 20th March.",
-      date: "2026-03-17",
-      isRead: true,
-    },
-    {
-      id: 3,
-      title: "Sports Day Event",
-      description:
-        "Annual Sports Day will be held on 25th March. Participation is encouraged.",
-      date: "2026-03-16",
-      isRead: false,
-    },
-  ]);
+  const [notices, setNotices] = useState<Notice[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const markAsRead = (id: number) => {
-    setNotices((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, isRead: true } : n)),
-    );
+  useEffect(() => {
+    fetchNotices();
+  }, []);
+
+  const fetchNotices = async () => {
+    try {
+      const res = await api.get(`/student/noticeboard/${STUDENT_ID}`);
+      // Assuming your backend returns { notices: [...] } or just the array [...]
+      setNotices(res.data.notices || res.data || []);
+    } catch (error) {
+      console.error("Failed to fetch notices:", error);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
-  const deleteNotice = (id: number) => {
-    setNotices((prev) => prev.filter((n) => n.id !== id));
+  const markAsRead = async (id: string) => {
+    try {
+      await api.post(`/student/noticeboard/${STUDENT_ID}/notices/${id}/read`);
+      setNotices((prev) =>
+        prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
+      );
+    } catch (error) {
+      console.error("Failed to mark as read", error);
+    }
+  };
+
+  const deleteNotice = async (id: string) => {
+    try {
+      await api.delete(`/student/noticeboard/${STUDENT_ID}/notices/${id}`);
+      setNotices((prev) => prev.filter((n) => n._id !== id));
+    } catch (error) {
+      console.error("Failed to delete notice", error);
+    }
   };
 
   return (
@@ -57,44 +64,48 @@ export default function NoticeBoardPage() {
         <p className="text-sm text-gray-500">{notices.length} notices</p>
       </div>
 
-      <div className="space-y-4">
-        {notices.map((notice) => (
-          <div
-            key={notice.id}
-            className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex justify-between items-start ${
-              notice.isRead ? "opacity-70" : ""
-            }`}
-          >
-            <div>
-              <h3 className="font-semibold text-gray-900">{notice.title}</h3>
-              <p className="text-gray-700 text-sm mt-1">{notice.description}</p>
-              <span className="text-xs text-gray-400 mt-1 block">
-                {notice.date}
-              </span>
-            </div>
+      {isLoading ? (
+        <p className="text-gray-500 text-center mt-4">Loading notices...</p>
+      ) : (
+        <div className="space-y-4">
+          {notices.map((notice) => (
+            <div
+              key={notice._id}
+              className={`bg-white border border-gray-200 rounded-xl p-4 shadow-sm flex justify-between items-start ${
+                notice.isRead ? "opacity-70" : ""
+              }`}
+            >
+              <div>
+                <h3 className="font-semibold text-gray-900">{notice.title}</h3>
+                <p className="text-gray-700 text-sm mt-1">{notice.body}</p>
+                <span className="text-xs text-gray-400 mt-1 block">
+                  {notice.publishedDate}
+                </span>
+              </div>
 
-            <div className="flex flex-col gap-2 ml-4">
-              {!notice.isRead && (
+              <div className="flex flex-col gap-2 ml-4">
+                {!notice.isRead && (
+                  <button
+                    onClick={() => markAsRead(notice._id)}
+                    className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                  >
+                    Mark as Read
+                  </button>
+                )}
                 <button
-                  onClick={() => markAsRead(notice.id)}
-                  className="text-xs px-2 py-1 rounded-lg bg-blue-100 text-blue-700 hover:bg-blue-200 transition"
+                  onClick={() => deleteNotice(notice._id)}
+                  className="text-xs px-2 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
                 >
-                  Mark as Read
+                  <X size={14} />
                 </button>
-              )}
-              <button
-                onClick={() => deleteNotice(notice.id)}
-                className="text-xs px-2 py-1 rounded-lg bg-red-100 text-red-700 hover:bg-red-200 transition"
-              >
-                <X size={14} />
-              </button>
+              </div>
             </div>
-          </div>
-        ))}
-        {notices.length === 0 && (
-          <p className="text-gray-500 text-center mt-4">No notices available</p>
-        )}
-      </div>
+          ))}
+          {notices.length === 0 && (
+            <p className="text-gray-500 text-center mt-4">No notices available</p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
