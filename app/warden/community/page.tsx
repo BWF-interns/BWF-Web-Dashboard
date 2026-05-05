@@ -1,515 +1,655 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Search, ChevronLeft, ChevronRight, Check, X, Forward } from 'lucide-react';
-import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
-import { Button } from '@/app/warden/Template/components/ui/button';
+import { FormEvent, ReactNode, useMemo, useState } from 'react';
+import { CalendarClock, Check, Hash, MessageSquarePlus, Pencil, Pin, Search, Send, Trash2, Vote, X } from 'lucide-react';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
+import { Button } from '@/app/warden/Template/components/ui/button';
+import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
 import { Input } from '@/app/warden/Template/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/app/warden/Template/components/ui/dialog';
 import { Textarea } from '@/app/warden/Template/components/ui/textarea';
 
 type Status = 'Pending' | 'Approved' | 'Rejected' | 'Forwarded';
-
 type PostType = 'text' | 'poll';
+type FeedSection = 'latest' | 'pinned';
 
 interface PollOption {
-  id: string;
   text: string;
   votes: number;
 }
 
-interface Post {
+interface CommunityPost {
   id: number;
   author: string;
   content: string;
-  dateTime: string;
+  date: string;
+  time: string;
   status: Status;
   type: PostType;
-  hashtags?: string[];
-  tags?: string[];
-  pollOptions?: PollOption[];
-  rejectionReason?: string;
-  forwardReason?: string;
+  tags: string[];
+  pollOptions: PollOption[];
+  creatorId: string;
+  creatorRole: string;
+  hostelName: string;
+  pinned?: boolean;
 }
 
-const STATUS_OPTIONS = ['All', 'Pending', 'Approved', 'Rejected', 'Forwarded'];
-
-const getStatusColor = (status: string) => {
-  switch (status) {
-    case 'Approved':
-      return 'bg-green-50 text-green-700 border border-green-100';
-    case 'Pending':
-      return 'bg-amber-50 text-amber-700 border border-amber-100';
-    case 'Rejected':
-      return 'bg-red-50 text-red-700 border border-red-100';
-    case 'Forwarded':
-      return 'bg-slate-100 text-slate-800 border border-slate-200';
-    default:
-      return 'bg-slate-50 text-slate-700 border border-slate-200';
-  }
+const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:5000';
+const CURRENT_WARDEN = {
+  id: 'mock-warden-id',
+  name: 'Warden Office',
+  role: 'warden' as const,
+  hostelName: 'BWF Hostel',
 };
 
-const getInitialColor = (name: string) => {
-  const colors = [
-    'bg-red-100 text-red-700',
-    'bg-blue-100 text-blue-700',
-    'bg-green-100 text-green-700',
-    'bg-purple-100 text-purple-700',
-    'bg-yellow-100 text-yellow-700',
-    'bg-pink-100 text-pink-700',
-    'bg-indigo-100 text-indigo-700',
-    'bg-cyan-100 text-cyan-700',
-  ];
-  const charCode = name.charCodeAt(0);
-  return colors[charCode % colors.length];
+const initialVotedOptions: Record<number, number> = {
+  108: 1,
 };
 
-const truncateText = (text: string, charLimit = 200) => {
-  return text.length > charLimit ? text.substring(0, charLimit) + '...' : text;
-};
+const initialPosts: CommunityPost[] = [
+  {
+    id: 108,
+    author: 'Warden Office',
+    content: '#Gate Timing Poll#\nMain gate entry timings will be reviewed this week. Vote for the slot that works best for supervised evening entry.',
+    date: '2026-05-04',
+    time: '18:15',
+    status: 'Approved',
+    type: 'poll',
+    tags: ['#GateTiming', '#HostelSafety', '#WardenUpdate'],
+    pollOptions: [
+      { text: '8:30 PM', votes: 18 },
+      { text: '9:00 PM', votes: 32 },
+      { text: '9:30 PM', votes: 24 },
+    ],
+    creatorId: CURRENT_WARDEN.id,
+    creatorRole: 'warden',
+    hostelName: CURRENT_WARDEN.hostelName,
+    pinned: true,
+  },
+  {
+    id: 107,
+    author: 'Nisha Rao',
+    content: '#Study Room Lights#\nThe south block study room lights are flickering after 10 PM. Please check before exam week starts.',
+    date: '2026-05-04',
+    time: '12:40',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#StudyRoom', '#Maintenance'],
+    pollOptions: [],
+    creatorId: 'student-105',
+    creatorRole: 'student',
+    hostelName: 'BWF Hostel',
+  },
+  {
+    id: 106,
+    author: 'Admin Desk',
+    content: '#Document Verification#\nStudents who submitted scholarship documents last week can collect acknowledgement slips from the office after lunch.',
+    date: '2026-05-04',
+    time: '10:10',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#Scholarship', '#Admin'],
+    pollOptions: [],
+    creatorId: 'admin-001',
+    creatorRole: 'admin',
+    hostelName: 'BWF Hostel',
+    pinned: true,
+  },
+  {
+    id: 105,
+    author: 'Warden Office',
+    content: '#Water Tank Cleaning#\nWater tank cleaning is scheduled for Wednesday morning from 7 AM to 10 AM. Please store only essential water and avoid wastage.',
+    date: '2026-05-03',
+    time: '19:05',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#Maintenance', '#WaterSupply'],
+    pollOptions: [],
+    creatorId: CURRENT_WARDEN.id,
+    creatorRole: 'warden',
+    hostelName: CURRENT_WARDEN.hostelName,
+    pinned: true,
+  },
+  {
+    id: 104,
+    author: 'Aman Verma',
+    content: '#Library Hours#\nCan we extend library room access during the scholarship application week?',
+    date: '2026-05-03',
+    time: '11:30',
+    status: 'Approved',
+    type: 'poll',
+    tags: ['#Library', '#Scholarship'],
+    pollOptions: [
+      { text: 'Extend till 10 PM', votes: 22 },
+      { text: 'Keep current time', votes: 7 },
+    ],
+    creatorId: 'student-103',
+    creatorRole: 'student',
+    hostelName: 'BWF Hostel',
+  },
+  {
+    id: 103,
+    author: 'Activity Coordinator',
+    content: '#Weekend Practice#\nMusic room practice slots are open for the cultural evening team. Please keep instruments back in the labelled shelves.',
+    date: '2026-05-02',
+    time: '18:30',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#Activities', '#MusicRoom'],
+    pollOptions: [],
+    creatorId: 'staff-activity-01',
+    creatorRole: 'staff',
+    hostelName: 'BWF Hostel',
+  },
+  {
+    id: 102,
+    author: 'Ritika Sharma',
+    content: '#Health Camp Feedback#\nHi, my name is #Pratham Tiwari#. I am new here and want to contribute to #BWF#. Thanks to the wardens for arranging the health camp.',
+    date: '2026-05-02',
+    time: '16:10',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#HealthCamp', '#Community'],
+    pollOptions: [],
+    creatorId: 'student-102',
+    creatorRole: 'student',
+    hostelName: 'BWF Hostel',
+  },
+  {
+    id: 101,
+    author: 'Karan Mehta',
+    content: '#Common Room Request#\nCan the common room projector be checked before the weekend documentary screening?',
+    date: '2026-05-02',
+    time: '10:25',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#CommonRoom', '#Weekend'],
+    pollOptions: [],
+    creatorId: 'student-101',
+    creatorRole: 'student',
+    hostelName: 'BWF Hostel',
+  },
+  {
+    id: 100,
+    author: 'Warden Office',
+    content: '#Corridor Safety#\nReminder: keep corridors clear for emergency access. Shoes, cartons, and cycle parts left outside rooms will be moved to storage after inspection.',
+    date: '2026-05-01',
+    time: '09:20',
+    status: 'Approved',
+    type: 'text',
+    tags: ['#Safety', '#HostelRules'],
+    pollOptions: [],
+    creatorId: CURRENT_WARDEN.id,
+    creatorRole: 'warden',
+    hostelName: CURRENT_WARDEN.hostelName,
+    pinned: true,
+  },
+];
 
-const isTextTruncated = (text: string, charLimit = 200) => {
-  return text.length > charLimit;
-};
+const avatarColors = [
+  'bg-blue-100 text-blue-700',
+  'bg-emerald-100 text-emerald-700',
+  'bg-amber-100 text-amber-700',
+  'bg-rose-100 text-rose-700',
+  'bg-violet-100 text-violet-700',
+  'bg-cyan-100 text-cyan-700',
+  'bg-lime-100 text-lime-700',
+  'bg-fuchsia-100 text-fuchsia-700',
+  'bg-orange-100 text-orange-700',
+  'bg-teal-100 text-teal-700',
+];
 
-export default function ModerationPage() {
-  const [searchTerm, setSearchTerm] = useState('');
-  const [statusFilter, setStatusFilter] = useState('All');
-  const [currentPage, setCurrentPage] = useState(1);
-  const [rejectionReason, setRejectionReason] = useState('');
-  const [forwardReason, setForwardReason] = useState('');
-  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
-  const [dialogType, setDialogType] = useState<'approve' | 'reject' | 'forward' | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
-  const [expandedPostId, setExpandedPostId] = useState<number | null>(null);
-
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: 1,
-      author: 'Arjun Kumar',
-      content: 'Had a wonderful time at the inter-class sports day. Everyone participated with great enthusiasm and camaraderie. The games were exciting and the participation was amazing!',
-      dateTime: '2026-04-18 14:32',
-      status: 'Pending',
-      type: 'text',
-      hashtags: ['#SportsDay', '#Hostel', '#Unity'],
-      tags: ['Sports', 'Event'],
-    },
-    {
-      id: 2,
-      author: 'Meera Patel',
-      content: 'Loved the new books added to the library collection.',
-      dateTime: '2026-04-17 10:15',
-      status: 'Approved',
-      type: 'text',
-    },
-    {
-      id: 3,
-      author: 'Rahul Singh',
-      content: 'When should we schedule the next tech workshop? Please vote below.',
-      dateTime: '2026-04-16 16:45',
-      status: 'Pending',
-      type: 'poll',
-      pollOptions: [
-        { id: '1', text: 'Next Week', votes: 0 },
-        { id: '2', text: 'In 2 Weeks', votes: 0 },
-        { id: '3', text: 'Next Month', votes: 0 },
-        { id: '4', text: 'Flexible', votes: 0 },
-      ],
-      hashtags: ['#Tech', '#Workshop'],
-    },
-    {
-      id: 4,
-      author: 'Priya Sharma',
-      content: 'Urgent repairs needed in Block A. Please avoid using the lifts for next 3 days.',
-      dateTime: '2026-04-15 09:20',
-      status: 'Forwarded',
-      type: 'text',
-      forwardReason: 'Administrative approval needed for facility changes.',
-    },
-    {
-      id: 5,
-      author: 'Vikram Patel',
-      content: 'Organizing a campus-wide cleanliness drive this weekend. Everyone is encouraged to participate.',
-      dateTime: '2026-04-14 13:50',
-      status: 'Approved',
-      type: 'text',
-      hashtags: ['#CleanCampus', '#Eco'],
-    },
-    {
-      id: 6,
-      author: 'Anjali Gupta',
-      content: 'Planning a surprise birthday celebration for a fellow student on Friday evening.',
-      dateTime: '2026-04-13 11:30',
-      status: 'Pending',
-      type: 'text',
-    },
-    {
-      id: 7,
-      author: 'Devesh Kumar',
-      content: 'Starting a study group for competitive exams. Interested students can join our group chat.',
-      dateTime: '2026-04-12 15:00',
-      status: 'Approved',
-      type: 'text',
-      hashtags: ['#StudyGroup', '#Exams'],
-    },
-    {
-      id: 8,
-      author: 'Akshita Gupta',
-      content: 'Requesting new badminton equipment for the sports complex.',
-      dateTime: '2026-04-11 10:20',
-      status: 'Rejected',
-      type: 'text',
-      rejectionReason: 'Budget allocation for sports equipment is currently exhausted.',
-    },
-    {
-      id: 9,
-      author: 'Neha Sharma',
-      content: 'Exciting cultural fest with performances, food stalls, and fun activities planned for next month. This is going to be amazing!',
-      dateTime: '2026-04-10 14:15',
-      status: 'Pending',
-      type: 'text',
-      hashtags: ['#CulturalFest', '#Events'],
-    },
-    {
-      id: 10,
-      author: 'Rohan Menon',
-      content: 'Launching a mentorship programme pairing seniors with juniors for academic and personal growth.',
-      dateTime: '2026-04-09 12:40',
-      status: 'Pending',
-      type: 'text',
-    },
-    {
-      id: 11,
-      author: 'Maya Sethi',
-      content: 'Extra content post for pagination testing.',
-      dateTime: '2026-04-08 08:00',
-      status: 'Approved',
-      type: 'text',
-    },
-    {
-      id: 12,
-      author: 'Ravi Nair',
-      content: 'Another post to test the pagination system thoroughly.',
-      dateTime: '2026-04-07 09:30',
-      status: 'Pending',
-      type: 'text',
-    },
-  ]);
-
-  const ITEMS_PER_PAGE = 10;
-
-  const filteredPosts = useMemo(() => {
-    return posts.filter((post) => {
-      const matchesStatus = statusFilter === 'All' || post.status === statusFilter;
-      const matchesSearch = `${post.author} ${post.content}`
-        .toLowerCase()
-        .includes(searchTerm.toLowerCase());
-      return matchesStatus && matchesSearch;
-    });
-  }, [posts, statusFilter, searchTerm]);
-
-  const totalPages = Math.ceil(filteredPosts.length / ITEMS_PER_PAGE);
-  const paginatedPosts = filteredPosts.slice(
-    (currentPage - 1) * ITEMS_PER_PAGE,
-    currentPage * ITEMS_PER_PAGE
+const toDisplayDate = (post: CommunityPost) =>
+  new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(
+    new Date(`${post.date}T${post.time}`)
   );
 
-  const updateStatus = (id: number, status: Status, reason?: string) => {
+const totalVotes = (post: CommunityPost) => post.pollOptions.reduce((sum, option) => sum + option.votes, 0);
+const initialFor = (name: string) => name.trim().charAt(0).toUpperCase() || 'W';
+
+const avatarColorFor = (seed: string | number) => {
+  const value = String(seed);
+  const hash = Array.from(value).reduce((sum, char, index) => sum + char.charCodeAt(0) * (index + 1), 0);
+  return avatarColors[hash % avatarColors.length];
+};
+
+const normalizeTag = (value: string) => {
+  const compact = value.trim().replace(/^#/, '').replace(/\s+/g, '');
+  return compact ? `#${compact}` : '';
+};
+
+const tagsToInput = (tags: string[]) => tags.map((tag) => tag.replace(/^#/, '')).join(', ');
+
+const renderInlineContent = (line: string) => {
+  return line.split(/(#.+?#)/g).map((part, index) => {
+    const boldText = part.match(/^#(.+?)#$/);
+
+    if (boldText) {
+      return (
+        <strong key={`${part}-${index}`} className="font-bold text-slate-950">
+          {boldText[1].trim()}
+        </strong>
+      );
+    }
+
+    return part;
+  });
+};
+
+const renderPostContent = (content: string): ReactNode => {
+  return content.split('\n').map((line, index) => {
+    const heading = line.match(/^#(.+)#$/);
+
+    if (heading) {
+      return (
+        <h3 key={`${line}-${index}`} className="mb-2 text-base font-bold leading-6 text-slate-950">
+          {heading[1].trim()}
+        </h3>
+      );
+    }
+
+    return line.trim() ? (
+      <p key={`${line}-${index}`} className="text-sm leading-6 text-slate-700">
+        {renderInlineContent(line)}
+      </p>
+    ) : null;
+  });
+};
+
+export default function CommunityPage() {
+  const [posts, setPosts] = useState<CommunityPost[]>(initialPosts);
+  const [searchTerm, setSearchTerm] = useState('');
+  const [section, setSection] = useState<FeedSection>('latest');
+  const [draftType, setDraftType] = useState<PostType>('text');
+  const [content, setContent] = useState('');
+  const [tagInput, setTagInput] = useState('');
+  const [pollInputs, setPollInputs] = useState(['', '']);
+  const [votedOptions, setVotedOptions] = useState<Record<number, number>>(initialVotedOptions);
+  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [editingContent, setEditingContent] = useState('');
+  const [editingTagInput, setEditingTagInput] = useState('');
+
+  const filteredPosts = useMemo(() => {
+    const query = searchTerm.trim().toLowerCase();
+
+    return posts
+      .filter((post) => post.status === 'Approved' || post.creatorId === CURRENT_WARDEN.id)
+      .filter((post) => (section === 'pinned' ? post.pinned : true))
+      .filter((post) => {
+        if (!query) return true;
+        const searchable = `${post.author} ${post.creatorRole} ${post.tags.join(' ')} ${post.content}`.toLowerCase();
+        return searchable.includes(query);
+      })
+      .sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
+  }, [posts, searchTerm, section]);
+
+  const buildPostPayload = (): Omit<CommunityPost, 'id'> => {
+    const now = new Date();
+    const tags = tagInput
+      .split(',')
+      .map(normalizeTag)
+      .filter(Boolean);
+
+    return {
+      author: CURRENT_WARDEN.name,
+      content: content.trim(),
+      date: now.toISOString().slice(0, 10),
+      time: now.toTimeString().slice(0, 5),
+      status: 'Pending',
+      type: draftType,
+      tags,
+      pollOptions:
+        draftType === 'poll'
+          ? pollInputs.map((text) => ({ text: text.trim(), votes: 0 })).filter((option) => option.text)
+          : [],
+      creatorId: CURRENT_WARDEN.id,
+      creatorRole: CURRENT_WARDEN.role,
+      hostelName: CURRENT_WARDEN.hostelName,
+      pinned: false,
+    };
+  };
+
+  const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault();
+    if (!content.trim()) return;
+    if (draftType === 'poll' && pollInputs.filter((option) => option.trim()).length < 2) return;
+
+    const payload = buildPostPayload();
+
+    // Backend-ready handoff: POST `${API_BASE_URL}/api/community/posts` with this payload when the endpoint is available.
+    console.info('Prepared community post payload', { endpoint: `${API_BASE_URL}/api/community/posts`, payload });
+
+    setPosts((current) => [{ ...payload, id: Date.now() }, ...current]);
+    setContent('');
+    setTagInput('');
+    setPollInputs(['', '']);
+    setDraftType('text');
+    setSection('latest');
+  };
+
+  const startEditing = (post: CommunityPost) => {
+    setEditingPostId(post.id);
+    setEditingContent(post.content);
+    setEditingTagInput(tagsToInput(post.tags));
+  };
+
+  const cancelEditing = () => {
+    setEditingPostId(null);
+    setEditingContent('');
+    setEditingTagInput('');
+  };
+
+  const saveEditing = (postId: number) => {
+    if (!editingContent.trim()) return;
+
+    const tags = editingTagInput
+      .split(',')
+      .map(normalizeTag)
+      .filter(Boolean);
+
+    setPosts((current) =>
+      current.map((post) =>
+        post.id === postId && post.creatorId === CURRENT_WARDEN.id
+          ? { ...post, content: editingContent.trim(), tags }
+          : post
+      )
+    );
+    cancelEditing();
+  };
+
+  const deletePost = (postId: number) => {
+    setPosts((current) => current.filter((post) => post.id !== postId || post.creatorId !== CURRENT_WARDEN.id));
+    if (editingPostId === postId) cancelEditing();
+  };
+
+  const handleVote = (postId: number, optionIndex: number) => {
+    const previousOptionIndex = votedOptions[postId];
+    if (previousOptionIndex === optionIndex) return;
+
     setPosts((current) =>
       current.map((post) => {
-        if (post.id !== id) return post;
+        if (post.id !== postId) return post;
         return {
           ...post,
-          status,
-          rejectionReason: status === 'Rejected' ? reason : post.rejectionReason,
-          forwardReason: status === 'Forwarded' ? reason : post.forwardReason,
+          pollOptions: post.pollOptions.map((option, index) => {
+            if (index === optionIndex) return { ...option, votes: option.votes + 1 };
+            if (index === previousOptionIndex) return { ...option, votes: Math.max(0, option.votes - 1) };
+            return option;
+          }),
         };
       })
     );
-  };
-
-  const openDialog = (postId: number, type: 'approve' | 'reject' | 'forward') => {
-    setSelectedPostId(postId);
-    setDialogType(type);
-    setIsOpen(true);
-  };
-
-  const handleConfirm = () => {
-    if (!selectedPostId) return;
-
-    if (dialogType === 'approve') {
-      updateStatus(selectedPostId, 'Approved');
-    } else if (dialogType === 'reject' && rejectionReason.trim()) {
-      updateStatus(selectedPostId, 'Rejected', rejectionReason.trim());
-      setRejectionReason('');
-    } else if (dialogType === 'forward' && forwardReason.trim()) {
-      updateStatus(selectedPostId, 'Forwarded', forwardReason.trim());
-      setForwardReason('');
-    }
-
-    setIsOpen(false);
-    setDialogType(null);
-    setSelectedPostId(null);
+    setVotedOptions((current) => ({ ...current, [postId]: optionIndex }));
   };
 
   return (
-    <div className="flex-1 p-4 md:p-6 bg-[#f8fafc] min-h-screen text-[13px]">
-      <div className="flex items-center justify-between mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Community Moderation</h1>
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1 font-medium">
-            <span>Home</span>
-            <span className="text-slate-300">/</span>
-            <span className="text-indigo-500 font-semibold">Moderation</span>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4 mb-6">
-        <div className="flex gap-4 items-end">
-          <div className="flex-1">
-            <label className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 block">Search</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground" size={16} />
-              <Input
-                value={searchTerm}
-                onChange={(e) => {
-                  setSearchTerm(e.target.value);
-                  setCurrentPage(1);
-                }}
-                placeholder="Search posts by author or content..."
-                className="pl-10 h-12 rounded-2xl bg-slate-50"
-              />
-            </div>
-          </div>
-          <div className="w-40">
-            <label className="text-xs uppercase tracking-widest text-slate-500 font-semibold mb-2 block">Status</label>
-            <Select value={statusFilter} onValueChange={(value) => {
-              setStatusFilter(value);
-              setCurrentPage(1);
-            }}>
-              <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-4 text-sm text-slate-600">
-                <SelectValue placeholder="Status" />
-              </SelectTrigger>
-              <SelectContent>
-                {STATUS_OPTIONS.map((option) => (
-                  <SelectItem key={option} value={option}>{option}</SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-          </div>
-        </div>
-      </div>
-
-      <div className="space-y-4">
-        {paginatedPosts.length === 0 ? (
-          <Card className="border border-dashed py-12 text-center">
-            <p className="text-muted-foreground">No posts found</p>
-          </Card>
-        ) : (
-          paginatedPosts.map((post) => {
-            const isExpanded = expandedPostId === post.id;
-            const isTruncated = isTextTruncated(post.content);
-            const displayContent = isExpanded ? post.content : truncateText(post.content);
-
-            return (
-              <Card key={post.id} className="hover:shadow-md transition-shadow">
-                <CardContent className="pt-6">
-                  <div className="space-y-4">
-                    <div className="flex justify-between items-start gap-4">
-                      <div className="flex gap-3 flex-1">
-                        <div className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-sm flex-shrink-0 ${getInitialColor(post.author)}`}>
-                          {post.author.charAt(0)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-900">{post.author}</p>
-                          <p className="text-xs text-slate-500">{post.dateTime}</p>
-                        </div>
-                      </div>
-                      <Badge variant="outline" className={`${getStatusColor(post.status)} flex-shrink-0`}>
-                        {post.status}
-                      </Badge>
-                    </div>
-
-                    <div className="text-sm text-slate-700 leading-relaxed">
-                      {displayContent}
-                      {isTruncated && !isExpanded && (
-                        <button
-                          onClick={() => setExpandedPostId(post.id)}
-                          className="ml-1 text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          Read more
-                        </button>
-                      )}
-                      {isTruncated && isExpanded && (
-                        <button
-                          onClick={() => setExpandedPostId(null)}
-                          className="ml-1 text-blue-600 hover:text-blue-700 font-medium"
-                        >
-                          Show less
-                        </button>
-                      )}
-                    </div>
-
-                    {post.type === 'poll' && post.pollOptions && (
-                      <div className="space-y-2 bg-slate-50 p-3 rounded-lg">
-                        {post.pollOptions.slice(0, 4).map((option) => (
-                          <div key={option.id} className="text-sm text-slate-700 p-2 bg-white rounded border border-slate-200 cursor-not-allowed">
-                            {option.text}
-                          </div>
-                        ))}
-                      </div>
-                    )}
-
-                    {post.hashtags && post.hashtags.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {post.hashtags.slice(0, 4).map((tag, idx) => (
-                          <span key={idx} className="text-blue-600 hover:text-blue-700 cursor-pointer text-sm">
-                            {tag}
-                          </span>
-                        ))}
-                      </div>
-                    )}
-
-                    {post.status === 'Rejected' && post.rejectionReason && (
-                      <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-sm text-red-700">
-                        <p className="font-semibold">Rejection Reason</p>
-                        <p className="text-red-600 text-xs mt-1">{post.rejectionReason}</p>
-                      </div>
-                    )}
-
-                    {post.status === 'Forwarded' && post.forwardReason && (
-                      <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm text-slate-700">
-                        <p className="font-semibold">Forwarded Note</p>
-                        <p className="text-slate-600 text-xs mt-1">{post.forwardReason}</p>
-                      </div>
-                    )}
-
-                    {post.status === 'Pending' && (
-                      <div className="flex gap-2 pt-2">
-                        <Button
-                          size="sm"
-                          className="bg-green-600 hover:bg-green-700 text-white text-xs"
-                          onClick={() => openDialog(post.id, 'approve')}
-                        >
-                          <Check className="w-3 h-3 mr-1" />
-                          Approve
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-slate-700 hover:bg-blue-50 hover:border-blue-200 hover:text-blue-700 text-xs"
-                          onClick={() => openDialog(post.id, 'forward')}
-                        >
-                          <Forward className="w-3 h-3 mr-1" />
-                          Forward
-                        </Button>
-                        <Button
-                          size="sm"
-                          variant="outline"
-                          className="text-slate-700 hover:bg-red-50 hover:border-red-200 hover:text-red-700 text-xs"
-                          onClick={() => openDialog(post.id, 'reject')}
-                        >
-                          <X className="w-3 h-3 mr-1" />
-                          Reject
-                        </Button>
-                      </div>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-            );
-          })
-        )}
-      </div>
-
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2 mt-8">
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === 1}
-            onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
-          >
-            <ChevronLeft className="w-4 h-4" />
-          </Button>
-          {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => (
-            <Button
-              key={page}
-              variant={currentPage === page ? 'default' : 'outline'}
-              size="sm"
-              onClick={() => setCurrentPage(page)}
-              className="w-8 h-8 p-0"
-            >
-              {page}
-            </Button>
-          ))}
-          <Button
-            variant="outline"
-            size="sm"
-            disabled={currentPage === totalPages}
-            onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
-          >
-            <ChevronRight className="w-4 h-4" />
-          </Button>
-        </div>
-      )}
-
-      <Dialog open={isOpen} onOpenChange={setIsOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>
-              {dialogType === 'approve' && 'Approve Post'}
-              {dialogType === 'reject' && 'Reject Post'}
-              {dialogType === 'forward' && 'Forward to Admin'}
-            </DialogTitle>
-            <DialogDescription>
-              {dialogType === 'approve' && 'Are you sure you want to approve this post?'}
-              {dialogType === 'reject' && 'Please provide a rejection reason.'}
-              {dialogType === 'forward' && 'Please provide a note for the admin.'}
-            </DialogDescription>
-          </DialogHeader>
-
-          {(dialogType === 'reject' || dialogType === 'forward') && (
-            <Textarea
-              placeholder={dialogType === 'reject' ? 'Why is this being rejected?' : 'Why should this be forwarded?'}
-              value={dialogType === 'reject' ? rejectionReason : forwardReason}
-              onChange={(e) => {
-                if (dialogType === 'reject') {
-                  setRejectionReason(e.target.value);
-                } else {
-                  setForwardReason(e.target.value);
-                }
-              }}
-              className="min-h-24"
+    <div className="min-h-screen bg-slate-50 text-slate-950">
+      <div className="mx-auto flex w-full max-w-7xl flex-col gap-4 px-4 py-4 md:px-6 lg:px-8">
+        <div className="sticky top-14 z-30 -mx-4 border-b border-slate-200 bg-slate-50/95 px-4 py-3 backdrop-blur md:-mx-6 md:px-6 lg:-mx-8 lg:px-8">
+          <div className="relative w-full">
+            <Search className="absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <Input
+              value={searchTerm}
+              onChange={(event) => setSearchTerm(event.target.value)}
+              placeholder="Search by name or #hashtag"
+              className="h-11 w-full rounded-xl border-slate-200 bg-white pl-11 text-sm shadow-sm"
             />
-          )}
+          </div>
+        </div>
 
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsOpen(false)}>
-              Cancel
-            </Button>
-            <Button
-              onClick={handleConfirm}
-              disabled={
-                (dialogType === 'reject' && !rejectionReason.trim()) ||
-                (dialogType === 'forward' && !forwardReason.trim())
-              }
-              className={
-                dialogType === 'reject'
-                  ? 'bg-red-600 hover:bg-red-700 text-white'
-                  : 'bg-slate-900 hover:bg-slate-950 text-white'
-              }
-            >
-              {dialogType === 'approve' && 'Approve'}
-              {dialogType === 'reject' && 'Reject'}
-              {dialogType === 'forward' && 'Forward'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+        <div className="grid gap-5 xl:grid-cols-[minmax(0,1fr)_330px] 2xl:grid-cols-[minmax(0,1fr)_350px]">
+          <section className="order-2 min-w-0 space-y-4 xl:order-1">
+            <div className="space-y-2">
+              <h2 className="text-lg font-bold tracking-tight text-slate-950">Your Feed</h2>
+              <div className="flex items-center gap-3">
+                <button
+                  type="button"
+                  onClick={() => setSection('latest')}
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${section === 'latest' ? 'border-blue-100 bg-blue-50 text-blue-700 shadow-sm' : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-slate-950'}`}
+                >
+                  Latest
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setSection('pinned')}
+                  className={`rounded-full border px-3.5 py-1.5 text-sm font-medium transition ${section === 'pinned' ? 'border-blue-100 bg-blue-50 text-blue-700 shadow-sm' : 'border-transparent text-slate-600 hover:border-slate-200 hover:bg-white hover:text-slate-950'}`}
+                >
+                  Pinned
+                </button>
+              </div>
+            </div>
+
+            <div className="space-y-4 pb-6">
+              {filteredPosts.length === 0 ? (
+                <Card className="border-dashed border-slate-300 bg-white shadow-sm">
+                  <CardContent className="flex min-h-48 flex-col items-center justify-center text-center">
+                    <Search className="mb-3 h-8 w-8 text-slate-300" />
+                    <p className="font-semibold text-slate-800">No posts found</p>
+                    <p className="mt-1 text-sm text-slate-500">Try another name or hashtag.</p>
+                  </CardContent>
+                </Card>
+              ) : (
+                filteredPosts.map((post) => {
+                  const votes = totalVotes(post);
+                  const isOwnPost = post.creatorId === CURRENT_WARDEN.id;
+                  const isEditing = editingPostId === post.id;
+
+                  return (
+                    <article key={post.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md md:p-6">
+                      <div className="flex items-start justify-between gap-4">
+                        <div className="flex min-w-0 items-center gap-3">
+                          <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarColorFor(`${post.author}-${post.id}`)}`}>
+                            {initialFor(post.author)}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex flex-wrap items-center gap-2">
+                              <h2 className="truncate text-sm font-bold text-slate-950">{post.author}</h2>
+                              {post.pinned && (
+                                <Badge className="gap-1 border-amber-200 bg-amber-50 text-amber-700 hover:bg-amber-50">
+                                  <Pin className="h-3 w-3" /> Pinned
+                                </Badge>
+                              )}
+                            </div>
+                            <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
+                              <CalendarClock className="h-3.5 w-3.5" />
+                              {toDisplayDate(post)} at {post.time} | {post.hostelName}
+                            </p>
+                          </div>
+                        </div>
+                        <div className="flex shrink-0 items-center gap-2">
+                          <Badge variant="outline" className="border-blue-100 bg-blue-50 text-blue-700 capitalize">
+                            {post.creatorRole}
+                          </Badge>
+                          {isOwnPost && !isEditing && (
+                            <div className="flex items-center gap-1">
+                              <Button type="button" variant="ghost" size="icon" onClick={() => startEditing(post)} className="h-8 w-8 text-slate-500 hover:text-blue-700">
+                                <Pencil className="h-4 w-4" />
+                              </Button>
+                              <Button type="button" variant="ghost" size="icon" onClick={() => deletePost(post.id)} className="h-8 w-8 text-slate-500 hover:text-red-600">
+                                <Trash2 className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          )}
+                        </div>
+                      </div>
+
+                      {isEditing ? (
+                        <div className="mt-5 space-y-3 rounded-xl border border-blue-100 bg-blue-50/40 p-3">
+                          <Textarea
+                            value={editingContent}
+                            onChange={(event) => setEditingContent(event.target.value)}
+                            className="min-h-28 resize-none rounded-lg border-slate-200 bg-white text-sm leading-6"
+                          />
+                          <div className="relative">
+                            <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                            <Input
+                              value={editingTagInput}
+                              onChange={(event) => setEditingTagInput(event.target.value)}
+                              placeholder="Tags separated by commas"
+                              className="h-10 rounded-lg border-slate-200 bg-white pl-10 text-sm"
+                            />
+                          </div>
+                          <div className="flex justify-end gap-2">
+                            <Button type="button" variant="outline" onClick={cancelEditing} className="h-9 gap-2">
+                              <X className="h-4 w-4" /> Cancel
+                            </Button>
+                            <Button type="button" onClick={() => saveEditing(post.id)} className="h-9 gap-2 bg-blue-700 text-white hover:bg-blue-800">
+                              <Check className="h-4 w-4" /> Save
+                            </Button>
+                          </div>
+                        </div>
+                      ) : (
+                        <div className="mt-5 space-y-2">{renderPostContent(post.content)}</div>
+                      )}
+
+                      {!isEditing && post.tags.length > 0 && (
+                        <div className="mt-4 flex flex-wrap gap-2">
+                          {post.tags.map((tag) => (
+                            <button
+                              key={tag}
+                              type="button"
+                              onClick={() => setSearchTerm(tag)}
+                              className="rounded-full bg-slate-100 px-3 py-1 text-xs font-semibold text-slate-600 transition hover:bg-blue-50 hover:text-blue-700"
+                            >
+                              {tag}
+                            </button>
+                          ))}
+                        </div>
+                      )}
+
+                      {!isEditing && post.type === 'poll' && (
+                        <div className="mt-5 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
+                          <div className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
+                            <span className="flex items-center gap-2"><Vote className="h-4 w-4 text-blue-600" /> Vote</span>
+                            <span>{votedOptions[post.id] !== undefined ? 'Your vote is recorded. You can change it.' : `${votes} total votes`}</span>
+                          </div>
+                          {post.pollOptions.map((option, index) => {
+                            const percent = votes ? Math.round((option.votes / votes) * 100) : 0;
+                            const hasVoted = votedOptions[post.id] !== undefined;
+                            const selected = votedOptions[post.id] === index;
+
+                            return (
+                              <button
+                                key={option.text}
+                                type="button"
+                                onClick={() => handleVote(post.id, index)}
+                                aria-pressed={selected}
+                                className={`w-full rounded-lg border bg-white p-3 text-left transition ${selected ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-200'} ${hasVoted && !selected ? 'opacity-90' : ''}`}
+                              >
+                                <div className="flex items-center justify-between gap-3 text-sm font-medium text-slate-800">
+                                  <span>{option.text}</span>
+                                  <span>{percent}%</span>
+                                </div>
+                                <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
+                                  <div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
+                                </div>
+                              </button>
+                            );
+                          })}
+                        </div>
+                      )}
+                    </article>
+                  );
+                })
+              )}
+            </div>
+          </section>
+
+          <aside className="order-1 xl:order-2 xl:sticky xl:top-28 xl:self-start">
+            <Card className="border-slate-200 bg-white shadow-sm">
+              <CardContent className="p-3 md:p-4">
+                <div className="mb-3 flex items-center justify-between gap-3">
+                  <div>
+                    <p className="flex items-center gap-2 text-xs font-semibold uppercase tracking-wider text-blue-700">
+                      <MessageSquarePlus className="h-4 w-4" /> Warden Post
+                    </p>
+                    <h2 className="mt-1 text-base font-bold text-slate-950">Create post</h2>
+                  </div>
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${avatarColorFor(CURRENT_WARDEN.id)}`}>
+                    {initialFor(CURRENT_WARDEN.name)}
+                  </div>
+                </div>
+
+                <form onSubmit={handleSubmit} className="space-y-3">
+                  <div className="grid grid-cols-2 rounded-lg border border-slate-200 bg-slate-100 p-1 text-xs font-medium">
+                    <button
+                      type="button"
+                      onClick={() => setDraftType('text')}
+                      className={`rounded-md px-3 py-2 transition ${draftType === 'text' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-950'}`}
+                    >
+                      Text
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setDraftType('poll')}
+                      className={`rounded-md px-3 py-2 transition ${draftType === 'poll' ? 'bg-white text-blue-700 shadow-sm' : 'text-slate-600 hover:text-slate-950'}`}
+                    >
+                      Poll
+                    </button>
+                  </div>
+
+                  <Textarea
+                    value={content}
+                    onChange={(event) => setContent(event.target.value)}
+                    placeholder="Use #Heading# on its own line for bold heading text."
+                    className="min-h-24 resize-none rounded-lg border-slate-200 bg-slate-50 text-sm leading-6 md:min-h-28"
+                  />
+
+                  <div className="relative">
+                    <Hash className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+                    <Input
+                      value={tagInput}
+                      onChange={(event) => setTagInput(event.target.value)}
+                      placeholder="Tags separated by commas"
+                      className="h-10 rounded-lg border-slate-200 bg-slate-50 pl-10 text-sm"
+                    />
+                  </div>
+
+                  {draftType === 'poll' && (
+                    <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
+                      {pollInputs.map((option, index) => (
+                        <div key={index} className="flex items-center gap-2">
+                          <Input
+                            value={option}
+                            onChange={(event) => setPollInputs((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                            placeholder={`Option ${index + 1}`}
+                            className="h-9 rounded-lg bg-white text-sm"
+                          />
+                          {pollInputs.length > 2 && (
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => setPollInputs((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                              className="h-9 w-9 shrink-0 text-slate-500 hover:text-red-600"
+                            >
+                              <X className="h-4 w-4" />
+                            </Button>
+                          )}
+                        </div>
+                      ))}
+                      {pollInputs.length < 4 && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          onClick={() => setPollInputs((current) => [...current, ''])}
+                          className="h-9 w-full border-dashed text-xs"
+                        >
+                          Add option
+                        </Button>
+                      )}
+                    </div>
+                  )}
+
+                  <Button type="submit" className="h-10 w-full gap-2 bg-blue-700 text-white hover:bg-blue-800">
+                    <Send className="h-4 w-4" />
+                    Publish as warden
+                  </Button>
+                </form>
+              </CardContent>
+            </Card>
+          </aside>
+        </div>
+      </div>
     </div>
   );
 }

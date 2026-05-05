@@ -140,8 +140,7 @@ export default function StudentsPage() {
 
   const sortedStudents = useMemo(() => {
     return [...students].sort((a, b) => {
-      if (parseInt(a.class) !== parseInt(b.class)) return parseInt(a.class) - parseInt(b.class);
-      return a.gender.localeCompare(b.gender);
+      return a.name.localeCompare(b.name);
     });
   }, [students]);
 
@@ -274,7 +273,7 @@ export default function StudentsPage() {
                   <TableRow
                     key={student.id}
                     onClick={() => handleRowClick(student)}
-                    className="border-b border-slate-50/50 bg-white hover:bg-slate-50 hover:shadow-sm hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 transform-gpu cursor-pointer group"
+                    className="border-b border-slate-50/50 bg-white hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer group"
                   >
                     <TableCell className="py-4 px-8 font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{student.name}</TableCell>
                     <TableCell className="py-4 px-8 text-center text-slate-600">{student.class}</TableCell>
@@ -340,3 +339,5 @@ export default function StudentsPage() {
     </div>
   );
 }
+
+

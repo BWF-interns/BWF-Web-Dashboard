@@ -31,7 +31,7 @@ export default function HomePage() {
       title: "Warden Dashboard",
       description: "Manage students, activities, and hostel operations",
       icon: <Shield size={24} />,
-      route: "/warden/dashboard",
+      route: "/warden/community",
       color: "bg-purple-500",
     },
     {

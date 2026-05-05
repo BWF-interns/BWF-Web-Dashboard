@@ -1,6 +1,6 @@
 'use client';
 
-import { Bell } from 'lucide-react';
+import { Bell, Menu } from 'lucide-react';
 import { Button } from '@/app/warden/Template/components/ui/button';
 import {
   DropdownMenu,
@@ -11,16 +11,27 @@ import {
 } from '@/app/warden/Template/components/ui/dropdown-menu';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
 
-export function TopNav() {
+type TopNavProps = {
+  onMenuClick?: () => void;
+};
+
+export function TopNav({ onMenuClick }: TopNavProps) {
   return (
-    <div className="sticky top-0 z-50 bg-background border-b border-border/50 backdrop-blur-sm animate-slide-in-bottom">
-      <div className="flex items-center justify-between h-14 px-6">
-        <div className="flex-1">
-          <h2 className="text-lg font-semibold text-foreground">Warden Dashboard</h2>
+    <div className="sticky top-0 z-30 bg-background border-b border-border/50 backdrop-blur-sm animate-slide-in-bottom">
+      <div className="flex items-center justify-between h-14 px-4 md:px-6">
+        <div className="flex items-center gap-3 min-w-0">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={onMenuClick}
+            className="md:hidden h-9 w-9 rounded-lg hover:bg-muted/60"
+          >
+            <Menu className="w-5 h-5 text-foreground" />
+          </Button>
+          <h2 className="text-base md:text-lg font-semibold text-foreground truncate">Warden Dashboard</h2>
         </div>
 
         <div className="flex items-center gap-4">
-          {/* Notifications */}
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button
