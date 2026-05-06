@@ -2,20 +2,21 @@
 
 import { useState, useEffect } from "react";
 import "../styles/complaints.css";
-import { 
-  ShieldAlert, 
-  MessageSquarePlus, 
-  CheckCircle2, 
-  Clock, 
-  History, 
-  UserSquare2, 
-  X, 
+import {
+  ShieldAlert,
+  MessageSquarePlus,
+  CheckCircle2,
+  Clock,
+  History,
+  UserSquare2,
+  X,
   Plus,
   Send,
   MessageCircle,
   HelpCircle,
-  ChevronRight
+  ChevronRight,
 } from "lucide-react";
+import { postComplaints, getComplaints } from "./service";
 
 type ComplaintStatus = "open" | "resolved" | "escalated";
 
@@ -44,7 +45,8 @@ function timeAgo(dateStr: string): string {
 const mockData = {
   eyebrow: "Permissions & Support",
   title: "Activities & Complaints 🌿",
-  subtitle: "Request activity permissions or share a personal concern with the Warden.",
+  subtitle:
+    "Request activity permissions or share a personal concern with the Warden.",
   formTitle: "What can we help you with?",
   formSub: "Your requests and concerns are handled securely by our team.",
   historyTitle: "Request History",
@@ -56,15 +58,15 @@ const mockData = {
     steps: [
       "Your message is sent securely and directly to the BWF Warden.",
       "The Warden will review and assign your concern to a mentor.",
-      "You'll receive feedback and updates directly in this dashboard."
-    ]
+      "You'll receive feedback and updates directly in this dashboard.",
+    ],
   },
   sidebarSupport: {
     badge: "BWF Support",
     title: "Need to talk now?",
     desc: "Our team is available 24/7 for emotional and mental health support.",
-    linkText: "Go to Wellbeing Hub"
-  }
+    linkText: "Go to Wellbeing Hub",
+  },
 };
 
 const ACTIVITY_CATEGORIES = [
@@ -78,13 +80,24 @@ const COMPLAINT_CATEGORIES = [
   { id: "academic", label: "Academic Pressure", icon: "📚", color: "#f59e0b" },
   { id: "peer", label: "Peer Conflict", icon: "🤝", color: "#ec4899" },
   { id: "safety", label: "Safety/Personal", icon: "⚠️", color: "#ef4444" },
-  { id: "other", label: "Other", icon: "❓", color: "#64748b" }
+  { id: "other", label: "Other", icon: "❓", color: "#64748b" },
 ];
 
-const STATUS_CONFIG: Record<ComplaintStatus, { label: string; icon: any; class: string }> = {
+const STATUS_CONFIG: Record<
+  ComplaintStatus,
+  { label: string; icon: any; class: string }
+> = {
   open: { label: "Received", icon: Clock, class: "rc-status--open" },
-  resolved: { label: "Resolved", icon: CheckCircle2, class: "rc-status--resolved" },
-  escalated: { label: "In Review", icon: ShieldAlert, class: "rc-status--escalated" },
+  resolved: {
+    label: "Resolved",
+    icon: CheckCircle2,
+    class: "rc-status--resolved",
+  },
+  escalated: {
+    label: "In Review",
+    icon: ShieldAlert,
+    class: "rc-status--escalated",
+  },
 };
 
 export default function ComplaintsPage() {
@@ -92,8 +105,10 @@ export default function ComplaintsPage() {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [showForm, setShowForm] = useState(false);
-  const [activeTab, setActiveTab] = useState<"all" | "open" | "resolved">("all");
-  
+  const [activeTab, setActiveTab] = useState<"all" | "open" | "resolved">(
+    "all",
+  );
+
   // Form State
   const [type, setType] = useState<"activity" | "complaint">("complaint");
   const [text, setText] = useState("");
@@ -105,18 +120,12 @@ export default function ComplaintsPage() {
     fetchComplaints();
   }, []);
 
-  const token = typeof window !== "undefined" ? localStorage.getItem("accessToken") : null;
-  const authId = typeof window !== "undefined" ? localStorage.getItem("auth_id") : null;
-
   async function fetchComplaints() {
     try {
-      const res = await fetch(`/api/student/complaints/${authId}`, {
-        headers: { Authorization: `Bearer ${token}` }
-      });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
+      const data = await getComplaints();
       setComplaints(data.complaints || []);
-    } catch {
+      console.log("Fetched complaints:", data);
+    } catch (err) {
       setError("Unable to load history. Please refresh.");
     } finally {
       setLoading(false);
@@ -125,24 +134,20 @@ export default function ComplaintsPage() {
 
   async function handleSubmit() {
     if (!text.trim()) return;
-    setSubmitting(true);
+
     try {
-      const res = await fetch(`/api/student/complaints/${authId}`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-          Authorization: `Bearer ${token}`,
-        },
-        body: JSON.stringify({ text: text.trim(), category }),
+      const newComplaint = await postComplaints({
+        message: text.trim(),
+        category,
+        type,
       });
-      if (!res.ok) throw new Error();
-      const data = await res.json();
-      setComplaints(prev => [data.complaint, ...prev]);
+
+      setComplaints((prev) => [newComplaint, ...prev]);
       resetForm();
       setSubmitted(true);
       setTimeout(() => setSubmitted(false), 5000);
     } catch {
-      setError("Failed to send concern. Check your connection.");
+      setError("Failed to send concern.");
     } finally {
       setSubmitting(false);
     }
@@ -155,9 +160,10 @@ export default function ComplaintsPage() {
     setShowForm(false);
   };
 
-  const filteredComplaints = complaints.filter(c => {
+  const filteredComplaints = complaints.filter((c) => {
     if (activeTab === "all") return true;
-    if (activeTab === "open") return c.status === "open" || c.status === "escalated";
+    if (activeTab === "open")
+      return c.status === "open" || c.status === "escalated";
     return c.status === "resolved";
   });
 
@@ -183,9 +189,17 @@ export default function ComplaintsPage() {
         <div className="rc-banner rc-banner--success">
           <div className="rc-banner-inner">
             <CheckCircle2 size={18} />
-            <span>Thank you for sharing. We've received your concern and will review it soon.</span>
+            <span>
+              Thank you for sharing. We've received your concern and will review
+              it soon.
+            </span>
           </div>
-          <button onClick={() => setSubmitted(false)} className="rc-banner-close"><X size={16} /></button>
+          <button
+            onClick={() => setSubmitted(false)}
+            className="rc-banner-close"
+          >
+            <X size={16} />
+          </button>
         </div>
       )}
 
@@ -195,7 +209,11 @@ export default function ComplaintsPage() {
             <ShieldAlert size={18} />
             <span>{error}</span>
           </div>
-          <button className="rc-banner-close" onClick={() => setError(null)} aria-label="Close">
+          <button
+            className="rc-banner-close"
+            onClick={() => setError(null)}
+            aria-label="Close"
+          >
             <X size={16} />
           </button>
         </div>
@@ -224,16 +242,22 @@ export default function ComplaintsPage() {
               <div className="rc-form-section">
                 <label className="rc-section-label">Select Request Type</label>
                 <div className="rc-type-grid">
-                  <button 
-                    className={`rc-type-item ${type === 'activity' ? 'rc-type-item--active' : ''}`}
-                    onClick={() => { setType('activity'); setCategory(ACTIVITY_CATEGORIES[0].label); }}
+                  <button
+                    className={`rc-type-item ${type === "activity" ? "rc-type-item--active" : ""}`}
+                    onClick={() => {
+                      setType("activity");
+                      setCategory(ACTIVITY_CATEGORIES[0].label);
+                    }}
                   >
                     <Plus size={20} />
                     <span>Activity Approval</span>
                   </button>
-                  <button 
-                    className={`rc-type-item ${type === 'complaint' ? 'rc-type-item--active' : ''}`}
-                    onClick={() => { setType('complaint'); setCategory(COMPLAINT_CATEGORIES[0].label); }}
+                  <button
+                    className={`rc-type-item ${type === "complaint" ? "rc-type-item--active" : ""}`}
+                    onClick={() => {
+                      setType("complaint");
+                      setCategory(COMPLAINT_CATEGORIES[0].label);
+                    }}
                   >
                     <ShieldAlert size={20} />
                     <span>Personal Complaint</span>
@@ -245,15 +269,22 @@ export default function ComplaintsPage() {
               <div className="rc-form-section">
                 <label className="rc-section-label">Category</label>
                 <div className="rc-category-grid">
-                  {(type === 'activity' ? ACTIVITY_CATEGORIES : COMPLAINT_CATEGORIES).map(cat => (
+                  {(type === "activity"
+                    ? ACTIVITY_CATEGORIES
+                    : COMPLAINT_CATEGORIES
+                  ).map((cat) => (
                     <button
                       key={cat.id}
-                      className={`rc-cat-item ${category === cat.label ? 'rc-cat-item--active' : ''}`}
+                      className={`rc-cat-item ${category === cat.label ? "rc-cat-item--active" : ""}`}
                       onClick={() => setCategory(cat.label)}
                     >
                       <span className="rc-cat-icon">{cat.icon}</span>
                       <span className="rc-cat-label">{cat.label}</span>
-                      {category === cat.label && <div className="rc-cat-check"><CheckCircle2 size={12} /></div>}
+                      {category === cat.label && (
+                        <div className="rc-cat-check">
+                          <CheckCircle2 size={12} />
+                        </div>
+                      )}
                     </button>
                   ))}
                 </div>
@@ -267,7 +298,7 @@ export default function ComplaintsPage() {
                     className="rc-textarea"
                     placeholder="Provide as much detail as you're comfortable sharing..."
                     value={text}
-                    onChange={e => setText(e.target.value)}
+                    onChange={(e) => setText(e.target.value)}
                     rows={6}
                     maxLength={1000}
                   />
@@ -279,10 +310,12 @@ export default function ComplaintsPage() {
 
               {/* Actions */}
               <div className="rc-form-footer">
-                <button className="rc-btn-cancel" onClick={resetForm}>Discard</button>
-                <button 
-                  className="rc-btn-submit" 
-                  disabled={submitting || !text.trim()} 
+                <button className="rc-btn-cancel" onClick={resetForm}>
+                  Discard
+                </button>
+                <button
+                  className="rc-btn-submit"
+                  disabled={submitting || !text.trim()}
                   onClick={handleSubmit}
                 >
                   {submitting ? "Sending..." : "Submit Request"}
@@ -298,19 +331,19 @@ export default function ComplaintsPage() {
                   <h2 className="rc-history-title">{mockData.historyTitle}</h2>
                 </div>
                 <div className="rc-tabs">
-                  <button 
+                  <button
                     className={`rc-tab ${activeTab === "all" ? "rc-tab--active" : ""}`}
                     onClick={() => setActiveTab("all")}
                   >
                     All
                   </button>
-                  <button 
+                  <button
                     className={`rc-tab ${activeTab === "open" ? "rc-tab--active" : ""}`}
                     onClick={() => setActiveTab("open")}
                   >
                     Active
                   </button>
-                  <button 
+                  <button
                     className={`rc-tab ${activeTab === "resolved" ? "rc-tab--active" : ""}`}
                     onClick={() => setActiveTab("resolved")}
                   >
@@ -332,23 +365,31 @@ export default function ComplaintsPage() {
                 </div>
               ) : (
                 <div className="rc-list">
-                  {filteredComplaints.map(c => {
-                    const config = STATUS_CONFIG[c.status];
+                  {filteredComplaints.map((c) => {
+                    const config =
+                      STATUS_CONFIG[c.status] || STATUS_CONFIG["open"];
                     const Icon = config.icon;
                     return (
-                      <div key={c._id} className={`rc-card rc-card--${c.status}`}>
+                      <div
+                        key={c._id}
+                        className={`rc-card rc-card--${c.status}`}
+                      >
                         <div className="rc-card-header">
                           <div className="rc-card-badges">
                             <span className={`rc-pill-status ${config.class}`}>
                               <Icon size={12} />
                               {config.label}
                             </span>
-                            <span className="rc-pill-cat">{c.category || "General"}</span>
+                            <span className="rc-pill-cat">
+                              {c.category || "General"}
+                            </span>
                           </div>
-                          <span className="rc-card-date">{timeAgo(c.createdAt)}</span>
+                          <span className="rc-card-date">
+                            {timeAgo(c.createdAt)}
+                          </span>
                         </div>
                         <p className="rc-card-body">{c.text}</p>
-                        
+
                         {c.response && (
                           <div className="rc-mentor-response">
                             <div className="rc-mentor-head">
@@ -371,7 +412,9 @@ export default function ComplaintsPage() {
         <aside className="rc-column-sidebar">
           <div className="rc-sidebar-card rc-sidebar-card--primary">
             <HelpCircle size={24} className="rc-sidebar-icon" />
-            <h3 className="rc-sidebar-title">{mockData.sidebarHowItWorks.title}</h3>
+            <h3 className="rc-sidebar-title">
+              {mockData.sidebarHowItWorks.title}
+            </h3>
             <ul className="rc-sidebar-list">
               {mockData.sidebarHowItWorks.steps.map((step, idx) => (
                 <li key={idx}>
@@ -382,9 +425,16 @@ export default function ComplaintsPage() {
             </ul>
           </div>
 
-          <div className="rc-sidebar-card rc-sidebar-card--purple" onClick={() => window.location.href = '/student/wellbeing'}>
-            <div className="rc-sidebar-badge">{mockData.sidebarSupport.badge}</div>
-            <h3 className="rc-sidebar-title">{mockData.sidebarSupport.title}</h3>
+          <div
+            className="rc-sidebar-card rc-sidebar-card--purple"
+            onClick={() => (window.location.href = "/student/wellbeing")}
+          >
+            <div className="rc-sidebar-badge">
+              {mockData.sidebarSupport.badge}
+            </div>
+            <h3 className="rc-sidebar-title">
+              {mockData.sidebarSupport.title}
+            </h3>
             <p className="rc-sidebar-desc">{mockData.sidebarSupport.desc}</p>
             <div className="rc-sidebar-link">
               <span>{mockData.sidebarSupport.linkText}</span>

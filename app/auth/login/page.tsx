@@ -22,7 +22,7 @@ export default function LoginPage() {
       // optional: store token
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("role", data.role);
-      localStorage.setItem("studentId", studentId); 
+      localStorage.setItem("auth_id", data.auth_id);
       // role-based redirect
       if (data.role === "admin") {
         router.push("/admin/dashboard");

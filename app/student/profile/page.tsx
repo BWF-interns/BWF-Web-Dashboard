@@ -3,7 +3,7 @@ import ProfilePage from "./ProfilePage";
 import type { Metadata } from "next";
 
 export const metadata: Metadata = {
-  title: "Aisha Sharma - Profile",
+  title: "Profile",
   description:
     "View your profile, interests, and personal journal reflections.",
 };

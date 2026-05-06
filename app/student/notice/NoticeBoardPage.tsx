@@ -25,7 +25,7 @@ export default function NoticeBoardPage() {
 
   const fetchNotices = async () => {
     try {
-      const res = await api.get(`/student/noticeboard/${STUDENT_ID}`);
+      const res = await api.get(`/student/noticeboard/me`);
       // Assuming your backend returns { notices: [...] } or just the array [...]
       setNotices(res.data.notices || res.data || []);
     } catch (error) {
@@ -37,7 +37,7 @@ export default function NoticeBoardPage() {
 
   const markAsRead = async (id: string) => {
     try {
-      await api.post(`/student/noticeboard/${STUDENT_ID}/notices/${id}/read`);
+      await api.post(`/student/noticeboard/me/notices/${id}/read`);
       setNotices((prev) =>
         prev.map((n) => (n._id === id ? { ...n, isRead: true } : n)),
       );
@@ -48,7 +48,7 @@ export default function NoticeBoardPage() {
 
   const deleteNotice = async (id: string) => {
     try {
-      await api.delete(`/student/noticeboard/${STUDENT_ID}/notices/${id}`);
+      await api.delete(`/student/noticeboard/me/notices/${id}`);
       setNotices((prev) => prev.filter((n) => n._id !== id));
     } catch (error) {
       console.error("Failed to delete notice", error);
@@ -102,7 +102,9 @@ export default function NoticeBoardPage() {
             </div>
           ))}
           {notices.length === 0 && (
-            <p className="text-gray-500 text-center mt-4">No notices available</p>
+            <p className="text-gray-500 text-center mt-4">
+              No notices available
+            </p>
           )}
         </div>
       )}
