@@ -28,7 +28,7 @@ type Student = {
   name: string;
   class: string;
   gender: 'male' | 'female' | 'other';
-  contactNumber: string;
+  contactNumber?: string;
   DOB: string;
   email?: string;
   address?: string;
@@ -100,7 +100,7 @@ const buildStudentPayload = (data: StudentFormData, includeCredentials = false, 
     name: data.name.trim(),
     DOB: data.DOB,
     gender: data.gender,
-    contactNumber: data.contactNumber.trim(),
+    contactNumber: data.contactNumber?.trim() || undefined,
     class: data.class,
     email: data.email?.trim() || undefined,
     address: data.address?.trim() || undefined,
@@ -186,8 +186,8 @@ const StudentForm = ({ data, onChange }: StudentFormProps) => (
         </Select>
       </Field>
       <Field>
-        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone *</FieldLabel>
-        <Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="10-digit number" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone (Optional)</FieldLabel>
+        <Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="Optional phone" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
       </Field>
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Email (Optional)</FieldLabel>
@@ -196,10 +196,6 @@ const StudentForm = ({ data, onChange }: StudentFormProps) => (
       <Field className="md:col-span-2">
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Address (Optional)</FieldLabel>
         <Input value={data.address} onChange={(e) => onChange({ ...data, address: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
-      </Field>
-      <Field>
-        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">School Name (Optional)</FieldLabel>
-        <Input value={data.schoolName} onChange={(e) => onChange({ ...data, schoolName: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
       </Field>
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Aadhaar (Optional)</FieldLabel>
@@ -265,7 +261,7 @@ export default function StudentsPage() {
 
   const filteredStudents = useMemo(() => {
     return sortedStudents.filter((student) => {
-      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.contactNumber.includes(searchTerm);
+      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || (student.contactNumber?.includes(searchTerm) ?? false);
       const matchesClass = classFilter === 'all' || student.class === classFilter;
       const matchesGender = genderFilter === 'all' || student.gender.toLowerCase() === genderFilter.toLowerCase();
       return matchesSearch && matchesClass && matchesGender;
@@ -283,7 +279,7 @@ export default function StudentsPage() {
   };
 
   const validateForm = (requirePassword = false) => {
-    if (!formData.name || !formData.auth_id || !formData.contactNumber || !formData.DOB || !formData.gender || !formData.class || (requirePassword && !formData.password)) {
+    if (!formData.name || !formData.auth_id || !formData.DOB || !formData.gender || !formData.class || (requirePassword && !formData.password)) {
       alert("Required fields missing.");
       return false;
     }
@@ -292,7 +288,7 @@ export default function StudentsPage() {
       alert("Invalid email format.");
       return false;
     }
-    if (formData.contactNumber.length < 10) {
+    if (formData.contactNumber && formData.contactNumber.length < 10) {
       alert("Invalid contact number.");
       return false;
     }
@@ -439,7 +435,7 @@ export default function StudentsPage() {
                     <TableCell className="py-4 px-8 text-center text-slate-600">{student.class}</TableCell>
                     <TableCell className="py-4 px-8 text-center text-slate-600">{calculateAge(student.DOB)}</TableCell>
                     <TableCell className="py-4 px-8 text-slate-600 capitalize">{student.gender}</TableCell>
-                    <TableCell className="py-4 px-8 text-slate-600 tracking-wider">{student.contactNumber}</TableCell>
+                    <TableCell className="py-4 px-8 text-slate-600 tracking-wider">{student.contactNumber || 'N/A'}</TableCell>
                   </TableRow>
                 ))
               ) : (

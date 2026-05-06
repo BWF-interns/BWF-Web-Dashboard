@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Search, AlertCircle, Plus, CheckCircle2, ArrowUp, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Search, AlertCircle, Plus, CheckCircle2, ArrowUp, ChevronLeft, ChevronRight, Loader2 } from 'lucide-react';
 import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
 import { Button } from '@/app/warden/Template/components/ui/button';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/app/warden/Template/components/ui/input';
 import { Textarea } from '@/app/warden/Template/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle, AlertDialogTrigger } from '@/app/warden/Template/components/ui/alert-dialog';
+import api from '@/app/lib/api';
 
 type Status = 'OPEN' | 'RESOLVED' | 'ESCALATED';
 
@@ -24,7 +25,7 @@ interface ComplaintTimeline {
 }
 
 interface Complaint {
-  id: number;
+  id: string;
   title: string;
   description: string;
   reporter: string;
@@ -54,6 +55,7 @@ const formatTime = (dateTime: string) => {
 
 const getPriorityColor = (priority: string) => {
   switch (priority) {
+    case 'Critical':
     case 'High':
       return 'bg-destructive/10 text-destructive border border-destructive/20';
     case 'Medium':
@@ -91,169 +93,56 @@ export default function ComplaintsPage() {
   const [roleFilter, setRoleFilter] = useState('All');
   const [resolutionNote, setResolutionNote] = useState('');
   const [escalateReason, setEscalateReason] = useState('');
+  const [isLoading, setIsLoading] = useState(true);
 
-  const [data, setData] = useState<Complaint[]>([
-    {
-      id: 1,
-      title: 'Noise Disturbance',
-      description: 'Excessive noise from Room 204 late at night, disturbing other residents and study hours.',
-      reporter: 'Aditya Kumar',
-      role: 'Student',
-      dateTime: '2026-04-10T23:30:00',
-      location: 'Room 204',
-      priority: 'High',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-10T23:30:00',
-      },
-    },
-    {
-      id: 2,
-      title: 'Broken Water Tap',
-      description: 'The tap in the B Block washroom has been leaking for two days and needs urgent repair.',
-      reporter: 'Pooja Sharma',
-      role: 'Student',
-      dateTime: '2026-04-11T08:15:00',
-      location: 'B Block Washroom',
-      priority: 'Medium',
-      status: 'RESOLVED',
-      timeline: {
-        reported: '2026-04-11T08:15:00',
-        resolved: '2026-04-11T12:20:00',
-        resolvedReason: 'Plumber was called and the tap was fixed.',
-      },
-    },
-    {
-      id: 3,
-      title: 'Unauthorized Guest',
-      description: 'Teacher noticed an unauthorized guest in the hostel common area after midnight.',
-      reporter: 'Mrs. Meera Joshi',
-      role: 'Teacher',
-      dateTime: '2026-04-12T00:05:00',
-      location: 'A Block Common Area',
-      priority: 'High',
-      status: 'ESCALATED',
-      timeline: {
-        reported: '2026-04-12T00:05:00',
-        escalated: '2026-04-12T00:20:00',
-        escalatedReason: 'Security concern requires immediate attention from higher authorities.',
-      },
-    },
-    {
-      id: 4,
-      title: 'WiFi Connectivity Issues',
-      description: 'Students in Block B are experiencing slow internet speeds and frequent disconnections.',
-      reporter: 'Rahul Sharma',
-      role: 'Student',
-      dateTime: '2026-04-13T10:00:00',
-      location: 'Block B',
-      priority: 'Medium',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-13T10:00:00',
-      },
-    },
-    {
-      id: 5,
-      title: 'Mess Food Quality',
-      description: 'Complaint about the quality and taste of food served in the mess today.',
-      reporter: 'Priya Patel',
-      role: 'Student',
-      dateTime: '2026-04-13T12:30:00',
-      location: 'Mess Hall',
-      priority: 'Low',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-13T12:30:00',
-      },
-    },
-    {
-      id: 6,
-      title: 'Library Book Return',
-      description: 'Overdue books not being returned by students, affecting availability.',
-      reporter: 'Dr. Amit Kumar',
-      role: 'Teacher',
-      dateTime: '2026-04-14T09:00:00',
-      location: 'Library',
-      priority: 'Medium',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-14T09:00:00',
-      },
-    },
-    {
-      id: 7,
-      title: 'Sports Equipment Damage',
-      description: 'Basketball court equipment has been damaged and needs repair.',
-      reporter: 'Sports Club',
-      role: 'Student',
-      dateTime: '2026-04-14T14:00:00',
-      location: 'Basketball Court',
-      priority: 'High',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-14T14:00:00',
-      },
-    },
-    {
-      id: 8,
-      title: 'Room Cleaning Schedule',
-      description: 'Room cleaning is not happening as per the scheduled times.',
-      reporter: 'Anjali Gupta',
-      role: 'Student',
-      dateTime: '2026-04-15T08:00:00',
-      location: 'Room 101',
-      priority: 'Low',
-      status: 'RESOLVED',
-      timeline: {
-        reported: '2026-04-15T08:00:00',
-        resolved: '2026-04-15T10:00:00',
-        resolvedReason: 'Cleaning schedule has been adjusted and staff notified.',
-      },
-    },
-    {
-      id: 9,
-      title: 'Parking Space Issues',
-      description: 'Insufficient parking spaces for visitors and staff vehicles.',
-      reporter: 'Security Guard',
-      role: 'Teacher',
-      dateTime: '2026-04-15T16:00:00',
-      location: 'Parking Area',
-      priority: 'Medium',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-15T16:00:00',
-      },
-    },
-    {
-      id: 10,
-      title: 'Elevator Malfunction',
-      description: 'Main elevator in A Block is not working properly.',
-      reporter: 'Vikram Singh',
-      role: 'Student',
-      dateTime: '2026-04-16T11:00:00',
-      location: 'A Block Elevator',
-      priority: 'High',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-16T11:00:00',
-      },
-    },
-    {
-      id: 11,
-      title: 'Study Room Booking System',
-      description: 'Online booking system for study rooms is not functioning.',
-      reporter: 'Library Committee',
-      role: 'Student',
-      dateTime: '2026-04-16T13:00:00',
-      location: 'Study Rooms',
-      priority: 'Medium',
-      status: 'OPEN',
-      timeline: {
-        reported: '2026-04-16T13:00:00',
-      },
-    },
-  ]);
+  const [data, setData] = useState<Complaint[]>([]);
+
+  const fetchComplaints = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get('/warden/complaints');
+      
+      const normalizedData = res.data.map((item: any) => {
+        // Combine date and time for dateTime field if available
+        let dateTime = item.date;
+        if (item.date && item.time) {
+          const d = new Date(item.date);
+          const [hours, minutes] = item.time.split(':');
+          d.setHours(parseInt(hours), parseInt(minutes));
+          dateTime = d.toISOString();
+        }
+
+        return {
+          id: item._id,
+          title: item.title,
+          description: item.description,
+          reporter: item.reporter,
+          role: item.role as ReporterRole,
+          dateTime: dateTime,
+          location: item.location,
+          priority: item.priority,
+          status: item.status,
+          timeline: {
+            reported: item.timeline?.reportedDate || item.date,
+            resolved: item.timeline?.resolvedDate,
+            resolvedReason: item.timeline?.resolvedReason,
+            escalated: item.timeline?.escalatedDate,
+            escalatedReason: item.timeline?.escalatedReason,
+          }
+        };
+      });
+
+      setData(normalizedData);
+    } catch (error) {
+      console.error("Failed to fetch complaints:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchComplaints();
+  }, []);
 
   const ITEMS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
@@ -279,42 +168,68 @@ export default function ComplaintsPage() {
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedComplaints = filteredComplaints.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-  const resolveComplaint = (id: number, reason: string) => {
+  const resolveComplaint = async (id: string, reason: string) => {
     if (!reason.trim()) return;
-    setData((prev) =>
-      prev.map((complaint) =>
-        complaint.id === id
-          ? {
-              ...complaint,
-              status: 'RESOLVED',
-              timeline: {
-                ...complaint.timeline,
-                resolved: new Date().toISOString(),
-                resolvedReason: reason,
-              },
-            }
-          : complaint
-      )
-    );
+    try {
+      const res = await api.put(`/warden/complaints/${id}/approve`, { reason });
+      const updatedItem = res.data;
+      
+      setData((prev) =>
+        prev.map((complaint) =>
+          complaint.id === id
+            ? {
+                ...complaint,
+                status: 'RESOLVED',
+                timeline: {
+                  ...complaint.timeline,
+                  resolved: updatedItem.timeline.resolvedDate,
+                  resolvedReason: updatedItem.timeline.resolvedReason,
+                },
+              }
+            : complaint
+        )
+      );
+    } catch (error) {
+      console.error("Failed to resolve complaint:", error);
+      alert("Failed to resolve complaint. Please try again.");
+    }
   };
 
-  const escalateComplaint = (id: number, reason: string) => {
+  const escalateComplaint = async (id: string, reason: string) => {
     if (!reason.trim()) return;
-    setData((prev) =>
-      prev.map((complaint) =>
-        complaint.id === id
-          ? {
-              ...complaint,
-              status: 'ESCALATED',
-              timeline: {
-                ...complaint.timeline,
-                escalated: new Date().toISOString(),
-                escalatedReason: reason,
-              },
-            }
-          : complaint
-      )
-    );
+    try {
+      const res = await api.put(`/warden/complaints/${id}/reject`, { reason });
+      const updatedItem = res.data;
+
+      setData((prev) =>
+        prev.map((complaint) =>
+          complaint.id === id
+            ? {
+                ...complaint,
+                status: 'ESCALATED',
+                timeline: {
+                  ...complaint.timeline,
+                  escalated: updatedItem.timeline.escalatedDate,
+                  escalatedReason: updatedItem.timeline.escalatedReason,
+                },
+              }
+            : complaint
+        )
+      );
+    } catch (error) {
+      console.error("Failed to escalate complaint:", error);
+      alert("Failed to escalate complaint. Please try again.");
+    }
+  };
+
+  const deleteComplaint = async (id: string) => {
+    try {
+      await api.delete(`/warden/complaints/${id}`);
+      setData((prev) => prev.filter((complaint) => complaint.id !== id));
+    } catch (error) {
+      console.error("Failed to delete complaint:", error);
+      alert("Failed to delete complaint. Please try again.");
+    }
   };
 
   return (
@@ -388,7 +303,11 @@ export default function ComplaintsPage() {
         </div>
 
         <CardContent className="pt-4 pb-6 space-y-4">
-          {filteredComplaints.length === 0 ? (
+          {isLoading ? (
+            <div className="flex items-center justify-center py-20">
+              <Loader2 className="w-8 h-8 text-indigo-500 animate-spin" />
+            </div>
+          ) : filteredComplaints.length === 0 ? (
             <div className="rounded-4xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-slate-500">
               No complaints match your search or filters.
             </div>
@@ -433,7 +352,7 @@ export default function ComplaintsPage() {
                                 className="h-24 mt-4"
                               />
                               <div className="mt-4 flex gap-3 justify-end">
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel onClick={() => setResolutionNote('')}>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-green-600 hover:bg-green-700"
                                   disabled={!resolutionNote.trim()}
@@ -463,7 +382,7 @@ export default function ComplaintsPage() {
                                 className="h-24 mt-4"
                               />
                               <div className="mt-4 flex gap-3 justify-end">
-                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogCancel onClick={() => setEscalateReason('')}>Cancel</AlertDialogCancel>
                                 <AlertDialogAction
                                   className="bg-red-600 hover:bg-red-700"
                                   disabled={!escalateReason.trim()}
@@ -479,10 +398,30 @@ export default function ComplaintsPage() {
                           </AlertDialog>
                         </>
                       ) : (
-                        <div className="space-y-3">
-                          <div className="rounded-3xl bg-slate-50 px-4 py-3 text-slate-600 text-sm">
-                            {complaint.status === 'RESOLVED' ? 'This complaint has been resolved.' : 'This complaint has been escalated.'}
+                        <div className="flex gap-2 items-center">
+                          <div className="rounded-3xl bg-slate-50 px-4 py-2 text-slate-600 text-sm">
+                            {complaint.status === 'RESOLVED' ? 'Resolved' : 'Escalated'}
                           </div>
+                          <AlertDialog>
+                            <AlertDialogTrigger asChild>
+                              <Button variant="ghost" size="sm" className="h-8 rounded-lg text-red-500 hover:text-red-600 hover:bg-red-50 px-3 text-xs font-bold">Delete</Button>
+                            </AlertDialogTrigger>
+                            <AlertDialogContent>
+                              <AlertDialogHeader>
+                                <AlertDialogTitle>Delete Complaint?</AlertDialogTitle>
+                                <AlertDialogDescription>This action cannot be undone. This will permanently remove the complaint record.</AlertDialogDescription>
+                              </AlertDialogHeader>
+                              <div className="mt-4 flex gap-3 justify-end">
+                                <AlertDialogCancel>Cancel</AlertDialogCancel>
+                                <AlertDialogAction
+                                  className="bg-red-600 hover:bg-red-700 text-white"
+                                  onClick={() => deleteComplaint(complaint.id)}
+                                >
+                                  Delete Permanently
+                                </AlertDialogAction>
+                              </div>
+                            </AlertDialogContent>
+                          </AlertDialog>
                         </div>
                       )}
                     </div>

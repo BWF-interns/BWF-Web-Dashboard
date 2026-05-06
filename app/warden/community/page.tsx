@@ -1,12 +1,16 @@
 'use client';
 
-import { FormEvent, ReactNode, useMemo, useState } from 'react';
+import { FormEvent, ReactNode, useEffect, useMemo, useState } from 'react';
 import { CalendarClock, Check, Hash, MessageSquarePlus, Pencil, Pin, Search, Send, Trash2, Vote, X } from 'lucide-react';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/app/warden/Template/components/ui/alert-dialog';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
 import { Button } from '@/app/warden/Template/components/ui/button';
 import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
 import { Input } from '@/app/warden/Template/components/ui/input';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
+import { Skeleton } from '@/app/warden/Template/components/ui/skeleton';
 import { Textarea } from '@/app/warden/Template/components/ui/textarea';
+import api from '@/app/lib/api';
 
 type Status = 'Pending' | 'Approved' | 'Rejected' | 'Forwarded';
 type PostType = 'text' | 'poll';
@@ -18,6 +22,7 @@ interface PollOption {
 }
 
 interface CommunityPost {
+  _id: string;
   id: number;
   author: string;
   content: string;
@@ -27,163 +32,26 @@ interface CommunityPost {
   type: PostType;
   tags: string[];
   pollOptions: PollOption[];
+  voters?: { userId: string; optionIndex: number }[];
+  userVote?: number | null;
   creatorId: string;
   creatorRole: string;
-  hostelName: string;
+  hostelName: string | { _id: string; name?: string };
   pinned?: boolean;
+  canManage?: boolean;
 }
 
-const API_BASE_URL = process.env.NEXT_PUBLIC_API_BASE_URL ?? 'http://localhost:5000';
-const CURRENT_WARDEN = {
-  id: 'mock-warden-id',
-  name: 'Warden Office',
-  role: 'warden' as const,
-  hostelName: 'BWF Hostel',
+type ApiError = {
+  response?: { data?: { message?: string } };
+  message?: string;
 };
 
-const initialVotedOptions: Record<number, number> = {
-  108: 1,
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const apiError = error as ApiError;
+  return apiError.response?.data?.message || apiError.message || fallback;
 };
 
-const initialPosts: CommunityPost[] = [
-  {
-    id: 108,
-    author: 'Warden Office',
-    content: '#Gate Timing Poll#\nMain gate entry timings will be reviewed this week. Vote for the slot that works best for supervised evening entry.',
-    date: '2026-05-04',
-    time: '18:15',
-    status: 'Approved',
-    type: 'poll',
-    tags: ['#GateTiming', '#HostelSafety', '#WardenUpdate'],
-    pollOptions: [
-      { text: '8:30 PM', votes: 18 },
-      { text: '9:00 PM', votes: 32 },
-      { text: '9:30 PM', votes: 24 },
-    ],
-    creatorId: CURRENT_WARDEN.id,
-    creatorRole: 'warden',
-    hostelName: CURRENT_WARDEN.hostelName,
-    pinned: true,
-  },
-  {
-    id: 107,
-    author: 'Nisha Rao',
-    content: '#Study Room Lights#\nThe south block study room lights are flickering after 10 PM. Please check before exam week starts.',
-    date: '2026-05-04',
-    time: '12:40',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#StudyRoom', '#Maintenance'],
-    pollOptions: [],
-    creatorId: 'student-105',
-    creatorRole: 'student',
-    hostelName: 'BWF Hostel',
-  },
-  {
-    id: 106,
-    author: 'Admin Desk',
-    content: '#Document Verification#\nStudents who submitted scholarship documents last week can collect acknowledgement slips from the office after lunch.',
-    date: '2026-05-04',
-    time: '10:10',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#Scholarship', '#Admin'],
-    pollOptions: [],
-    creatorId: 'admin-001',
-    creatorRole: 'admin',
-    hostelName: 'BWF Hostel',
-    pinned: true,
-  },
-  {
-    id: 105,
-    author: 'Warden Office',
-    content: '#Water Tank Cleaning#\nWater tank cleaning is scheduled for Wednesday morning from 7 AM to 10 AM. Please store only essential water and avoid wastage.',
-    date: '2026-05-03',
-    time: '19:05',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#Maintenance', '#WaterSupply'],
-    pollOptions: [],
-    creatorId: CURRENT_WARDEN.id,
-    creatorRole: 'warden',
-    hostelName: CURRENT_WARDEN.hostelName,
-    pinned: true,
-  },
-  {
-    id: 104,
-    author: 'Aman Verma',
-    content: '#Library Hours#\nCan we extend library room access during the scholarship application week?',
-    date: '2026-05-03',
-    time: '11:30',
-    status: 'Approved',
-    type: 'poll',
-    tags: ['#Library', '#Scholarship'],
-    pollOptions: [
-      { text: 'Extend till 10 PM', votes: 22 },
-      { text: 'Keep current time', votes: 7 },
-    ],
-    creatorId: 'student-103',
-    creatorRole: 'student',
-    hostelName: 'BWF Hostel',
-  },
-  {
-    id: 103,
-    author: 'Activity Coordinator',
-    content: '#Weekend Practice#\nMusic room practice slots are open for the cultural evening team. Please keep instruments back in the labelled shelves.',
-    date: '2026-05-02',
-    time: '18:30',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#Activities', '#MusicRoom'],
-    pollOptions: [],
-    creatorId: 'staff-activity-01',
-    creatorRole: 'staff',
-    hostelName: 'BWF Hostel',
-  },
-  {
-    id: 102,
-    author: 'Ritika Sharma',
-    content: '#Health Camp Feedback#\nHi, my name is #Pratham Tiwari#. I am new here and want to contribute to #BWF#. Thanks to the wardens for arranging the health camp.',
-    date: '2026-05-02',
-    time: '16:10',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#HealthCamp', '#Community'],
-    pollOptions: [],
-    creatorId: 'student-102',
-    creatorRole: 'student',
-    hostelName: 'BWF Hostel',
-  },
-  {
-    id: 101,
-    author: 'Karan Mehta',
-    content: '#Common Room Request#\nCan the common room projector be checked before the weekend documentary screening?',
-    date: '2026-05-02',
-    time: '10:25',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#CommonRoom', '#Weekend'],
-    pollOptions: [],
-    creatorId: 'student-101',
-    creatorRole: 'student',
-    hostelName: 'BWF Hostel',
-  },
-  {
-    id: 100,
-    author: 'Warden Office',
-    content: '#Corridor Safety#\nReminder: keep corridors clear for emergency access. Shoes, cartons, and cycle parts left outside rooms will be moved to storage after inspection.',
-    date: '2026-05-01',
-    time: '09:20',
-    status: 'Approved',
-    type: 'text',
-    tags: ['#Safety', '#HostelRules'],
-    pollOptions: [],
-    creatorId: CURRENT_WARDEN.id,
-    creatorRole: 'warden',
-    hostelName: CURRENT_WARDEN.hostelName,
-    pinned: true,
-  },
-];
+const emptyPollInputs = ['', ''];
 
 const avatarColors = [
   'bg-blue-100 text-blue-700',
@@ -198,10 +66,13 @@ const avatarColors = [
   'bg-teal-100 text-teal-700',
 ];
 
-const toDisplayDate = (post: CommunityPost) =>
-  new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(
-    new Date(`${post.date}T${post.time}`)
-  );
+const hostelLabel = (hostelName: CommunityPost['hostelName']) =>
+  typeof hostelName === 'string' ? hostelName : hostelName?.name || 'Hostel';
+
+const toDisplayDate = (post: CommunityPost) => {
+  const dateValue = post.date ? new Date(post.date) : new Date();
+  return new Intl.DateTimeFormat('en-IN', { day: '2-digit', month: 'short', year: 'numeric' }).format(dateValue);
+};
 
 const totalVotes = (post: CommunityPost) => post.pollOptions.reduce((sum, option) => sum + option.votes, 0);
 const initialFor = (name: string) => name.trim().charAt(0).toUpperCase() || 'W';
@@ -219,8 +90,26 @@ const normalizeTag = (value: string) => {
 
 const tagsToInput = (tags: string[]) => tags.map((tag) => tag.replace(/^#/, '')).join(', ');
 
-const renderInlineContent = (line: string) => {
-  return line.split(/(#.+?#)/g).map((part, index) => {
+const parseTagInput = (value: string) =>
+  value
+    .split(',')
+    .map(normalizeTag)
+    .filter(Boolean)
+    .slice(0, 10);
+
+const normalizePost = (post: CommunityPost): CommunityPost => ({
+  ...post,
+  date: post.date ? new Date(post.date).toISOString() : new Date().toISOString(),
+  tags: Array.isArray(post.tags) ? post.tags : [],
+  pollOptions: Array.isArray(post.pollOptions) ? post.pollOptions : [],
+  voters: Array.isArray(post.voters) ? post.voters : [],
+  userVote: post.userVote ?? null,
+  pinned: Boolean(post.pinned),
+  canManage: Boolean(post.canManage),
+});
+
+const renderInlineContent = (line: string) =>
+  line.split(/(#.+?#)/g).map((part, index) => {
     const boldText = part.match(/^#(.+?)#$/);
 
     if (boldText) {
@@ -233,10 +122,9 @@ const renderInlineContent = (line: string) => {
 
     return part;
   });
-};
 
-const renderPostContent = (content: string): ReactNode => {
-  return content.split('\n').map((line, index) => {
+const renderPostContent = (content: string): ReactNode =>
+  content.split('\n').map((line, index) => {
     const heading = line.match(/^#(.+)#$/);
 
     if (heading) {
@@ -248,137 +136,204 @@ const renderPostContent = (content: string): ReactNode => {
     }
 
     return line.trim() ? (
-      <p key={`${line}-${index}`} className="text-sm leading-6 text-slate-700">
+      <p key={`${line}-${index}`} className="text-sm leading-6 text-slate-700 break-words">
         {renderInlineContent(line)}
       </p>
     ) : null;
   });
-};
 
 export default function CommunityPage() {
-  const [posts, setPosts] = useState<CommunityPost[]>(initialPosts);
+  const [posts, setPosts] = useState<CommunityPost[]>([]);
   const [searchTerm, setSearchTerm] = useState('');
   const [section, setSection] = useState<FeedSection>('latest');
   const [draftType, setDraftType] = useState<PostType>('text');
   const [content, setContent] = useState('');
   const [tagInput, setTagInput] = useState('');
-  const [pollInputs, setPollInputs] = useState(['', '']);
-  const [votedOptions, setVotedOptions] = useState<Record<number, number>>(initialVotedOptions);
-  const [editingPostId, setEditingPostId] = useState<number | null>(null);
+  const [pollInputs, setPollInputs] = useState<string[]>(emptyPollInputs);
+  const [editingPostId, setEditingPostId] = useState<string | null>(null);
+  const [editingType, setEditingType] = useState<PostType>('text');
   const [editingContent, setEditingContent] = useState('');
   const [editingTagInput, setEditingTagInput] = useState('');
+  const [editingPollInputs, setEditingPollInputs] = useState<string[]>(emptyPollInputs);
+  const [isPublishConfirmOpen, setIsPublishConfirmOpen] = useState(false);
+  const [deleteTarget, setDeleteTarget] = useState<CommunityPost | null>(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get('/warden/posts');
+      setPosts(res.data.map(normalizePost));
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to load posts.'));
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    const timeoutId = window.setTimeout(() => {
+      void fetchPosts();
+    }, 0);
+
+    return () => window.clearTimeout(timeoutId);
+  }, []);
 
   const filteredPosts = useMemo(() => {
     const query = searchTerm.trim().toLowerCase();
 
     return posts
-      .filter((post) => post.status === 'Approved' || post.creatorId === CURRENT_WARDEN.id)
       .filter((post) => (section === 'pinned' ? post.pinned : true))
       .filter((post) => {
         if (!query) return true;
         const searchable = `${post.author} ${post.creatorRole} ${post.tags.join(' ')} ${post.content}`.toLowerCase();
         return searchable.includes(query);
       })
-      .sort((a, b) => new Date(`${b.date}T${b.time}`).getTime() - new Date(`${a.date}T${a.time}`).getTime());
+      .sort((a, b) => {
+        const left = new Date(`${b.date}T${b.time}`).getTime();
+        const right = new Date(`${a.date}T${a.time}`).getTime();
+        return left - right;
+      });
   }, [posts, searchTerm, section]);
 
-  const buildPostPayload = (): Omit<CommunityPost, 'id'> => {
-    const now = new Date();
-    const tags = tagInput
-      .split(',')
-      .map(normalizeTag)
-      .filter(Boolean);
-
-    return {
-      author: CURRENT_WARDEN.name,
-      content: content.trim(),
-      date: now.toISOString().slice(0, 10),
-      time: now.toTimeString().slice(0, 5),
-      status: 'Pending',
-      type: draftType,
-      tags,
-      pollOptions:
-        draftType === 'poll'
-          ? pollInputs.map((text) => ({ text: text.trim(), votes: 0 })).filter((option) => option.text)
-          : [],
-      creatorId: CURRENT_WARDEN.id,
-      creatorRole: CURRENT_WARDEN.role,
-      hostelName: CURRENT_WARDEN.hostelName,
-      pinned: false,
-    };
+  const resetDraft = () => {
+    setContent('');
+    setTagInput('');
+    setPollInputs(emptyPollInputs);
+    setDraftType('text');
   };
+
+  const validateDraft = () => {
+    if (!content.trim()) {
+      alert('Post content is required.');
+      return false;
+    }
+
+    if (draftType === 'poll') {
+      const validOptions = pollInputs.map((option) => option.trim()).filter(Boolean);
+      if (validOptions.length < 2) {
+        alert('Poll requires at least 2 options.');
+        return false;
+      }
+      if (validOptions.length > 4) {
+        alert('Poll can have at most 4 options.');
+        return false;
+      }
+    }
+
+    return true;
+  };
+
+  const buildDraftPayload = () => ({
+    content: content.trim(),
+    type: draftType,
+    tags: parseTagInput(tagInput),
+    pollOptions: draftType === 'poll' ? pollInputs.map((option) => option.trim()).filter(Boolean) : [],
+  });
 
   const handleSubmit = async (event: FormEvent<HTMLFormElement>) => {
     event.preventDefault();
-    if (!content.trim()) return;
-    if (draftType === 'poll' && pollInputs.filter((option) => option.trim()).length < 2) return;
+    if (!validateDraft()) return;
+    setIsPublishConfirmOpen(true);
+  };
 
-    const payload = buildPostPayload();
-
-    // Backend-ready handoff: POST `${API_BASE_URL}/api/community/posts` with this payload when the endpoint is available.
-    console.info('Prepared community post payload', { endpoint: `${API_BASE_URL}/api/community/posts`, payload });
-
-    setPosts((current) => [{ ...payload, id: Date.now() }, ...current]);
-    setContent('');
-    setTagInput('');
-    setPollInputs(['', '']);
-    setDraftType('text');
-    setSection('latest');
+  const confirmPublish = async () => {
+    try {
+      setIsSubmitting(true);
+      const res = await api.post('/warden/posts', buildDraftPayload());
+      setPosts((current) => [normalizePost(res.data.post), ...current]);
+      resetDraft();
+      setSection('latest');
+      setIsPublishConfirmOpen(false);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to publish post.'));
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   const startEditing = (post: CommunityPost) => {
-    setEditingPostId(post.id);
+    setEditingPostId(post._id);
+    setEditingType(post.type);
     setEditingContent(post.content);
     setEditingTagInput(tagsToInput(post.tags));
+    setEditingPollInputs(
+      post.type === 'poll'
+        ? [...post.pollOptions.map((option) => option.text), ...emptyPollInputs].slice(0, Math.max(2, post.pollOptions.length))
+        : emptyPollInputs
+    );
   };
 
   const cancelEditing = () => {
     setEditingPostId(null);
+    setEditingType('text');
     setEditingContent('');
     setEditingTagInput('');
+    setEditingPollInputs(emptyPollInputs);
   };
 
-  const saveEditing = (postId: number) => {
-    if (!editingContent.trim()) return;
+  const saveEditing = async (post: CommunityPost) => {
+    if (!editingContent.trim()) {
+      alert('Post content is required.');
+      return;
+    }
 
-    const tags = editingTagInput
-      .split(',')
-      .map(normalizeTag)
-      .filter(Boolean);
+    const trimmedOptions = editingPollInputs.map((option) => option.trim()).filter(Boolean);
+    if (editingType === 'poll' && trimmedOptions.length < 2) {
+      alert('Poll requires at least 2 options.');
+      return;
+    }
 
-    setPosts((current) =>
-      current.map((post) =>
-        post.id === postId && post.creatorId === CURRENT_WARDEN.id
-          ? { ...post, content: editingContent.trim(), tags }
-          : post
-      )
-    );
-    cancelEditing();
+    try {
+      const payload = {
+        content: editingContent.trim(),
+        type: editingType,
+        tags: parseTagInput(editingTagInput),
+        pollOptions: editingType === 'poll' ? trimmedOptions : [],
+      };
+
+      const res = await api.put(`/warden/posts/${post._id}`, payload);
+      const updatedPost = normalizePost(res.data);
+      setPosts((current) => current.map((item) => (item._id === post._id ? updatedPost : item)));
+      cancelEditing();
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to update post.'));
+    }
   };
 
-  const deletePost = (postId: number) => {
-    setPosts((current) => current.filter((post) => post.id !== postId || post.creatorId !== CURRENT_WARDEN.id));
-    if (editingPostId === postId) cancelEditing();
+  const handleDelete = async () => {
+    if (!deleteTarget) return;
+
+    try {
+      await api.delete(`/warden/posts/${deleteTarget._id}`);
+      setPosts((current) => current.filter((post) => post._id !== deleteTarget._id));
+      if (editingPostId === deleteTarget._id) {
+        cancelEditing();
+      }
+      setDeleteTarget(null);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to delete post.'));
+    }
   };
 
-  const handleVote = (postId: number, optionIndex: number) => {
-    const previousOptionIndex = votedOptions[postId];
-    if (previousOptionIndex === optionIndex) return;
+  const handleVote = async (post: CommunityPost, optionIndex: number) => {
+    try {
+      const res = await api.post(`/warden/posts/${post._id}/vote`, { optionIndex });
+      setPosts((current) => current.map((item) => (item._id === post._id ? res.data.post : item)));
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to vote.'));
+    }
+  };
 
-    setPosts((current) =>
-      current.map((post) => {
-        if (post.id !== postId) return post;
-        return {
-          ...post,
-          pollOptions: post.pollOptions.map((option, index) => {
-            if (index === optionIndex) return { ...option, votes: option.votes + 1 };
-            if (index === previousOptionIndex) return { ...option, votes: Math.max(0, option.votes - 1) };
-            return option;
-          }),
-        };
-      })
-    );
-    setVotedOptions((current) => ({ ...current, [postId]: optionIndex }));
+  const togglePin = async (post: CommunityPost) => {
+    try {
+      const res = await api.put(`/warden/posts/${post._id}/pin`, { pinned: !post.pinned });
+      const updatedPost = normalizePost(res.data);
+      setPosts((current) => current.map((item) => (item._id === post._id ? updatedPost : item)));
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to update pin status.'));
+    }
   };
 
   return (
@@ -419,7 +374,30 @@ export default function CommunityPage() {
             </div>
 
             <div className="space-y-4 pb-6">
-              {filteredPosts.length === 0 ? (
+              {isLoading ? (
+                Array.from({ length: 3 }).map((_, index) => (
+                  <Card key={index} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 items-center gap-3">
+                        <Skeleton className="h-11 w-11 rounded-full" />
+                        <div className="min-w-0 space-y-2">
+                          <Skeleton className="h-4 w-32" />
+                          <Skeleton className="h-3 w-24" />
+                        </div>
+                      </div>
+                      <Skeleton className="h-8 w-8 rounded" />
+                    </div>
+                    <div className="mt-5 space-y-2">
+                      <Skeleton className="h-4 w-full" />
+                      <Skeleton className="h-4 w-3/4" />
+                    </div>
+                    <div className="mt-4 flex flex-wrap gap-2">
+                      <Skeleton className="h-6 w-16 rounded-full" />
+                      <Skeleton className="h-6 w-20 rounded-full" />
+                    </div>
+                  </Card>
+                ))
+              ) : filteredPosts.length === 0 ? (
                 <Card className="border-dashed border-slate-300 bg-white shadow-sm">
                   <CardContent className="flex min-h-48 flex-col items-center justify-center text-center">
                     <Search className="mb-3 h-8 w-8 text-slate-300" />
@@ -430,11 +408,11 @@ export default function CommunityPage() {
               ) : (
                 filteredPosts.map((post) => {
                   const votes = totalVotes(post);
-                  const isOwnPost = post.creatorId === CURRENT_WARDEN.id;
-                  const isEditing = editingPostId === post.id;
+                  const isOwnPost = Boolean(post.canManage);
+                  const isEditing = editingPostId === post._id;
 
                   return (
-                    <article key={post.id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md md:p-6">
+                    <article key={post._id} className="rounded-xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-blue-200 hover:shadow-md md:p-6">
                       <div className="flex items-start justify-between gap-4">
                         <div className="flex min-w-0 items-center gap-3">
                           <div className={`flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-sm font-bold ${avatarColorFor(`${post.author}-${post.id}`)}`}>
@@ -451,7 +429,7 @@ export default function CommunityPage() {
                             </div>
                             <p className="mt-1 flex flex-wrap items-center gap-2 text-xs text-slate-500">
                               <CalendarClock className="h-3.5 w-3.5" />
-                              {toDisplayDate(post)} at {post.time} | {post.hostelName}
+                              {toDisplayDate(post)} at {post.time} | {hostelLabel(post.hostelName)}
                             </p>
                           </div>
                         </div>
@@ -461,10 +439,13 @@ export default function CommunityPage() {
                           </Badge>
                           {isOwnPost && !isEditing && (
                             <div className="flex items-center gap-1">
+                              <Button type="button" variant="ghost" size="icon" onClick={() => togglePin(post)} className="h-8 w-8 text-slate-500 hover:text-amber-600">
+                                <Pin className={`h-4 w-4 ${post.pinned ? 'fill-current text-amber-600' : ''}`} />
+                              </Button>
                               <Button type="button" variant="ghost" size="icon" onClick={() => startEditing(post)} className="h-8 w-8 text-slate-500 hover:text-blue-700">
                                 <Pencil className="h-4 w-4" />
                               </Button>
-                              <Button type="button" variant="ghost" size="icon" onClick={() => deletePost(post.id)} className="h-8 w-8 text-slate-500 hover:text-red-600">
+                              <Button type="button" variant="ghost" size="icon" onClick={() => setDeleteTarget(post)} className="h-8 w-8 text-slate-500 hover:text-red-600">
                                 <Trash2 className="h-4 w-4" />
                               </Button>
                             </div>
@@ -474,6 +455,15 @@ export default function CommunityPage() {
 
                       {isEditing ? (
                         <div className="mt-5 space-y-3 rounded-xl border border-blue-100 bg-blue-50/40 p-3">
+                          <Select value={editingType} onValueChange={(value) => setEditingType(value as PostType)}>
+                            <SelectTrigger className="h-10 rounded-lg border-slate-200 bg-white text-sm">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="text">Text</SelectItem>
+                              <SelectItem value="poll">Poll</SelectItem>
+                            </SelectContent>
+                          </Select>
                           <Textarea
                             value={editingContent}
                             onChange={(event) => setEditingContent(event.target.value)}
@@ -488,11 +478,50 @@ export default function CommunityPage() {
                               className="h-10 rounded-lg border-slate-200 bg-white pl-10 text-sm"
                             />
                           </div>
+                          {editingType === 'poll' && (
+                            <div className="space-y-2 rounded-xl border border-slate-200 bg-white p-3">
+                              {editingPollInputs.map((option, index) => (
+                                <div key={`${post._id}-edit-${index}`} className="flex items-center gap-2">
+                                  <Input
+                                    value={option}
+                                    onChange={(event) =>
+                                      setEditingPollInputs((current) =>
+                                        current.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
+                                      )
+                                    }
+                                    placeholder={`Option ${index + 1}`}
+                                    className="h-9 rounded-lg text-sm"
+                                  />
+                                  {editingPollInputs.length > 2 && (
+                                    <Button
+                                      type="button"
+                                      variant="ghost"
+                                      size="icon"
+                                      onClick={() => setEditingPollInputs((current) => current.filter((_, itemIndex) => itemIndex !== index))}
+                                      className="h-9 w-9 shrink-0 text-slate-500 hover:text-red-600"
+                                    >
+                                      <X className="h-4 w-4" />
+                                    </Button>
+                                  )}
+                                </div>
+                              ))}
+                              {editingPollInputs.length < 4 && (
+                                <Button
+                                  type="button"
+                                  variant="outline"
+                                  onClick={() => setEditingPollInputs((current) => [...current, ''])}
+                                  className="h-9 w-full border-dashed text-xs"
+                                >
+                                  Add option
+                                </Button>
+                              )}
+                            </div>
+                          )}
                           <div className="flex justify-end gap-2">
                             <Button type="button" variant="outline" onClick={cancelEditing} className="h-9 gap-2">
                               <X className="h-4 w-4" /> Cancel
                             </Button>
-                            <Button type="button" onClick={() => saveEditing(post.id)} className="h-9 gap-2 bg-blue-700 text-white hover:bg-blue-800">
+                            <Button type="button" onClick={() => saveEditing(post)} className="h-9 gap-2 bg-blue-700 text-white hover:bg-blue-800">
                               <Check className="h-4 w-4" /> Save
                             </Button>
                           </div>
@@ -519,30 +548,33 @@ export default function CommunityPage() {
                       {!isEditing && post.type === 'poll' && (
                         <div className="mt-5 space-y-3 rounded-xl border border-slate-200 bg-slate-50 p-4">
                           <div className="flex items-center justify-between gap-3 text-xs font-semibold uppercase tracking-wide text-slate-500">
-                            <span className="flex items-center gap-2"><Vote className="h-4 w-4 text-blue-600" /> Vote</span>
-                            <span>{votedOptions[post.id] !== undefined ? 'Your vote is recorded. You can change it.' : `${votes} total votes`}</span>
+                            <span className="flex items-center gap-2"><Vote className="h-4 w-4 text-blue-600" /> Poll</span>
+                            <span>{votes} total votes</span>
                           </div>
                           {post.pollOptions.map((option, index) => {
                             const percent = votes ? Math.round((option.votes / votes) * 100) : 0;
-                            const hasVoted = votedOptions[post.id] !== undefined;
-                            const selected = votedOptions[post.id] === index;
-
+                            const isVoted = post.userVote === index;
                             return (
-                              <button
-                                key={option.text}
-                                type="button"
-                                onClick={() => handleVote(post.id, index)}
-                                aria-pressed={selected}
-                                className={`w-full rounded-lg border bg-white p-3 text-left transition ${selected ? 'border-blue-300 ring-2 ring-blue-100' : 'border-slate-200 hover:border-blue-200'} ${hasVoted && !selected ? 'opacity-90' : ''}`}
-                              >
+                              <div key={`${post._id}-${option.text}`} className={`w-full rounded-lg border p-3 ${isVoted ? 'border-blue-300 bg-blue-50' : 'border-slate-200 bg-white'}`}>
                                 <div className="flex items-center justify-between gap-3 text-sm font-medium text-slate-800">
                                   <span>{option.text}</span>
-                                  <span>{percent}%</span>
+                                  <div className="flex items-center gap-2">
+                                    <span>{percent}%</span>
+                                    <Button
+                                      type="button"
+                                      variant={isVoted ? "default" : "outline"}
+                                      size="sm"
+                                      onClick={() => handleVote(post, index)}
+                                      className={`h-7 px-2 text-xs ${isVoted ? 'bg-blue-600 hover:bg-blue-700' : ''}`}
+                                    >
+                                      {isVoted ? 'Voted' : 'Vote'}
+                                    </Button>
+                                  </div>
                                 </div>
                                 <div className="mt-2 h-2 overflow-hidden rounded-full bg-slate-100">
                                   <div className="h-full rounded-full bg-blue-600" style={{ width: `${percent}%` }} />
                                 </div>
-                              </button>
+                              </div>
                             );
                           })}
                         </div>
@@ -564,8 +596,8 @@ export default function CommunityPage() {
                     </p>
                     <h2 className="mt-1 text-base font-bold text-slate-950">Create post</h2>
                   </div>
-                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${avatarColorFor(CURRENT_WARDEN.id)}`}>
-                    {initialFor(CURRENT_WARDEN.name)}
+                  <div className={`flex h-9 w-9 items-center justify-center rounded-full text-sm font-bold ${avatarColorFor('warden-community')}`}>
+                    W
                   </div>
                 </div>
 
@@ -607,10 +639,14 @@ export default function CommunityPage() {
                   {draftType === 'poll' && (
                     <div className="space-y-2 rounded-xl border border-slate-200 bg-slate-50 p-3">
                       {pollInputs.map((option, index) => (
-                        <div key={index} className="flex items-center gap-2">
+                        <div key={`draft-${index}`} className="flex items-center gap-2">
                           <Input
                             value={option}
-                            onChange={(event) => setPollInputs((current) => current.map((item, itemIndex) => itemIndex === index ? event.target.value : item))}
+                            onChange={(event) =>
+                              setPollInputs((current) =>
+                                current.map((item, itemIndex) => (itemIndex === index ? event.target.value : item))
+                              )
+                            }
                             placeholder={`Option ${index + 1}`}
                             className="h-9 rounded-lg bg-white text-sm"
                           />
@@ -650,6 +686,44 @@ export default function CommunityPage() {
           </aside>
         </div>
       </div>
+
+      <AlertDialog open={isPublishConfirmOpen} onOpenChange={setIsPublishConfirmOpen}>
+        <AlertDialogContent className="rounded-3xl border-none p-8">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">Post to community?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500">
+              This will publish the post to the hostel community feed.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel className="rounded-xl border-none bg-slate-100 text-slate-600 font-bold">Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={confirmPublish}
+              disabled={isSubmitting}
+              className="rounded-xl bg-blue-700 hover:bg-blue-800 text-white font-bold px-8"
+            >
+              {isSubmitting ? 'Posting...' : 'Post now'}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      <AlertDialog open={Boolean(deleteTarget)} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent className="rounded-3xl border-none p-8">
+          <AlertDialogHeader>
+            <AlertDialogTitle className="text-xl font-bold">Delete this post?</AlertDialogTitle>
+            <AlertDialogDescription className="text-slate-500">
+              This will remove the post from the community feed permanently.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter className="mt-6 gap-3">
+            <AlertDialogCancel className="rounded-xl border-none bg-slate-100 text-slate-600 font-bold">Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="rounded-xl bg-rose-600 hover:bg-rose-700 text-white font-bold px-8">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

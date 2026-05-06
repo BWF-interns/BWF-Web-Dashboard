@@ -1,7 +1,7 @@
 'use client';
 
 import { useMemo, useState } from 'react';
-import { Search, ChevronLeft, ChevronRight, Check, X, Forward } from 'lucide-react';
+import { Search, ChevronLeft, ChevronRight, Check, X, Forward, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
 import { Button } from '@/app/warden/Template/components/ui/button';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
@@ -9,19 +9,21 @@ import { Input } from '@/app/warden/Template/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/app/warden/Template/components/ui/dialog';
 import { Textarea } from '@/app/warden/Template/components/ui/textarea';
+import api from '@/app/lib/api';
+import { useEffect } from 'react';
 
 type Status = 'Pending' | 'Approved' | 'Rejected' | 'Forwarded';
 
 type PostType = 'text' | 'poll';
 
 interface PollOption {
-  id: string;
+  _id: string;
   text: string;
   votes: number;
 }
 
 interface Post {
-  id: number;
+  id: string; // MongoDB _id
   author: string;
   content: string;
   dateTime: string;
@@ -32,6 +34,9 @@ interface Post {
   pollOptions?: PollOption[];
   rejectionReason?: string;
   forwardReason?: string;
+  approvedBy?: string;
+  rejectedBy?: string;
+  forwardedBy?: string;
 }
 
 const STATUS_OPTIONS = ['All', 'Pending', 'Approved', 'Rejected', 'Forwarded'];
@@ -74,129 +79,63 @@ const isTextTruncated = (text: string, charLimit = 200) => {
   return text.length > charLimit;
 };
 
+const renderContent = (content: string) => {
+  const parts = content.split(/(#.*?#)/g);
+  return parts.map((part, index) => {
+    if (part.startsWith('#') && part.endsWith('#') && part.length > 2) {
+      return (
+        <strong key={index} className="font-extrabold text-slate-900">
+          {part.slice(1, -1)}
+        </strong>
+      );
+    }
+    return part;
+  });
+};
+
 export default function ModerationPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [currentPage, setCurrentPage] = useState(1);
   const [rejectionReason, setRejectionReason] = useState('');
   const [forwardReason, setForwardReason] = useState('');
-  const [selectedPostId, setSelectedPostId] = useState<number | null>(null);
-  const [dialogType, setDialogType] = useState<'approve' | 'reject' | 'forward' | null>(null);
+  const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
+  const [dialogType, setDialogType] = useState<'approve' | 'reject' | 'forward' | 'delete' | null>(null);
   const [isOpen, setIsOpen] = useState(false);
-  const [expandedPostId, setExpandedPostId] = useState<number | null>(null);
+  const [expandedPostId, setExpandedPostId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [posts, setPosts] = useState<Post[]>([]);
 
-  const [posts, setPosts] = useState<Post[]>([
-    {
-      id: 1,
-      author: 'Arjun Kumar',
-      content: 'Had a wonderful time at the inter-class sports day. Everyone participated with great enthusiasm and camaraderie. The games were exciting and the participation was amazing!',
-      dateTime: '2026-04-18 14:32',
-      status: 'Pending',
-      type: 'text',
-      hashtags: ['#SportsDay', '#Hostel', '#Unity'],
-      tags: ['Sports', 'Event'],
-    },
-    {
-      id: 2,
-      author: 'Meera Patel',
-      content: 'Loved the new books added to the library collection.',
-      dateTime: '2026-04-17 10:15',
-      status: 'Approved',
-      type: 'text',
-    },
-    {
-      id: 3,
-      author: 'Rahul Singh',
-      content: 'When should we schedule the next tech workshop? Please vote below.',
-      dateTime: '2026-04-16 16:45',
-      status: 'Pending',
-      type: 'poll',
-      pollOptions: [
-        { id: '1', text: 'Next Week', votes: 0 },
-        { id: '2', text: 'In 2 Weeks', votes: 0 },
-        { id: '3', text: 'Next Month', votes: 0 },
-        { id: '4', text: 'Flexible', votes: 0 },
-      ],
-      hashtags: ['#Tech', '#Workshop'],
-    },
-    {
-      id: 4,
-      author: 'Priya Sharma',
-      content: 'Urgent repairs needed in Block A. Please avoid using the lifts for next 3 days.',
-      dateTime: '2026-04-15 09:20',
-      status: 'Forwarded',
-      type: 'text',
-      forwardReason: 'Administrative approval needed for facility changes.',
-    },
-    {
-      id: 5,
-      author: 'Vikram Patel',
-      content: 'Organizing a campus-wide cleanliness drive this weekend. Everyone is encouraged to participate.',
-      dateTime: '2026-04-14 13:50',
-      status: 'Approved',
-      type: 'text',
-      hashtags: ['#CleanCampus', '#Eco'],
-    },
-    {
-      id: 6,
-      author: 'Anjali Gupta',
-      content: 'Planning a surprise birthday celebration for a fellow student on Friday evening.',
-      dateTime: '2026-04-13 11:30',
-      status: 'Pending',
-      type: 'text',
-    },
-    {
-      id: 7,
-      author: 'Devesh Kumar',
-      content: 'Starting a study group for competitive exams. Interested students can join our group chat.',
-      dateTime: '2026-04-12 15:00',
-      status: 'Approved',
-      type: 'text',
-      hashtags: ['#StudyGroup', '#Exams'],
-    },
-    {
-      id: 8,
-      author: 'Akshita Gupta',
-      content: 'Requesting new badminton equipment for the sports complex.',
-      dateTime: '2026-04-11 10:20',
-      status: 'Rejected',
-      type: 'text',
-      rejectionReason: 'Budget allocation for sports equipment is currently exhausted.',
-    },
-    {
-      id: 9,
-      author: 'Neha Sharma',
-      content: 'Exciting cultural fest with performances, food stalls, and fun activities planned for next month. This is going to be amazing!',
-      dateTime: '2026-04-10 14:15',
-      status: 'Pending',
-      type: 'text',
-      hashtags: ['#CulturalFest', '#Events'],
-    },
-    {
-      id: 10,
-      author: 'Rohan Menon',
-      content: 'Launching a mentorship programme pairing seniors with juniors for academic and personal growth.',
-      dateTime: '2026-04-09 12:40',
-      status: 'Pending',
-      type: 'text',
-    },
-    {
-      id: 11,
-      author: 'Maya Sethi',
-      content: 'Extra content post for pagination testing.',
-      dateTime: '2026-04-08 08:00',
-      status: 'Approved',
-      type: 'text',
-    },
-    {
-      id: 12,
-      author: 'Ravi Nair',
-      content: 'Another post to test the pagination system thoroughly.',
-      dateTime: '2026-04-07 09:30',
-      status: 'Pending',
-      type: 'text',
-    },
-  ]);
+  const fetchPosts = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/warden/moderation/pending');
+      const normalizedData = response.data.map((item: any) => ({
+        id: item._id,
+        author: item.author,
+        content: item.content,
+        dateTime: `${new Date(item.date).toLocaleDateString()} ${item.time}`,
+        status: item.status,
+        type: item.type,
+        hashtags: item.tags, // backend uses tags for hashtags
+        pollOptions: item.pollOptions,
+        rejectionReason: item.rejectionReason,
+        forwardReason: item.forwardReason,
+        approvedBy: item.approvedBy?.name,
+        rejectedBy: item.rejectedBy?.name,
+        forwardedBy: item.forwardedBy?.name
+      }));
+      setPosts(normalizedData);
+    } catch (error) {
+      console.error("Failed to fetch posts:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchPosts();
+  }, []);
 
   const ITEMS_PER_PAGE = 10;
 
@@ -216,7 +155,7 @@ export default function ModerationPage() {
     currentPage * ITEMS_PER_PAGE
   );
 
-  const updateStatus = (id: number, status: Status, reason?: string) => {
+  const updateStatus = (id: string, status: Status, reason?: string) => {
     setPosts((current) =>
       current.map((post) => {
         if (post.id !== id) return post;
@@ -230,28 +169,39 @@ export default function ModerationPage() {
     );
   };
 
-  const openDialog = (postId: number, type: 'approve' | 'reject' | 'forward') => {
+  const openDialog = (postId: string, type: 'approve' | 'reject' | 'forward') => {
     setSelectedPostId(postId);
     setDialogType(type);
     setIsOpen(true);
   };
 
-  const handleConfirm = () => {
+  const handleConfirm = async () => {
     if (!selectedPostId) return;
 
-    if (dialogType === 'approve') {
-      updateStatus(selectedPostId, 'Approved');
-    } else if (dialogType === 'reject' && rejectionReason.trim()) {
-      updateStatus(selectedPostId, 'Rejected', rejectionReason.trim());
-      setRejectionReason('');
-    } else if (dialogType === 'forward' && forwardReason.trim()) {
-      updateStatus(selectedPostId, 'Forwarded', forwardReason.trim());
-      setForwardReason('');
+    try {
+      if (dialogType === 'approve') {
+        await api.put(`/warden/moderation/${selectedPostId}/approve`);
+        updateStatus(selectedPostId, 'Approved');
+      } else if (dialogType === 'reject' && rejectionReason.trim()) {
+        await api.put(`/warden/moderation/${selectedPostId}/reject`, { reason: rejectionReason.trim() });
+        updateStatus(selectedPostId, 'Rejected', rejectionReason.trim());
+        setRejectionReason('');
+      } else if (dialogType === 'forward' && forwardReason.trim()) {
+        await api.put(`/warden/moderation/${selectedPostId}/forward`, { reason: forwardReason.trim() });
+        updateStatus(selectedPostId, 'Forwarded', forwardReason.trim());
+        setForwardReason('');
+      } else if (dialogType === 'delete') {
+        await api.delete(`/warden/moderation/${selectedPostId}`);
+        setPosts((prev) => prev.filter((p) => p.id !== selectedPostId));
+      }
+      setIsOpen(false);
+      setDialogType(null);
+      setSelectedPostId(null);
+      fetchPosts(); // Refresh list to sync performer names and final status
+    } catch (error) {
+      console.error("Action failed:", error);
+      alert("Action failed. Please try again.");
     }
-
-    setIsOpen(false);
-    setDialogType(null);
-    setSelectedPostId(null);
   };
 
   return (
@@ -304,7 +254,11 @@ export default function ModerationPage() {
       </div>
 
       <div className="space-y-4">
-        {paginatedPosts.length === 0 ? (
+        {isLoading ? (
+          <div className="flex h-64 items-center justify-center">
+            <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+          </div>
+        ) : paginatedPosts.length === 0 ? (
           <Card className="border border-dashed py-12 text-center">
             <p className="text-muted-foreground">No posts found</p>
           </Card>
@@ -328,13 +282,29 @@ export default function ModerationPage() {
                           <p className="text-xs text-slate-500">{post.dateTime}</p>
                         </div>
                       </div>
-                      <Badge variant="outline" className={`${getStatusColor(post.status)} flex-shrink-0`}>
-                        {post.status}
-                      </Badge>
+                      <div className="flex items-center gap-2">
+                        <Badge variant="outline" className={`${getStatusColor(post.status)} flex-shrink-0`}>
+                          {post.status}
+                        </Badge>
+                        {(post.status === 'Approved' || post.status === 'Rejected') && (
+                          <Button
+                            variant="ghost"
+                            size="icon"
+                            className="h-8 w-8 text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                            onClick={() => {
+                              setSelectedPostId(post.id);
+                              setDialogType('delete');
+                              setIsOpen(true);
+                            }}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        )}
+                      </div>
                     </div>
 
-                    <div className="text-sm text-slate-700 leading-relaxed">
-                      {displayContent}
+                    <div className="text-sm text-slate-700 leading-relaxed whitespace-pre-wrap">
+                      {renderContent(displayContent)}
                       {isTruncated && !isExpanded && (
                         <button
                           onClick={() => setExpandedPostId(post.id)}
@@ -356,7 +326,7 @@ export default function ModerationPage() {
                     {post.type === 'poll' && post.pollOptions && (
                       <div className="space-y-2 bg-slate-50 p-3 rounded-lg">
                         {post.pollOptions.slice(0, 4).map((option) => (
-                          <div key={option.id} className="text-sm text-slate-700 p-2 bg-white rounded border border-slate-200 cursor-not-allowed">
+                          <div key={option._id} className="text-sm text-slate-700 p-2 bg-white rounded border border-slate-200 cursor-not-allowed">
                             {option.text}
                           </div>
                         ))}
@@ -375,15 +345,27 @@ export default function ModerationPage() {
 
                     {post.status === 'Rejected' && post.rejectionReason && (
                       <div className="rounded-lg bg-red-50 border border-red-100 p-3 text-sm text-red-700">
-                        <p className="font-semibold">Rejection Reason</p>
-                        <p className="text-red-600 text-xs mt-1">{post.rejectionReason}</p>
+                        <p className="font-semibold flex justify-between items-center">
+                          <span>Rejection Reason</span>
+                          {post.rejectedBy && <span className="text-[10px] opacity-70">By: {post.rejectedBy}</span>}
+                        </p>
+                        <p className="text-red-600 text-xs mt-1 break-words">{post.rejectionReason}</p>
                       </div>
                     )}
 
                     {post.status === 'Forwarded' && post.forwardReason && (
                       <div className="rounded-lg bg-slate-50 border border-slate-200 p-3 text-sm text-slate-700">
-                        <p className="font-semibold">Forwarded Note</p>
-                        <p className="text-slate-600 text-xs mt-1">{post.forwardReason}</p>
+                        <p className="font-semibold flex justify-between items-center">
+                          <span>Forwarded Note</span>
+                          {post.forwardedBy && <span className="text-[10px] opacity-70">By: {post.forwardedBy}</span>}
+                        </p>
+                        <p className="text-slate-600 text-xs mt-1 break-words">{post.forwardReason}</p>
+                      </div>
+                    )}
+
+                    {post.status === 'Approved' && post.approvedBy && (
+                      <div className="text-[11px] text-slate-400 font-medium italic">
+                        Approved by {post.approvedBy}
                       </div>
                     )}
 
@@ -464,27 +446,35 @@ export default function ModerationPage() {
               {dialogType === 'approve' && 'Approve Post'}
               {dialogType === 'reject' && 'Reject Post'}
               {dialogType === 'forward' && 'Forward to Admin'}
+              {dialogType === 'delete' && 'Delete Moderation Record'}
             </DialogTitle>
             <DialogDescription>
               {dialogType === 'approve' && 'Are you sure you want to approve this post?'}
               {dialogType === 'reject' && 'Please provide a rejection reason.'}
               {dialogType === 'forward' && 'Please provide a note for the admin.'}
+              {dialogType === 'delete' && 'This will permanently remove this moderation record. This action cannot be undone.'}
             </DialogDescription>
           </DialogHeader>
 
           {(dialogType === 'reject' || dialogType === 'forward') && (
-            <Textarea
-              placeholder={dialogType === 'reject' ? 'Why is this being rejected?' : 'Why should this be forwarded?'}
-              value={dialogType === 'reject' ? rejectionReason : forwardReason}
-              onChange={(e) => {
-                if (dialogType === 'reject') {
-                  setRejectionReason(e.target.value);
-                } else {
-                  setForwardReason(e.target.value);
-                }
-              }}
-              className="min-h-24"
-            />
+            <div className="space-y-2 py-4">
+              <Textarea
+                placeholder={dialogType === 'reject' ? 'Why is this being rejected?' : 'Why should this be forwarded?'}
+                value={dialogType === 'reject' ? rejectionReason : forwardReason}
+                onChange={(e) => {
+                  if (dialogType === 'reject') {
+                    setRejectionReason(e.target.value);
+                  } else {
+                    setForwardReason(e.target.value);
+                  }
+                }}
+                className="min-h-24 break-all p-3"
+                maxLength={200}
+              />
+              <p className="text-[10px] text-slate-400 text-right">
+                {(dialogType === 'reject' ? rejectionReason : forwardReason).length}/200
+              </p>
+            </div>
           )}
 
           <DialogFooter>
@@ -498,7 +488,7 @@ export default function ModerationPage() {
                 (dialogType === 'forward' && !forwardReason.trim())
               }
               className={
-                dialogType === 'reject'
+                dialogType === 'reject' || dialogType === 'delete'
                   ? 'bg-red-600 hover:bg-red-700 text-white'
                   : 'bg-slate-900 hover:bg-slate-950 text-white'
               }
@@ -506,6 +496,7 @@ export default function ModerationPage() {
               {dialogType === 'approve' && 'Approve'}
               {dialogType === 'reject' && 'Reject'}
               {dialogType === 'forward' && 'Forward'}
+              {dialogType === 'delete' && 'Delete'}
             </Button>
           </DialogFooter>
         </DialogContent>
