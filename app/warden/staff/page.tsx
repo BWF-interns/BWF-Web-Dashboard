@@ -1,6 +1,6 @@
 'use client';
 
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { ChevronLeft, ChevronRight, Plus, Search } from 'lucide-react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/app/warden/Template/components/ui/alert-dialog';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
@@ -12,6 +12,7 @@ import { Input } from '@/app/warden/Template/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/warden/Template/components/ui/table';
 import { Textarea } from '@/app/warden/Template/components/ui/textarea';
+import api from '@/app/lib/api';
 
 const ITEMS_PER_PAGE = 10;
 const DEPARTMENTS = ['Academic', 'Kitchen', 'Security', 'Housekeeping', 'Health', 'Administration', 'Maintenance'];
@@ -25,7 +26,10 @@ type Shift = 'Morning' | 'Evening' | 'Night' | 'Rotational';
 type EmploymentType = 'Full-time' | 'Part-time' | 'Contract' | 'Volunteer';
 
 interface StaffMember {
-  id: number;
+  _id: string;
+  userId?: string;
+  auth_id?: string;
+  password: string;
   role: 'staff';
   roleName: string;
   name: string;
@@ -34,7 +38,7 @@ interface StaffMember {
   email: string;
   contactNumber: string;
   address: string;
-  hostelName: string;
+  hostelName: string | { _id: string; name?: string };
   department: string;
   employmentType: EmploymentType;
   shift: Shift;
@@ -53,7 +57,9 @@ interface StaffFormProps {
 }
 
 const emptyStaff: StaffMember = {
-  id: 0,
+  _id: '',
+  auth_id: '',
+  password: '',
   role: 'staff',
   roleName: 'Teacher',
   name: '',
@@ -75,17 +81,98 @@ const emptyStaff: StaffMember = {
   notes: '',
 };
 
-const mockStaff: StaffMember[] = [
-  { ...emptyStaff, id: 1, name: 'Meera Kapoor', roleName: 'Teacher', gender: 'female', DOB: '1991-04-18', email: 'meera.kapoor@bwf.org', contactNumber: '9811001001', department: 'Academic', joiningDate: '2022-06-12', salary: '42000', status: 'Active', emergencyContact: { name: 'Ravi Kapoor', phone: '9811001011', relation: 'Spouse' }, notes: 'Handles evening remedial classes.' },
-  { ...emptyStaff, id: 2, name: 'Suresh Yadav', roleName: 'Cook', gender: 'male', DOB: '1986-01-05', email: '', contactNumber: '9811001002', department: 'Kitchen', shift: 'Morning', joiningDate: '2021-02-03', salary: '28000', status: 'Active', emergencyContact: { name: 'Kavita Yadav', phone: '9811001022', relation: 'Wife' }, notes: 'Breakfast and lunch lead.' },
-  { ...emptyStaff, id: 3, name: 'Farah Ali', roleName: 'Nurse', gender: 'female', DOB: '1994-09-22', email: 'farah.ali@bwf.org', contactNumber: '9811001003', department: 'Health', shift: 'Rotational', joiningDate: '2023-08-10', salary: '36000', status: 'On Leave', emergencyContact: { name: 'Sameer Ali', phone: '9811001033', relation: 'Brother' }, notes: 'Maintains health records.' },
-  { ...emptyStaff, id: 4, name: 'Mahesh Rawat', roleName: 'Security Guard', gender: 'male', DOB: '1982-12-11', email: '', contactNumber: '9811001004', department: 'Security', shift: 'Night', joiningDate: '2020-11-18', salary: '30000', status: 'Active', emergencyContact: { name: 'Pooja Rawat', phone: '9811001044', relation: 'Wife' }, notes: 'Night gate duty.' },
-  { ...emptyStaff, id: 5, name: 'Lata Joshi', roleName: 'Cleaner', gender: 'female', DOB: '1989-07-30', email: '', contactNumber: '9811001005', department: 'Housekeeping', shift: 'Morning', joiningDate: '2022-01-15', salary: '23000', status: 'Active', emergencyContact: { name: 'Anil Joshi', phone: '9811001055', relation: 'Husband' }, notes: 'Assigned to south block.' },
-  { ...emptyStaff, id: 6, name: 'Ramesh Pillai', roleName: 'Caretaker', gender: 'male', DOB: '1979-03-21', email: 'ramesh.pillai@bwf.org', contactNumber: '9811001006', department: 'Maintenance', shift: 'Evening', joiningDate: '2019-05-08', salary: '34000', status: 'Active', emergencyContact: { name: 'Devika Pillai', phone: '9811001066', relation: 'Daughter' }, notes: 'Coordinates repairs.' },
-  { ...emptyStaff, id: 7, name: 'Anita Dsouza', roleName: 'Other Staff', gender: 'female', DOB: '1990-10-09', email: 'anita.dsouza@bwf.org', contactNumber: '9811001007', department: 'Administration', employmentType: 'Contract', shift: 'Morning', joiningDate: '2024-03-01', salary: '31000', status: 'Inactive', emergencyContact: { name: 'Maria Dsouza', phone: '9811001077', relation: 'Mother' }, notes: 'Documentation support.' },
-];
-
 const normalizeRoleName = (value: string) => value.trim().toLowerCase().replace(/\b\w/g, (char) => char.toUpperCase());
+
+type ApiError = {
+  response?: { data?: { message?: string } };
+  message?: string;
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const apiError = error as ApiError;
+  return apiError.response?.data?.message || apiError.message || fallback;
+};
+
+const toDateInput = (value: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 10);
+};
+
+const hostelLabel = (hostelName: StaffMember['hostelName']) => {
+  if (typeof hostelName === 'string') return hostelName;
+  return hostelName?.name || 'BWF Hostel';
+};
+
+const normalizeStaff = (staff: Partial<StaffMember> & { _id: string }): StaffMember => ({
+  ...emptyStaff,
+  ...staff,
+  _id: staff._id,
+  auth_id: staff.auth_id || '',
+  password: '',
+  DOB: toDateInput(staff.DOB || ''),
+  joiningDate: toDateInput(staff.joiningDate || ''),
+  gender: (staff.gender || 'male') as Gender,
+  employmentType: (staff.employmentType || 'Full-time') as EmploymentType,
+  shift: (staff.shift || 'Morning') as Shift,
+  status: (staff.status || 'Active') as StaffStatus,
+  salary: staff.salary !== undefined ? String(staff.salary) : '',
+  emergencyContact: {
+    ...emptyStaff.emergencyContact,
+    ...staff.emergencyContact,
+  },
+});
+
+const buildStaffPayload = (data: StaffMember, includeCredentials = false, requirePassword = false) => {
+  const payload: Record<string, unknown> = {
+    roleName: normalizeRoleName(data.roleName),
+    name: data.name.trim(),
+    gender: data.gender,
+    DOB: data.DOB || undefined,
+    email: data.email?.trim() || undefined,
+    contactNumber: data.contactNumber.trim(),
+    address: data.address?.trim() || undefined,
+    department: data.department?.trim() || undefined,
+    employmentType: data.employmentType,
+    shift: data.shift,
+    joiningDate: data.joiningDate,
+    salary: data.salary ? Number(data.salary) : undefined,
+    status: data.status,
+    adhaarCard: data.adhaarCard?.trim() || undefined,
+    panCard: data.panCard?.trim() || undefined,
+    emergencyContact: {
+      name: data.emergencyContact?.name?.trim() || undefined,
+      phone: data.emergencyContact?.phone?.trim() || undefined,
+      relation: data.emergencyContact?.relation?.trim() || undefined,
+    },
+    notes: data.notes?.trim() || undefined,
+  };
+
+  if (includeCredentials) {
+    payload.auth_id = data.auth_id?.trim();
+
+    if (requirePassword || data.password?.trim()) {
+      payload.password = data.password.trim();
+    }
+  }
+
+  return payload;
+};
+
+const buildStaffCredentialsPayload = (data: StaffMember, selectedStaff: StaffMember) => {
+  const payload: Record<string, string> = {};
+  const nextAuthId = data.auth_id?.trim();
+
+  if (nextAuthId && nextAuthId !== selectedStaff.auth_id) {
+    payload.auth_id = nextAuthId;
+  }
+
+  if (data.password?.trim()) {
+    payload.password = data.password.trim();
+  }
+
+  return payload;
+};
 
 const statusColor = (status: StaffStatus) => {
   if (status === 'Active') return 'bg-emerald-50 text-emerald-700 border-none';
@@ -97,17 +184,19 @@ const StaffForm = ({ data, onChange }: StaffFormProps) => (
   <div className="p-6 space-y-8 text-[13px]">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Full Name *</FieldLabel><Input value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })} placeholder="e.g. Meera Kapoor" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Auth ID *</FieldLabel><Input value={data.auth_id} onChange={(e) => onChange({ ...data, auth_id: e.target.value })} placeholder="Staff login ID" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Password *</FieldLabel><Input type="password" value={data.password} onChange={(e) => onChange({ ...data, password: e.target.value })} placeholder="Staff login password" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Role Name *</FieldLabel><Input value={data.roleName} onChange={(e) => onChange({ ...data, roleName: normalizeRoleName(e.target.value) })} placeholder="Teacher, Accountant, Driver..." className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Department *</FieldLabel><Select value={data.department} onValueChange={(value) => onChange({ ...data, department: value })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{DEPARTMENTS.map((department) => <SelectItem key={department} value={department}>{department}</SelectItem>)}</SelectContent></Select></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Gender *</FieldLabel><Select value={data.gender} onValueChange={(value: Gender) => onChange({ ...data, gender: value })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Gender *</FieldLabel><Select value={data.gender} onValueChange={(value) => onChange({ ...data, gender: value as Gender })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone *</FieldLabel><Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="10-digit number" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Email</FieldLabel><Input type="email" value={data.email} onChange={(e) => onChange({ ...data, email: e.target.value })} placeholder="Optional email" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Date of Birth</FieldLabel><Input type="date" value={data.DOB} onChange={(e) => onChange({ ...data, DOB: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Joining Date *</FieldLabel><Input type="date" value={data.joiningDate} onChange={(e) => onChange({ ...data, joiningDate: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Hostel</FieldLabel><Input value={data.hostelName} onChange={(e) => onChange({ ...data, hostelName: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Employment Type</FieldLabel><Select value={data.employmentType} onValueChange={(value: EmploymentType) => onChange({ ...data, employmentType: value })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{EMPLOYMENT_TYPES.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Shift</FieldLabel><Select value={data.shift} onValueChange={(value: Shift) => onChange({ ...data, shift: value })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{SHIFTS.map((shift) => <SelectItem key={shift} value={shift}>{shift}</SelectItem>)}</SelectContent></Select></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Status</FieldLabel><Select value={data.status} onValueChange={(value: StaffStatus) => onChange({ ...data, status: value })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{STATUSES.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Hostel</FieldLabel><Input value={hostelLabel(data.hostelName)} disabled className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Employment Type</FieldLabel><Select value={data.employmentType} onValueChange={(value) => onChange({ ...data, employmentType: value as EmploymentType })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{EMPLOYMENT_TYPES.map((type) => <SelectItem key={type} value={type}>{type}</SelectItem>)}</SelectContent></Select></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Shift</FieldLabel><Select value={data.shift} onValueChange={(value) => onChange({ ...data, shift: value as Shift })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{SHIFTS.map((shift) => <SelectItem key={shift} value={shift}>{shift}</SelectItem>)}</SelectContent></Select></Field>
+      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Status</FieldLabel><Select value={data.status} onValueChange={(value) => onChange({ ...data, status: value as StaffStatus })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{STATUSES.map((status) => <SelectItem key={status} value={status}>{status}</SelectItem>)}</SelectContent></Select></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Monthly Salary</FieldLabel><Input value={data.salary} onChange={(e) => onChange({ ...data, salary: e.target.value })} placeholder="Amount" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field className="md:col-span-2"><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Address</FieldLabel><Input value={data.address} onChange={(e) => onChange({ ...data, address: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Aadhaar</FieldLabel><Input value={data.adhaarCard} onChange={(e) => onChange({ ...data, adhaarCard: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
@@ -125,7 +214,17 @@ const StaffForm = ({ data, onChange }: StaffFormProps) => (
 
     <Field>
       <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Notes</FieldLabel>
-      <Textarea value={data.notes} onChange={(e) => onChange({ ...data, notes: e.target.value })} className="min-h-24 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      <Textarea
+        value={data.notes}
+        onChange={(e) => onChange({ ...data, notes: e.target.value })}
+        maxLength={250}
+        wrap="soft"
+        className="h-24 min-h-24 max-h-24 w-full max-w-full min-w-0 resize-none overflow-x-hidden overflow-y-auto rounded-xl bg-slate-50 border-none whitespace-pre-wrap break-all font-medium text-xs leading-5 focus-visible:ring-1 focus-visible:ring-indigo-100"
+        style={{
+          overflowWrap: 'anywhere',
+          wordBreak: 'break-word',
+        }}
+      />
     </Field>
   </div>
 );
@@ -139,8 +238,21 @@ export default function StaffPage() {
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
-  const [staffMembers, setStaffMembers] = useState<StaffMember[]>(mockStaff);
+  const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
   const [formData, setFormData] = useState<StaffMember>(emptyStaff);
+
+  useEffect(() => {
+    const fetchStaff = async () => {
+      try {
+        const res = await api.get('/warden/staff');
+        setStaffMembers(res.data.map(normalizeStaff));
+      } catch (error: unknown) {
+        alert(getErrorMessage(error, 'Failed to load staff.'));
+      }
+    };
+
+    fetchStaff();
+  }, []);
 
   const filteredStaff = useMemo(() => {
     return staffMembers
@@ -161,18 +273,18 @@ export default function StaffPage() {
   const resetFiltersPage = () => setCurrentPage(1);
 
   const openAddDialog = () => {
-    setFormData({ ...emptyStaff, id: Date.now(), role: 'staff', roleName: normalizeRoleName(emptyStaff.roleName) });
+    setFormData({ ...emptyStaff, role: 'staff', roleName: normalizeRoleName(emptyStaff.roleName) });
     setIsAddOpen(true);
   };
 
   const handleRowClick = (staff: StaffMember) => {
     setSelectedStaff(staff);
-    setFormData(staff);
+    setFormData({ ...emptyStaff, ...staff, password: '', emergencyContact: staff.emergencyContact || emptyStaff.emergencyContact });
     setIsDetailOpen(true);
   };
 
-  const validateForm = () => {
-    if (!formData.name || !formData.contactNumber || !formData.roleName || !formData.department || !formData.joiningDate) {
+  const validateForm = (requirePassword = false) => {
+    if (!formData.name || !formData.auth_id || !formData.contactNumber || !formData.roleName || !formData.department || !formData.joiningDate || (requirePassword && !formData.password)) {
       alert('Required fields missing.');
       return false;
     }
@@ -187,23 +299,54 @@ export default function StaffPage() {
     return true;
   };
 
-  const handleRegister = () => {
-    if (!validateForm()) return;
-    setStaffMembers((current) => [{ ...formData, id: Date.now(), role: 'staff', roleName: normalizeRoleName(formData.roleName) }, ...current]);
-    setIsAddOpen(false);
+  const handleRegister = async () => {
+    if (!validateForm(true)) return;
+
+    try {
+      const res = await api.post('/warden/staff', buildStaffPayload(formData, true, true));
+      setStaffMembers((current) => [normalizeStaff(res.data.staff), ...current]);
+      setIsAddOpen(false);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to register staff.'));
+    }
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!selectedStaff || !validateForm()) return;
-    setStaffMembers((current) => current.map((staff) => (staff.id === selectedStaff.id ? { ...formData, role: 'staff', roleName: normalizeRoleName(formData.roleName) } : staff)));
-    setIsDetailOpen(false);
+
+    try {
+      const profileRes = await api.put(`/warden/staff/${selectedStaff._id}`, buildStaffPayload(formData));
+      let updatedStaff = normalizeStaff(profileRes.data);
+
+      const credentialsPayload = buildStaffCredentialsPayload(formData, selectedStaff);
+      if (Object.keys(credentialsPayload).length > 0) {
+        const credentialsRes = await api.put(
+          `/warden/staff/${selectedStaff._id}/credentials`,
+          credentialsPayload
+        );
+        updatedStaff = normalizeStaff(credentialsRes.data.staff);
+      }
+
+      setStaffMembers((current) => current.map((staff) => (staff._id === selectedStaff._id ? updatedStaff : staff)));
+      setSelectedStaff(updatedStaff);
+      setIsDetailOpen(false);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to update staff.'));
+    }
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!selectedStaff) return;
-    setStaffMembers((current) => current.filter((staff) => staff.id !== selectedStaff.id));
-    setIsDeleteConfirmOpen(false);
-    setIsDetailOpen(false);
+
+    try {
+      await api.delete(`/warden/staff/${selectedStaff._id}`);
+      setStaffMembers((current) => current.filter((staff) => staff._id !== selectedStaff._id));
+      setIsDeleteConfirmOpen(false);
+      setIsDetailOpen(false);
+      setSelectedStaff(null);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to delete staff.'));
+    }
   };
 
   return (
@@ -257,7 +400,7 @@ export default function StaffPage() {
             <TableBody>
               {paginatedStaff.length > 0 ? (
                 paginatedStaff.map((staff) => (
-                  <TableRow key={staff.id} onClick={() => handleRowClick(staff)} className="border-b border-slate-50/50 bg-white hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer group">
+                  <TableRow key={staff._id} onClick={() => handleRowClick(staff)} className="border-b border-slate-50/50 bg-white hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer group">
                     <TableCell className="py-4 px-8 font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{staff.name}</TableCell>
                     <TableCell className="py-4 px-8 text-slate-700 font-semibold">{staff.roleName}</TableCell>
                     <TableCell className="py-4 px-8 text-slate-600">{staff.department}</TableCell>                    <TableCell className="py-4 px-8 text-slate-600">{staff.shift}</TableCell>
