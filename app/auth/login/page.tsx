@@ -27,7 +27,7 @@ export default function LoginPage() {
       if (data.role === "admin") {
         router.push("/admin/dashboard");
       } else if (data.role === "warden") {
-        router.push("/warden/dashboard");
+        router.push("/warden/community");
       } else {
         router.push("/student/community");
       }

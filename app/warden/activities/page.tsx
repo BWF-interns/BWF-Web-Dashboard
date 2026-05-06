@@ -1,7 +1,7 @@
 'use client';
 
-import { useMemo, useState } from 'react';
-import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
+import { useMemo, useState, useEffect } from 'react';
+import { Search, Plus, ChevronLeft, ChevronRight, Loader2, Trash2 } from 'lucide-react';
 import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
 import { Button } from '@/app/warden/Template/components/ui/button';
 import { Input } from '@/app/warden/Template/components/ui/input';
@@ -9,19 +9,21 @@ import { Badge } from '@/app/warden/Template/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from '@/app/warden/Template/components/ui/dialog';
 import { Textarea } from '@/app/warden/Template/components/ui/textarea';
+import api from '@/app/lib/api';
 
 interface Activity {
-  id: number;
+  id: string; // MongoDB _id
   title: string;
   description: string;
   requestedBy: string;
   requesterRole: 'Student' | 'Teacher' | 'Warden';
   dateTime: string;
   location: string;
-  participants: number;
   category: string;
   status: 'Pending' | 'Approved' | 'Rejected';
   rejectionReason?: string;
+  approvedBy?: string;
+  rejectedBy?: string;
 }
 
 const STATUS_OPTIONS = ['All', 'Pending', 'Approved', 'Rejected'];
@@ -31,144 +33,53 @@ export default function ActivitiesPage() {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
   const [categoryFilter, setCategoryFilter] = useState('All');
-  const [activities, setActivities] = useState<Activity[]>([
-    {
-      id: 1,
-      title: 'Birthday Celebration',
-      description: 'Birthday celebration for Aditya with friends',
-      requestedBy: 'Aditya Kumar',
-      requesterRole: 'Student',
-      dateTime: '2026-04-15 18:00',
-      location: 'B Block Common Room',
-      participants: 25,
-      category: 'Social',
-      status: 'Pending',
-    },
-    {
-      id: 2,
-      title: 'Movie Night',
-      description: 'Screening of latest Bollywood movie',
-      requestedBy: 'Entertainment Club',
-      requesterRole: 'Student',
-      dateTime: '2026-04-20 20:00',
-      location: 'A Block Hall',
-      participants: 100,
-      category: 'Entertainment',
-      status: 'Pending',
-    },
-    {
-      id: 3,
-      title: 'Yoga Session',
-      description: 'Morning yoga and meditation class',
-      requestedBy: 'Wellness Club',
-      requesterRole: 'Student',
-      dateTime: '2026-04-12 06:30',
-      location: 'Gymnasium',
-      participants: 30,
-      category: 'Social',
-      status: 'Approved',
-    },
-    {
-      id: 4,
-      title: 'Tech Workshop',
-      description: 'Introduction to web development',
-      requestedBy: 'Technical Team',
-      requesterRole: 'Teacher',
-      dateTime: '2026-04-10 15:00',
-      location: 'Computer Lab',
-      participants: 45,
-      category: 'Technical',
-      status: 'Approved',
-    },
-    {
-      id: 5,
-      title: 'Art Exhibition',
-      description: 'Student artwork showcase',
-      requestedBy: 'Art Society',
-      requesterRole: 'Student',
-      dateTime: '2026-04-18 10:00',
-      location: 'Main Hall',
-      participants: 150,
-      category: 'Cultural',
-      status: 'Approved',
-    },
-    {
-      id: 6,
-      title: 'Debate Competition',
-      description: 'Inter-class debate championship',
-      requestedBy: 'Debate Club',
-      requesterRole: 'Student',
-      dateTime: '2026-04-25 16:00',
-      location: 'Auditorium',
-      participants: 60,
-      category: 'Academic',
-      status: 'Rejected',
-      rejectionReason: 'The proposal exceeds budget and requires revision.',
-    },
-    {
-      id: 7,
-      title: 'Music Concert',
-      description: 'Annual music concert featuring student bands',
-      requestedBy: 'Music Club',
-      requesterRole: 'Student',
-      dateTime: '2026-04-28 19:00',
-      location: 'Open Air Theatre',
-      participants: 200,
-      category: 'Cultural',
-      status: 'Pending',
-    },
-    {
-      id: 8,
-      title: 'Career Fair',
-      description: 'Industry professionals meet with students',
-      requestedBy: 'Placement Cell',
-      requesterRole: 'Teacher',
-      dateTime: '2026-04-30 10:00',
-      location: 'Main Auditorium',
-      participants: 300,
-      category: 'Academic',
-      status: 'Approved',
-    },
-    {
-      id: 9,
-      title: 'Photography Workshop',
-      description: 'Learn professional photography techniques',
-      requestedBy: 'Photography Society',
-      requesterRole: 'Student',
-      dateTime: '2026-05-02 14:00',
-      location: 'Media Lab',
-      participants: 25,
-      category: 'Technical',
-      status: 'Pending',
-    },
-    {
-      id: 10,
-      title: 'Sports Tournament',
-      description: 'Inter-hostel cricket championship',
-      requestedBy: 'Sports Committee',
-      requesterRole: 'Student',
-      dateTime: '2026-05-05 09:00',
-      location: 'Sports Ground',
-      participants: 150,
-      category: 'Sports',
-      status: 'Approved',
-    },
-  ]);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
   const [selectedActivity, setSelectedActivity] = useState<Activity | null>(null);
   const [approveOpen, setApproveOpen] = useState(false);
   const [rejectOpen, setRejectOpen] = useState(false);
+  const [deleteOpen, setDeleteOpen] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
   const [createOpen, setCreateOpen] = useState(false);
   const [newActivity, setNewActivity] = useState({
     title: '',
     description: '',
-    requestedBy: 'you',
+    requestedBy: '',
     requesterRole: 'Warden' as Activity['requesterRole'],
     dateTime: '',
     location: '',
-    participants: 0,
-    category: 'Cultural',
+    category: 'Social',
   });
+
+  const fetchActivities = async () => {
+    try {
+      setIsLoading(true);
+      const response = await api.get('/warden/activities');
+      const normalizedData = response.data.map((item: any) => ({
+        id: item._id,
+        title: item.title,
+        description: item.description,
+        requestedBy: item.requestedBy,
+        requesterRole: item.requesterRole,
+        dateTime: item.date, // Backend provides full ISO date
+        location: item.location,
+        category: item.category,
+        status: item.status,
+        rejectionReason: item.rejectionReason,
+        approvedBy: item.approvedBy?.name || item.approvedBy,
+        rejectedBy: item.rejectedBy?.name || item.rejectedBy
+      }));
+      setActivities(normalizedData);
+    } catch (error) {
+      console.error("Failed to fetch activities:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchActivities();
+  }, []);
 
   const filteredActivities = useMemo(
     () =>
@@ -207,48 +118,106 @@ export default function ActivitiesPage() {
     setRejectOpen(true);
   };
 
-  const confirmApprove = () => {
+  const confirmApprove = async () => {
     if (!selectedActivity) return;
-    setActivities((prev) => prev.map((item) => item.id === selectedActivity.id ? { ...item, status: 'Approved' } : item));
-    setApproveOpen(false);
+    try {
+      await api.put(`/warden/activities/${selectedActivity.id}/approve`);
+      setActivities((prev) => prev.map((item) => item.id === selectedActivity.id ? { ...item, status: 'Approved' } : item));
+      setApproveOpen(false);
+    } catch (error) {
+      console.error("Failed to approve activity:", error);
+      alert("Failed to approve activity.");
+    }
   };
 
-  const confirmReject = () => {
+  const confirmReject = async () => {
     if (!selectedActivity || !rejectReason.trim()) return;
-    setActivities((prev) => prev.map((item) =>
-      item.id === selectedActivity.id
-        ? { ...item, status: 'Rejected', rejectionReason: rejectReason }
-        : item
-    ));
-    setRejectOpen(false);
-    setRejectReason('');
+    try {
+      await api.put(`/warden/activities/${selectedActivity.id}/reject`, { reason: rejectReason });
+      setActivities((prev) => prev.map((item) =>
+        item.id === selectedActivity.id
+          ? { ...item, status: 'Rejected', rejectionReason: rejectReason }
+          : item
+      ));
+      setRejectOpen(false);
+      setRejectReason('');
+    } catch (error) {
+      console.error("Failed to reject activity:", error);
+      alert("Failed to reject activity.");
+    }
+  };
+
+  const confirmDelete = async () => {
+    if (!selectedActivity) return;
+    try {
+      await api.delete(`/warden/activities/${selectedActivity.id}`);
+      setActivities((prev) => prev.filter((item) => item.id !== selectedActivity.id));
+      setDeleteOpen(false);
+    } catch (error) {
+      console.error("Failed to delete activity:", error);
+      alert("Failed to delete activity.");
+    }
+  };
+
+  const openDelete = (activity: Activity) => {
+    setSelectedActivity(activity);
+    setDeleteOpen(true);
   };
 
   const openCreate = () => {
     setNewActivity({
       title: '',
       description: '',
-      requestedBy: 'you',
+      requestedBy: '',
       requesterRole: 'Warden',
       dateTime: '',
       location: '',
-      participants: 0,
-      category: 'Cultural',
+      category: 'Social',
     });
     setCreateOpen(true);
   };
 
-  const submitCreate = () => {
+  const submitCreate = async () => {
     if (!newActivity.title || !newActivity.dateTime || !newActivity.location) return;
-    setActivities((prev) => [
-      {
-        id: prev.length ? Math.max(...prev.map((item) => item.id)) + 1 : 1,
-        status: newActivity.requesterRole === 'Warden' ? 'Approved' : 'Pending',
-        ...newActivity,
-      },
-      ...prev,
-    ]);
-    setCreateOpen(false);
+    try {
+      // For warden creation, we need the warden's profile ID.
+      // But the backend testCreateActivity can take any profile ID.
+      // We'll use the user's ID for now, as the warden profile is linked to it.
+      // We'll get the warden profile first.
+      const profileRes = await api.get('/warden/profile');
+      const wardenId = profileRes.data._id;
+
+      const response = await api.post(`/warden/activities/test/${wardenId}`, {
+        title: newActivity.title,
+        description: newActivity.description,
+        category: newActivity.category,
+        date: newActivity.dateTime,
+        time: new Date(newActivity.dateTime).toTimeString().slice(0, 5),
+        location: newActivity.location
+      });
+
+      const item = response.data.activity;
+      const normalizedItem: Activity = {
+        id: item._id,
+        title: item.title,
+        description: item.description,
+        requestedBy: item.requestedBy,
+        requesterRole: item.requesterRole,
+        dateTime: item.date,
+        location: item.location,
+        category: item.category,
+        status: item.status,
+        rejectionReason: item.rejectionReason,
+        approvedBy: item.approvedBy?.name || item.approvedBy,
+        rejectedBy: item.rejectedBy?.name || item.rejectedBy
+      };
+
+      setActivities((prev) => [normalizedItem, ...prev]);
+      setCreateOpen(false);
+    } catch (error) {
+      console.error("Failed to create activity:", error);
+      alert("Failed to create activity.");
+    }
   };
 
   return (
@@ -308,7 +277,11 @@ export default function ActivitiesPage() {
         </div>
 
         <CardContent className="pt-2 pb-4 space-y-3">
-          {filteredActivities.length === 0 ? (
+          {isLoading ? (
+            <div className="flex h-64 items-center justify-center">
+              <Loader2 className="h-8 w-8 animate-spin text-indigo-600" />
+            </div>
+          ) : filteredActivities.length === 0 ? (
             <div className="rounded-4xl border border-dashed border-slate-200 bg-slate-50 p-10 text-center text-slate-500">
               No activities match your search or filters.
             </div>
@@ -327,23 +300,43 @@ export default function ActivitiesPage() {
                             ? 'bg-red-50 text-red-700 border border-red-100'
                             : 'bg-amber-50 text-amber-700 border border-amber-100'
                         }`}>{activity.status}</Badge>
-                        <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">{activity.category}</Badge>
+                        <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[100px]">{activity.category}</Badge>
                         <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">{activity.requesterRole}</Badge>
                       </div>
-                      <p className="mt-4 text-sm leading-6 text-slate-600">{activity.description}</p>
+                      <p className="mt-4 text-sm leading-6 text-slate-600 break-words line-clamp-3 hover:line-clamp-none transition-all duration-300">
+                        {activity.description}
+                      </p>
                       {activity.rejectionReason && (
-                        <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700 border border-red-100">
-                          <p className="font-semibold text-slate-900">Rejection reason</p>
-                          <p className="mt-1 text-slate-700">{activity.rejectionReason}</p>
+                        <div className="mt-4 rounded-2xl bg-red-50 p-4 text-sm text-red-700 border border-red-100 max-w-full overflow-hidden">
+                          <p className="font-semibold text-slate-900 flex justify-between">
+                            <span>Rejection reason</span>
+                            {activity.rejectedBy && <span className="text-[10px] font-normal opacity-70">By: {activity.rejectedBy}</span>}
+                          </p>
+                          <p className="mt-1 text-slate-700 break-words">{activity.rejectionReason}</p>
+                        </div>
+                      )}
+                      {activity.status === 'Approved' && activity.approvedBy && (
+                        <div className="mt-4 flex items-center gap-2 text-[11px] text-slate-400 font-medium italic">
+                          <span>Approved by {activity.approvedBy}</span>
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col gap-3 sm:flex-row">
+                    <div className="flex flex-col gap-3 sm:flex-row items-center">
                       {activity.status === 'Pending' && (
                         <>
                           <Button onClick={() => openApprove(activity)} size="sm" className="h-10 rounded-xl bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700">Approve</Button>
                           <Button onClick={() => openReject(activity)} size="sm" variant="outline" className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-600 hover:text-white">Reject</Button>
                         </>
+                      )}
+                      {activity.status !== 'Pending' && (
+                        <Button
+                          onClick={() => openDelete(activity)}
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
                       )}
                     </div>
                   </div>
@@ -351,7 +344,7 @@ export default function ActivitiesPage() {
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Requested By</p>
-                      <p className="mt-2 text-sm font-semibold text-slate-900">{activity.requesterRole === 'Warden' ? 'you' : activity.requestedBy}</p>
+                      <p className="mt-2 text-sm font-semibold text-slate-900">{activity.requestedBy}</p>
                     </div>
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Date & Time</p>
@@ -360,10 +353,6 @@ export default function ActivitiesPage() {
                     <div>
                       <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Location</p>
                       <p className="mt-2 text-sm font-semibold text-slate-900">{activity.location}</p>
-                    </div>
-                    <div>
-                      <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400">Participants</p>
-                      <p className="mt-2 text-sm font-semibold text-slate-900">{activity.participants}</p>
                     </div>
                   </div>
                 </div>
@@ -442,6 +431,10 @@ export default function ActivitiesPage() {
                   <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400">Location</p>
                   <p className="mt-2 text-sm font-semibold text-slate-900">{selectedActivity.location}</p>
                 </div>
+                <div className="col-span-full">
+                  <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400">Description</p>
+                  <p className="mt-2 text-sm text-slate-600 break-words leading-relaxed">{selectedActivity.description}</p>
+                </div>
               </div>
             </div>
           )}
@@ -472,8 +465,10 @@ export default function ActivitiesPage() {
                   value={rejectReason}
                   onChange={(e) => setRejectReason(e.target.value)}
                   placeholder="Enter a reason for rejection"
-                  className="h-20 rounded-xl bg-slate-50 border-slate-200 text-sm"
+                  maxLength={200}
+                  className="h-24 rounded-xl bg-slate-50 border-slate-200 text-sm resize-none break-all p-3"
                 />
+                <p className="mt-1 text-[10px] text-slate-400 text-right">{rejectReason.length}/200</p>
               </div>
             </div>
           )}
@@ -499,8 +494,17 @@ export default function ActivitiesPage() {
             </div>
             <div>
               <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400 mb-2">Description</p>
-              <Textarea value={newActivity.description} onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })} placeholder="Activity details (optional)" maxLength={300} className="h-16 rounded-xl bg-slate-50 border-slate-200 text-sm" />
-              <p className="mt-1 text-[11px] text-slate-400">Optional • keep it within 100 words.</p>
+              <Textarea
+                value={newActivity.description}
+                onChange={(e) => setNewActivity({ ...newActivity, description: e.target.value })}
+                placeholder="Activity details (optional)"
+                maxLength={300}
+                className="h-28 min-h-[7rem] max-h-40 w-full rounded-xl bg-slate-50 border-slate-200 text-sm resize-none whitespace-pre-wrap break-all overflow-y-auto leading-relaxed p-3"
+              />
+              <div className="flex justify-between mt-1">
+                <p className="text-[11px] text-slate-400 italic">Optional • Max 300 chars.</p>
+                <p className="text-[11px] text-slate-400">{newActivity.description.length}/300</p>
+              </div>
             </div>
             <div className="grid gap-4 sm:grid-cols-2">
               <div>
@@ -512,11 +516,7 @@ export default function ActivitiesPage() {
                 <Input value={newActivity.location} onChange={(e) => setNewActivity({ ...newActivity, location: e.target.value })} placeholder="Activity location" className="h-12 rounded-xl bg-slate-50 border-slate-200 text-sm" />
               </div>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <div>
-                <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400 mb-2">Participants</p>
-                <Input type="number" value={newActivity.participants} onChange={(e) => setNewActivity({ ...newActivity, participants: Number(e.target.value) })} placeholder="Number of participants" className="h-12 rounded-xl bg-slate-50 border-slate-200 text-sm" />
-              </div>
+            <div className="grid gap-4">
               <div>
                 <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400 mb-2">Category</p>
                 <Select value={newActivity.category} onValueChange={(value) => setNewActivity({ ...newActivity, category: value })}>
@@ -533,6 +533,28 @@ export default function ActivitiesPage() {
           <DialogFooter className="p-4 border-t border-slate-50 flex flex-col sm:flex-row gap-3 justify-end">
             <Button variant="outline" onClick={() => setCreateOpen(false)} className="rounded-xl h-10 px-6 text-xs font-bold">Cancel</Button>
             <Button onClick={submitCreate} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-8 font-bold text-xs">Create Activity</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      <Dialog open={deleteOpen} onOpenChange={setDeleteOpen}>
+        <DialogContent className="max-w-md rounded-[2.5rem] border-none shadow-2xl p-0 bg-white">
+          <div className="p-6 border-b border-slate-50">
+            <DialogHeader>
+              <DialogTitle className="text-lg font-bold text-slate-800 tracking-tight text-red-600">Delete Activity</DialogTitle>
+              <DialogDescription className="text-sm">Are you sure you want to delete this activity? This action cannot be undone.</DialogDescription>
+            </DialogHeader>
+          </div>
+          {selectedActivity && (
+            <div className="p-6">
+              <div className="rounded-2xl bg-slate-50 p-4 border border-slate-100">
+                <p className="text-[10px] uppercase tracking-[0.24em] text-slate-400">Activity Title</p>
+                <p className="mt-1 text-sm font-semibold text-slate-900">{selectedActivity.title}</p>
+              </div>
+            </div>
+          )}
+          <DialogFooter className="p-6 border-t border-slate-50 flex flex-col sm:flex-row gap-3 justify-end">
+            <Button variant="outline" onClick={() => setDeleteOpen(false)} className="rounded-xl h-10 px-6 text-xs font-bold">Cancel</Button>
+            <Button onClick={confirmDelete} className="rounded-xl bg-red-600 hover:bg-red-700 text-white h-10 px-8 font-bold text-xs">Delete Permanently</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>

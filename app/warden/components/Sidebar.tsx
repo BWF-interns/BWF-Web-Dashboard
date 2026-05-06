@@ -3,9 +3,11 @@
 import {
   LayoutDashboard,
   Users,
+  BriefcaseBusiness,
   Activity,
   DollarSign,
   MessageSquare,
+  ShieldCheck,
   AlertCircle,
   X,
 } from "lucide-react";
@@ -13,12 +15,14 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 
 const menu = [
+  { name: "Community", icon: MessageSquare, path: "/warden/community" },
   { name: "Dashboard", icon: LayoutDashboard, path: "/warden/dashboard" },
   { name: "Students", icon: Users, path: "/warden/students" },
+  { name: "Staff", icon: BriefcaseBusiness, path: "/warden/staff" },
   { name: "Activities", icon: Activity, path: "/warden/activities" },
   { name: "Expenses", icon: DollarSign, path: "/warden/expenses" },
-  { name: "Community", icon: MessageSquare, path: "/warden/community" },
   { name: "Complaints", icon: AlertCircle, path: "/warden/complaints" },
+  { name: "Moderation", icon: ShieldCheck, path: "/warden/moderation" },
 ];
 
 export default function Sidebar({
@@ -75,3 +79,6 @@ export default function Sidebar({
     </div>
   );
 }
+
+
+

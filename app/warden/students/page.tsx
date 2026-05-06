@@ -1,18 +1,144 @@
 'use client';
 
 import { useState, useEffect, useMemo } from 'react';
-import { Search, Plus, Edit2, Trash2, Calendar, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Search, Plus, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card, CardContent } from '@/app/warden/Template/components/ui/card';
 import { Button } from '@/app/warden/Template/components/ui/button';
 import { Input } from '@/app/warden/Template/components/ui/input';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/app/warden/Template/components/ui/table';
-import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from '@/app/warden/Template/components/ui/dialog';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/app/warden/Template/components/ui/dialog';
 import { Badge } from '@/app/warden/Template/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/app/warden/Template/components/ui/select';
 import { Field, FieldLabel } from '@/app/warden/Template/components/ui/field';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/app/warden/Template/components/ui/alert-dialog';
+import api from '@/app/lib/api';
 
 const ITEMS_PER_PAGE = 10;
+
+type TrustedPerson = {
+  name?: string;
+  phone?: string;
+  relation?: string;
+};
+
+type Student = {
+  _id: string;
+  userId?: string;
+  auth_id?: string;
+  name: string;
+  class: string;
+  gender: 'male' | 'female' | 'other';
+  contactNumber?: string;
+  DOB: string;
+  email?: string;
+  address?: string;
+  schoolName?: string;
+  adhaarCard?: string;
+  panCard?: string;
+  trustedPerson: TrustedPerson;
+};
+
+type StudentFormData = Omit<Student, '_id' | 'userId'> & {
+  password: string;
+};
+
+type StudentFormProps = {
+  data: StudentFormData;
+  onChange: (data: StudentFormData) => void;
+};
+
+type ApiError = {
+  response?: {
+    data?: {
+      message?: string;
+    };
+  };
+  message?: string;
+};
+
+const emptyStudentForm: StudentFormData = {
+  auth_id: '',
+  password: '',
+  name: '',
+  class: '1',
+  gender: 'male',
+  contactNumber: '',
+  DOB: '',
+  email: '',
+  address: '',
+  schoolName: '',
+  adhaarCard: '',
+  panCard: '',
+  trustedPerson: { name: '', phone: '', relation: '' },
+};
+
+const toDateInput = (value: string) => {
+  if (!value) return '';
+  const date = new Date(value);
+  return Number.isNaN(date.getTime()) ? value : date.toISOString().slice(0, 10);
+};
+
+const getErrorMessage = (error: unknown, fallback: string) => {
+  const apiError = error as ApiError;
+  return apiError.response?.data?.message || apiError.message || fallback;
+};
+
+const normalizeStudent = (student: Partial<Student> & { _id: string }): Student => ({
+  ...emptyStudentForm,
+  ...student,
+  _id: student._id,
+  DOB: toDateInput(student.DOB || ''),
+  gender: (student.gender || 'male').toLowerCase() as Student['gender'],
+  trustedPerson: {
+    ...emptyStudentForm.trustedPerson,
+    ...student.trustedPerson,
+  },
+});
+
+const buildStudentPayload = (data: StudentFormData, includeCredentials = false, requirePassword = false) => {
+  const payload: Record<string, unknown> = {
+    name: data.name.trim(),
+    DOB: data.DOB,
+    gender: data.gender,
+    contactNumber: data.contactNumber?.trim() || undefined,
+    class: data.class,
+    email: data.email?.trim() || undefined,
+    address: data.address?.trim() || undefined,
+    schoolName: data.schoolName?.trim() || undefined,
+    adhaarCard: data.adhaarCard?.trim() || undefined,
+    panCard: data.panCard?.trim() || undefined,
+    trustedPerson: {
+      name: data.trustedPerson?.name?.trim() || undefined,
+      phone: data.trustedPerson?.phone?.trim() || undefined,
+      relation: data.trustedPerson?.relation?.trim() || undefined,
+    },
+  };
+
+  if (includeCredentials) {
+    payload.auth_id = data.auth_id?.trim();
+
+    if (requirePassword || data.password?.trim()) {
+      payload.password = data.password.trim();
+    }
+  }
+
+  return payload;
+};
+
+const buildStudentCredentialsPayload = (data: StudentFormData, selectedStudent: Student) => {
+  const payload: Record<string, string> = {};
+  const nextAuthId = data.auth_id?.trim();
+
+  if (nextAuthId && nextAuthId !== selectedStudent.auth_id) {
+    payload.auth_id = nextAuthId;
+  }
+
+  if (data.password?.trim()) {
+    payload.password = data.password.trim();
+  }
+
+  return payload;
+};
 
 // Age Calculation Helper
 const calculateAge = (dob: string) => {
@@ -26,12 +152,20 @@ const calculateAge = (dob: string) => {
 };
 
 // Reusable Form Content Helper
-const StudentForm = ({ data, onChange }: any) => (
+const StudentForm = ({ data, onChange }: StudentFormProps) => (
   <div className="p-6 space-y-8 text-[13px]">
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Full Name *</FieldLabel>
         <Input value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })} placeholder="e.g. Eleanor Pena" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Auth ID *</FieldLabel>
+        <Input value={data.auth_id} onChange={(e) => onChange({ ...data, auth_id: e.target.value })} placeholder="Student login ID" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+      </Field>
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Password *</FieldLabel>
+        <Input type="password" value={data.password} onChange={(e) => onChange({ ...data, password: e.target.value })} placeholder="Student login password" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
       </Field>
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Class *</FieldLabel>
@@ -46,14 +180,14 @@ const StudentForm = ({ data, onChange }: any) => (
       </Field>
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Gender *</FieldLabel>
-        <Select value={data.gender} onValueChange={(v) => onChange({ ...data, gender: v })}>
+        <Select value={data.gender} onValueChange={(v) => onChange({ ...data, gender: v as StudentFormData['gender'] })}>
           <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger>
           <SelectContent className="rounded-xl"><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent>
         </Select>
       </Field>
       <Field>
-        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone *</FieldLabel>
-        <Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="10-digit number" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone (Optional)</FieldLabel>
+        <Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="Optional phone" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
       </Field>
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Email (Optional)</FieldLabel>
@@ -62,10 +196,6 @@ const StudentForm = ({ data, onChange }: any) => (
       <Field className="md:col-span-2">
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Address (Optional)</FieldLabel>
         <Input value={data.address} onChange={(e) => onChange({ ...data, address: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
-      </Field>
-      <Field>
-        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">School Name (Optional)</FieldLabel>
-        <Input value={data.schoolName} onChange={(e) => onChange({ ...data, schoolName: e.target.value })} className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" />
       </Field>
       <Field>
         <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Aadhaar (Optional)</FieldLabel>
@@ -105,49 +235,33 @@ export default function StudentsPage() {
   const [isAddOpen, setIsAddOpen] = useState(false);
   const [isDetailOpen, setIsDetailOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
-  const [selectedStudent, setSelectedStudent] = useState<any>(null);
-  const [students, setStudents] = useState<any[]>([]);
+  const [selectedStudent, setSelectedStudent] = useState<Student | null>(null);
+  const [students, setStudents] = useState<Student[]>([]);
 
-  const [formData, setFormData] = useState({
-    name: '', class: '1', gender: 'male', contactNumber: '', DOB: '', email: '', address: '', schoolName: '', adhaarCard: '', panCard: '', trustedPerson: { name: '', phone: '', relation: '' }
-  });
+  const [formData, setFormData] = useState<StudentFormData>(emptyStudentForm);
 
   useEffect(() => {
-    const mockStudents = [
-      { id: 1, name: "Eleanor Pena", class: "1", gender: "female", contactNumber: "9800000001", DOB: "2019-05-12", email: "", address: "", schoolName: "" },
-      { id: 2, name: "Jessia Rose", class: "2", gender: "female", contactNumber: "9800000002", DOB: "2018-04-03", email: "", address: "", schoolName: "" },
-      { id: 3, name: "Aditya Kumar", class: "3", gender: "male", contactNumber: "9800000003", DOB: "2017-08-15", email: "", address: "", schoolName: "" },
-      { id: 4, name: "Priya Singh", class: "4", gender: "female", contactNumber: "9800000004", DOB: "2016-11-22", email: "", address: "", schoolName: "" },
-      { id: 5, name: "Rohan Verma", class: "5", gender: "male", contactNumber: "9800000005", DOB: "2015-07-08", email: "", address: "", schoolName: "" },
-      { id: 6, name: "Ananya Gupta", class: "6", gender: "female", contactNumber: "9800000006", DOB: "2014-03-18", email: "", address: "", schoolName: "" },
-      { id: 7, name: "Rahul Sharma", class: "7", gender: "male", contactNumber: "9800000007", DOB: "2013-09-25", email: "", address: "", schoolName: "" },
-      { id: 8, name: "Divya Patel", class: "8", gender: "female", contactNumber: "9800000008", DOB: "2012-12-10", email: "", address: "", schoolName: "" },
-      { id: 9, name: "Vikram Singh", class: "9", gender: "male", contactNumber: "9800000009", DOB: "2011-06-14", email: "", address: "", schoolName: "" },
-      { id: 10, name: "Neha Reddy", class: "10", gender: "female", contactNumber: "9800000010", DOB: "2010-02-28", email: "", address: "", schoolName: "" },
-      { id: 11, name: "Arjun Nair", class: "11", gender: "male", contactNumber: "9800000011", DOB: "2009-10-05", email: "", address: "", schoolName: "" },
-      { id: 12, name: "Sara Khan", class: "12", gender: "female", contactNumber: "9800000012", DOB: "2008-01-19", email: "", address: "", schoolName: "" },
-      { id: 13, name: "Harsh Jain", class: "5", gender: "male", contactNumber: "9800000013", DOB: "2015-04-12", email: "", address: "", schoolName: "" },
-      { id: 14, name: "Meera Chopra", class: "8", gender: "female", contactNumber: "9800000014", DOB: "2012-09-30", email: "", address: "", schoolName: "" },
-      { id: 15, name: "Karan Desai", class: "6", gender: "male", contactNumber: "9800000015", DOB: "2014-05-21", email: "", address: "", schoolName: "" },
-    ];
-    setStudents(mockStudents);
+    const fetchStudents = async () => {
+      try {
+        const res = await api.get('/warden/students');
+        setStudents(res.data.map(normalizeStudent));
+      } catch (error: unknown) {
+        alert(getErrorMessage(error, 'Failed to load students.'));
+      }
+    };
+
+    fetchStudents();
   }, []);
-
-  // Reset to page 1 when filters change
-  useEffect(() => {
-    setCurrentPage(1);
-  }, [searchTerm, classFilter, genderFilter]);
 
   const sortedStudents = useMemo(() => {
     return [...students].sort((a, b) => {
-      if (parseInt(a.class) !== parseInt(b.class)) return parseInt(a.class) - parseInt(b.class);
-      return a.gender.localeCompare(b.gender);
+      return a.name.localeCompare(b.name);
     });
   }, [students]);
 
   const filteredStudents = useMemo(() => {
     return sortedStudents.filter((student) => {
-      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || student.contactNumber.includes(searchTerm);
+      const matchesSearch = student.name.toLowerCase().includes(searchTerm.toLowerCase()) || (student.contactNumber?.includes(searchTerm) ?? false);
       const matchesClass = classFilter === 'all' || student.class === classFilter;
       const matchesGender = genderFilter === 'all' || student.gender.toLowerCase() === genderFilter.toLowerCase();
       return matchesSearch && matchesClass && matchesGender;
@@ -158,14 +272,14 @@ export default function StudentsPage() {
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
   const paginatedStudents = filteredStudents.slice(startIdx, startIdx + ITEMS_PER_PAGE);
 
-  const handleRowClick = (student: any) => {
+  const handleRowClick = (student: Student) => {
     setSelectedStudent(student);
-    setFormData({ ...student, gender: student.gender.toLowerCase(), trustedPerson: student.trustedPerson || { name: '', phone: '', relation: '' } });
+    setFormData({ ...emptyStudentForm, ...student, gender: student.gender.toLowerCase() as StudentFormData['gender'], trustedPerson: student.trustedPerson || { name: '', phone: '', relation: '' } });
     setIsDetailOpen(true);
   };
 
-  const validateForm = () => {
-    if (!formData.name || !formData.contactNumber || !formData.DOB || !formData.gender || !formData.class) {
+  const validateForm = (requirePassword = false) => {
+    if (!formData.name || !formData.auth_id || !formData.DOB || !formData.gender || !formData.class || (requirePassword && !formData.password)) {
       alert("Required fields missing.");
       return false;
     }
@@ -174,29 +288,61 @@ export default function StudentsPage() {
       alert("Invalid email format.");
       return false;
     }
-    if (formData.contactNumber.length < 10) {
+    if (formData.contactNumber && formData.contactNumber.length < 10) {
       alert("Invalid contact number.");
       return false;
     }
     return true;
   };
 
-  const handleSave = () => {
+  const handleSave = async () => {
     if (!validateForm()) return;
-    setStudents(prev => prev.map(s => s.id === selectedStudent.id ? { ...s, ...formData } : s));
-    setIsDetailOpen(false);
+    if (!selectedStudent?._id) return;
+
+    try {
+      const profileRes = await api.put(`/warden/students/${selectedStudent._id}`, buildStudentPayload(formData));
+      let updatedStudent = normalizeStudent(profileRes.data);
+
+      const credentialsPayload = buildStudentCredentialsPayload(formData, selectedStudent);
+      if (Object.keys(credentialsPayload).length > 0) {
+        const credentialsRes = await api.put(
+          `/warden/students/${selectedStudent._id}/credentials`,
+          credentialsPayload
+        );
+        updatedStudent = normalizeStudent(credentialsRes.data.student);
+      }
+
+      setStudents(prev => prev.map(s => s._id === selectedStudent._id ? updatedStudent : s));
+      setSelectedStudent(updatedStudent);
+      setIsDetailOpen(false);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to update student.'));
+    }
   };
 
-  const handleRegister = () => {
-    if (!validateForm()) return;
-    setStudents(prev => [...prev, { ...formData, id: Date.now() }]);
-    setIsAddOpen(false);
+  const handleRegister = async () => {
+    if (!validateForm(true)) return;
+    try {
+      const res = await api.post('/warden/students', buildStudentPayload(formData, true, true));
+      setStudents(prev => [...prev, normalizeStudent(res.data.student)]);
+      setIsAddOpen(false);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to register student.'));
+    }
   };
 
-  const handleDelete = () => {
-    setStudents(prev => prev.filter(s => s.id !== selectedStudent.id));
-    setIsDeleteConfirmOpen(false);
-    setIsDetailOpen(false);
+  const handleDelete = async () => {
+    if (!selectedStudent?._id) return;
+
+    try {
+      await api.delete(`/warden/students/${selectedStudent._id}`);
+      setStudents(prev => prev.filter(s => s._id !== selectedStudent._id));
+      setIsDeleteConfirmOpen(false);
+      setIsDetailOpen(false);
+      setSelectedStudent(null);
+    } catch (error: unknown) {
+      alert(getErrorMessage(error, 'Failed to delete student.'));
+    }
   };
 
   return (
@@ -210,7 +356,7 @@ export default function StudentsPage() {
         </div>
         <Button
           onClick={() => {
-            setFormData({ name: '', class: '1', gender: 'male', contactNumber: '', DOB: '', email: '', address: '', schoolName: '', adhaarCard: '', panCard: '', trustedPerson: { name: '', phone: '', relation: '' } });
+            setFormData(emptyStudentForm);
             setIsAddOpen(true);
           }}
           className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl h-10 px-8 text-xs font-bold shadow-md transition-all active:scale-95"
@@ -235,11 +381,17 @@ export default function StudentsPage() {
                 placeholder="Search name or phone..."
                 className="pl-10 h-10 bg-slate-50/50 border-slate-200 rounded-xl text-[12px] placeholder:text-slate-400 focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium transition-all"
                 value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
+                onChange={(e) => {
+                  setSearchTerm(e.target.value);
+                  setCurrentPage(1);
+                }}
               />
             </div>
 
-            <Select value={classFilter} onValueChange={setClassFilter}>
+            <Select value={classFilter} onValueChange={(value) => {
+              setClassFilter(value);
+              setCurrentPage(1);
+            }}>
               <SelectTrigger className="h-10 w-32 bg-white border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors px-4"><SelectValue placeholder="All Classes" /></SelectTrigger>
               <SelectContent className="rounded-xl border-slate-100 shadow-xl">
                 <SelectItem value="all">All Classes</SelectItem>
@@ -247,7 +399,10 @@ export default function StudentsPage() {
               </SelectContent>
             </Select>
 
-            <Select value={genderFilter} onValueChange={setGenderFilter}>
+            <Select value={genderFilter} onValueChange={(value) => {
+              setGenderFilter(value);
+              setCurrentPage(1);
+            }}>
               <SelectTrigger className="h-10 w-32 bg-white border-slate-200 rounded-xl text-xs font-bold text-slate-500 hover:bg-slate-50 transition-colors px-4"><SelectValue placeholder="All Genders" /></SelectTrigger>
               <SelectContent className="rounded-xl border-slate-100 shadow-xl">
                 <SelectItem value="all">All Genders</SelectItem>
@@ -272,15 +427,15 @@ export default function StudentsPage() {
               {paginatedStudents.length > 0 ? (
                 paginatedStudents.map((student) => (
                   <TableRow
-                    key={student.id}
+                    key={student._id}
                     onClick={() => handleRowClick(student)}
-                    className="border-b border-slate-50/50 bg-white hover:bg-slate-50 hover:shadow-sm hover:scale-[1.01] active:scale-[0.98] transition-all duration-200 transform-gpu cursor-pointer group"
+                    className="border-b border-slate-50/50 bg-white hover:bg-indigo-50/40 transition-colors duration-150 cursor-pointer group"
                   >
                     <TableCell className="py-4 px-8 font-bold text-slate-900 text-sm group-hover:text-indigo-600 transition-colors uppercase tracking-tight">{student.name}</TableCell>
                     <TableCell className="py-4 px-8 text-center text-slate-600">{student.class}</TableCell>
                     <TableCell className="py-4 px-8 text-center text-slate-600">{calculateAge(student.DOB)}</TableCell>
                     <TableCell className="py-4 px-8 text-slate-600 capitalize">{student.gender}</TableCell>
-                    <TableCell className="py-4 px-8 text-slate-600 tracking-wider">{student.contactNumber}</TableCell>
+                    <TableCell className="py-4 px-8 text-slate-600 tracking-wider">{student.contactNumber || 'N/A'}</TableCell>
                   </TableRow>
                 ))
               ) : (
@@ -340,3 +495,5 @@ export default function StudentsPage() {
     </div>
   );
 }
+
+
