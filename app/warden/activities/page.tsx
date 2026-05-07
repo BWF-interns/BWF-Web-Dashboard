@@ -55,7 +55,7 @@ export default function ActivitiesPage() {
   const fetchActivities = async () => {
     try {
       setIsLoading(true);
-      
+
       // Fetch from the moderation (Pending/Rejected/Approved history) collection
       const response = await api.get('/warden/activities/pending');
 
@@ -180,7 +180,7 @@ export default function ActivitiesPage() {
       title: '',
       description: '',
       requestedBy: '',
-      requesterRole: 'Warden',
+      requesterRole: 'warden',
       dateTime: '',
       location: '',
       category: 'Social',
@@ -250,42 +250,42 @@ export default function ActivitiesPage() {
 
       <Card className="rounded-4xl border border-slate-200/60 bg-white shadow-none">
         <div className="lg:p-6 border-b border-slate-100">
-            <div className="grid gap-4 xl:grid-cols-[1.8fr_1fr] xl:items-end">
-              <div className="relative">
-                <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
-                <Input
-                  value={searchTerm}
-                  onChange={(e) => setSearchTerm(e.target.value)}
-                  placeholder="Search by title, organizer, or location"
-                  className="pl-12 h-12 rounded-2xl border-slate-200 bg-slate-50 text-sm"
-                />
-              </div>
+          <div className="grid gap-4 xl:grid-cols-[1.8fr_1fr] xl:items-end">
+            <div className="relative">
+              <Search className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400" />
+              <Input
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
+                placeholder="Search by title, organizer, or location"
+                className="pl-12 h-12 rounded-2xl border-slate-200 bg-slate-50 text-sm"
+              />
+            </div>
 
-              <div className="grid gap-3  sm:grid-cols-2">
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-2">Status</p>
-                  <Select value={statusFilter} onValueChange={setStatusFilter}>
-                    <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-4 text-sm text-slate-600"><SelectValue placeholder="Status" /></SelectTrigger>
-                    <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
-                      {STATUS_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-                <div>
-                  <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-2">Category</p>
-                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-4 text-sm text-slate-600"><SelectValue placeholder="Category" /></SelectTrigger>
-                    <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
-                      {CATEGORY_OPTIONS.map((option) => (
-                        <SelectItem key={option} value={option}>{option}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
+            <div className="grid gap-3  sm:grid-cols-2">
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-2">Status</p>
+                <Select value={statusFilter} onValueChange={setStatusFilter}>
+                  <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-4 text-sm text-slate-600"><SelectValue placeholder="Status" /></SelectTrigger>
+                  <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
+                    {STATUS_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+              <div>
+                <p className="text-[11px] uppercase tracking-[0.18em] text-slate-400 mb-2">Category</p>
+                <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                  <SelectTrigger className="h-12 rounded-2xl border-slate-200 bg-slate-50 px-4 text-sm text-slate-600"><SelectValue placeholder="Category" /></SelectTrigger>
+                  <SelectContent className="rounded-2xl border-slate-100 shadow-xl">
+                    {CATEGORY_OPTIONS.map((option) => (
+                      <SelectItem key={option} value={option}>{option}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
             </div>
+          </div>
         </div>
 
         <CardContent className="pt-2 pb-4 space-y-3">
@@ -305,13 +305,12 @@ export default function ActivitiesPage() {
                     <div className="min-w-0">
                       <div className="flex flex-wrap items-center gap-3">
                         <h2 className="text-xl font-semibold text-slate-900">{activity.title}</h2>
-                        <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${
-                          activity.status === 'Approved'
+                        <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${activity.status === 'Approved'
                             ? 'bg-green-50 text-green-700 border border-green-100'
                             : activity.status === 'Rejected'
-                            ? 'bg-red-50 text-red-700 border border-red-100'
-                            : 'bg-amber-50 text-amber-700 border border-amber-100'
-                        }`}>{activity.status}</Badge>
+                              ? 'bg-red-50 text-red-700 border border-red-100'
+                              : 'bg-amber-50 text-amber-700 border border-amber-100'
+                          }`}>{activity.status}</Badge>
                         <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[100px]">{activity.category}</Badge>
                         <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">{activity.requesterRole}</Badge>
                       </div>
@@ -333,24 +332,24 @@ export default function ActivitiesPage() {
                         </div>
                       )}
                     </div>
-                      <div className="flex flex-col gap-3 sm:flex-row items-center">
-                        {activity.status === 'Pending' && (
-                          <>
-                            <Button onClick={() => openApprove(activity)} size="sm" className="h-10 rounded-xl bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700">Approve</Button>
-                            <Button onClick={() => openReject(activity)} size="sm" variant="outline" className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-600 hover:text-white">Reject</Button>
-                          </>
-                        )}
-                        {(activity.status === 'Approved' || activity.status === 'Rejected') && (
-                          <Button
-                            onClick={() => openDelete(activity)}
-                            variant="ghost"
-                            size="icon"
-                            className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
-                          >
-                            <Trash2 className="w-5 h-5" />
-                          </Button>
-                        )}
-                      </div>
+                    <div className="flex flex-col gap-3 sm:flex-row items-center">
+                      {activity.status === 'Pending' && (
+                        <>
+                          <Button onClick={() => openApprove(activity)} size="sm" className="h-10 rounded-xl bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700">Approve</Button>
+                          <Button onClick={() => openReject(activity)} size="sm" variant="outline" className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-600 hover:text-white">Reject</Button>
+                        </>
+                      )}
+                      {(activity.status === 'Approved' || activity.status === 'Rejected') && (
+                        <Button
+                          onClick={() => openDelete(activity)}
+                          variant="ghost"
+                          size="icon"
+                          className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                        >
+                          <Trash2 className="w-5 h-5" />
+                        </Button>
+                      )}
+                    </div>
                   </div>
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
@@ -392,9 +391,8 @@ export default function ActivitiesPage() {
                     <Button
                       key={index}
                       variant={currentPage === index + 1 ? 'default' : 'ghost'}
-                      className={`w-6 h-6 rounded-lg text-[10px] font-bold p-0 transition-all ${
-                        currentPage === index + 1 ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'
-                      }`}
+                      className={`w-6 h-6 rounded-lg text-[10px] font-bold p-0 transition-all ${currentPage === index + 1 ? 'bg-indigo-600 text-white shadow-md' : 'text-slate-500 hover:bg-slate-100'
+                        }`}
                       onClick={() => setCurrentPage(index + 1)}
                     >
                       {index + 1}
