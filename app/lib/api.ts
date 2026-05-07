@@ -36,6 +36,15 @@ api.interceptors.response.use(
       !originalRequest.url?.includes('/login') &&
       !originalRequest.url?.includes('/refresh')
     ) {
+      // No access token was sent — user is not logged in. Do not call /refresh or
+      // redirect to login (matches warden pages that use fetch without hard redirects).
+      const hadBearer =
+        typeof originalRequest.headers?.Authorization === "string" &&
+        originalRequest.headers.Authorization.startsWith("Bearer ");
+      if (!hadBearer) {
+        return Promise.reject(error);
+      }
+
       originalRequest._retry = true; // Mark as retried to prevent infinite loops
 
       try {

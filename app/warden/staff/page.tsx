@@ -15,7 +15,7 @@ import { Textarea } from '@/app/warden/Template/components/ui/textarea';
 import api from '@/app/lib/api';
 
 const ITEMS_PER_PAGE = 10;
-const DEPARTMENTS = ['Academic', 'Kitchen', 'Security', 'Housekeeping', 'Health', 'Administration', 'Maintenance'];
+const STAFF_ROLES = ['Teacher', 'Academic Staff', 'Accountant', 'Driver', 'Cook', 'Guard', 'Cleaner', 'Warden Assistant', 'Maintenance', 'Other'];
 const SHIFTS = ['Morning', 'Evening', 'Night', 'Rotational'];
 const EMPLOYMENT_TYPES = ['Full-time', 'Part-time', 'Contract', 'Volunteer'];
 const STATUSES = ['Active', 'On Leave', 'Inactive'];
@@ -54,6 +54,9 @@ interface StaffMember {
 interface StaffFormProps {
   data: StaffMember;
   onChange: (data: StaffMember) => void;
+  wantsAccount: boolean;
+  onAccountToggle: (wants: boolean) => void;
+  isEdit?: boolean;
 }
 
 const emptyStaff: StaffMember = {
@@ -148,8 +151,8 @@ const buildStaffPayload = (data: StaffMember, includeCredentials = false, requir
     notes: data.notes?.trim() || undefined,
   };
 
-  if (includeCredentials) {
-    payload.auth_id = data.auth_id?.trim();
+  if (includeCredentials && data.auth_id?.trim()) {
+    payload.auth_id = data.auth_id.trim();
 
     if (requirePassword || data.password?.trim()) {
       payload.password = data.password.trim();
@@ -180,14 +183,75 @@ const statusColor = (status: StaffStatus) => {
   return 'bg-slate-100 text-slate-600 border-none';
 };
 
-const StaffForm = ({ data, onChange }: StaffFormProps) => (
+const StaffForm = ({ 
+  data, 
+  onChange, 
+  wantsAccount, 
+  onAccountToggle,
+  isEdit = false
+}: StaffFormProps) => (
   <div className="p-6 space-y-8 text-[13px]">
+    {!isEdit && (
+      <div className="bg-slate-50/50 p-4 rounded-2xl border border-slate-100 mb-2">
+        <div className="flex items-center justify-between px-2">
+          <div className="flex flex-col gap-1">
+            <span className="text-[11px] font-bold text-slate-700 uppercase tracking-tight">Login Account</span>
+            <span className="text-[10px] text-slate-400 font-medium">Enable login access (ID & Password) for this staff?</span>
+          </div>
+          <Button
+            type="button"
+            size="sm"
+            variant={wantsAccount ? 'default' : 'outline'}
+            onClick={() => onAccountToggle(!wantsAccount)}
+            className={`h-9 px-6 rounded-xl text-[10px] font-bold transition-all ${wantsAccount ? 'bg-indigo-600 shadow-md shadow-indigo-100' : 'text-slate-400 border-slate-200'}`}
+          >
+            {wantsAccount ? 'Account Enabled' : 'No Account'}
+          </Button>
+        </div>
+      </div>
+    )}
+
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Full Name *</FieldLabel><Input value={data.name} onChange={(e) => onChange({ ...data, name: e.target.value })} placeholder="e.g. Meera Kapoor" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Auth ID *</FieldLabel><Input value={data.auth_id} onChange={(e) => onChange({ ...data, auth_id: e.target.value })} placeholder="Staff login ID" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Password *</FieldLabel><Input type="password" value={data.password} onChange={(e) => onChange({ ...data, password: e.target.value })} placeholder="Staff login password" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Role Name *</FieldLabel><Input value={data.roleName} onChange={(e) => onChange({ ...data, roleName: normalizeRoleName(e.target.value) })} placeholder="Teacher, Accountant, Driver..." className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
-      <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Department *</FieldLabel><Select value={data.department} onValueChange={(value) => onChange({ ...data, department: value })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl">{DEPARTMENTS.map((department) => <SelectItem key={department} value={department}>{department}</SelectItem>)}</SelectContent></Select></Field>
+      
+      {wantsAccount && (
+        <>
+          <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Auth ID *</FieldLabel><Input value={data.auth_id} onChange={(e) => onChange({ ...data, auth_id: e.target.value })} placeholder="Staff login ID" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
+          <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Password *</FieldLabel><Input type="password" value={data.password} onChange={(e) => onChange({ ...data, password: e.target.value })} placeholder="Staff login password" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
+        </>
+      )}
+
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Role / Designation *</FieldLabel>
+        <Select 
+          value={data.roleName} 
+          onValueChange={(value) => {
+            const updates: Partial<StaffMember> = { roleName: value };
+            if (value === 'Teacher' || value === 'Academic Staff') {
+              updates.department = 'Academics';
+            }
+            onChange({ ...data, ...updates });
+          }}
+        >
+          <SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs">
+            <SelectValue placeholder="Select Role" />
+          </SelectTrigger>
+          <SelectContent className="rounded-xl">
+            {STAFF_ROLES.map((role) => <SelectItem key={role} value={role}>{role}</SelectItem>)}
+          </SelectContent>
+        </Select>
+      </Field>
+
+      <Field>
+        <FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Department (Optional)</FieldLabel>
+        <Input 
+          value={data.department} 
+          onChange={(e) => onChange({ ...data, department: e.target.value })} 
+          placeholder="e.g. Science, Kitchen..." 
+          className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" 
+        />
+      </Field>
+
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Gender *</FieldLabel><Select value={data.gender} onValueChange={(value) => onChange({ ...data, gender: value as Gender })}><SelectTrigger className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-bold text-xs"><SelectValue /></SelectTrigger><SelectContent className="rounded-xl"><SelectItem value="male">Male</SelectItem><SelectItem value="female">Female</SelectItem><SelectItem value="other">Other</SelectItem></SelectContent></Select></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Phone *</FieldLabel><Input value={data.contactNumber} onChange={(e) => onChange({ ...data, contactNumber: e.target.value })} placeholder="10-digit number" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
       <Field><FieldLabel className="text-slate-700 font-bold mb-1.5 block text-[10px] uppercase tracking-wider">Email *</FieldLabel><Input type="email" value={data.email} onChange={(e) => onChange({ ...data, email: e.target.value })} placeholder="Staff email address" className="h-10 rounded-xl bg-slate-50 border-none focus-visible:ring-1 focus-visible:ring-indigo-100 font-medium text-xs" /></Field>
@@ -238,6 +302,7 @@ export default function StaffPage() {
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [selectedStaff, setSelectedStaff] = useState<StaffMember | null>(null);
   const [staffMembers, setStaffMembers] = useState<StaffMember[]>([]);
+  const [wantsAccount, setWantsAccount] = useState(false);
   const [formData, setFormData] = useState<StaffMember>(emptyStaff);
 
   useEffect(() => {
@@ -272,7 +337,13 @@ export default function StaffPage() {
   const resetFiltersPage = () => setCurrentPage(1);
 
   const openAddDialog = () => {
-    setFormData({ ...emptyStaff, role: 'staff', roleName: normalizeRoleName(emptyStaff.roleName) });
+    setWantsAccount(false);
+    setFormData({ 
+      ...emptyStaff, 
+      role: 'staff', 
+      roleName: 'Teacher', 
+      department: 'Academics' 
+    });
     setIsAddOpen(true);
   };
 
@@ -283,10 +354,18 @@ export default function StaffPage() {
   };
 
   const validateForm = (requirePassword = false) => {
-    if (!formData.name || !formData.auth_id || !formData.contactNumber || !formData.roleName || !formData.department || !formData.joiningDate || !formData.email || (requirePassword && !formData.password)) {
+    if (!formData.name || !formData.contactNumber || !formData.roleName || !formData.joiningDate || !formData.email) {
       alert('Required fields missing.');
       return false;
     }
+
+    if (wantsAccount && requirePassword) {
+      if (!formData.auth_id || !formData.password) {
+        alert('Auth ID and Password are required for accounts.');
+        return false;
+      }
+    }
+
     if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(formData.email)) {
       alert('Invalid email format.');
       return false;
@@ -299,10 +378,10 @@ export default function StaffPage() {
   };
 
   const handleRegister = async () => {
-    if (!validateForm(true)) return;
+    if (!validateForm(wantsAccount)) return;
 
     try {
-      const res = await api.post('/warden/staff', buildStaffPayload(formData, true, true));
+      const res = await api.post('/warden/staff', buildStaffPayload(formData, wantsAccount, wantsAccount));
       setStaffMembers((current) => [normalizeStaff(res.data.staff), ...current]);
       setIsAddOpen(false);
     } catch (error: unknown) {
@@ -430,7 +509,13 @@ export default function StaffPage() {
             <DialogHeader><DialogTitle className="text-xl font-bold text-slate-800 tracking-tight">Manage Staff Entry</DialogTitle></DialogHeader>
             <div className="flex gap-2"><Button variant="outline" onClick={() => setIsDeleteConfirmOpen(true)} className="rounded-xl border-rose-200 text-rose-600 hover:bg-rose-50 h-10 px-6 font-bold text-xs transition-all">Delete Account</Button><Button onClick={handleSave} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-8 font-bold text-xs shadow-md transition-all">Update Staff</Button></div>
           </div>
-          <StaffForm data={formData} onChange={setFormData} />
+          <StaffForm 
+            data={formData} 
+            onChange={setFormData} 
+            wantsAccount={!!formData.userId}
+            onAccountToggle={() => {}} // Disabled in edit
+            isEdit={true}
+          />
         </DialogContent>
       </Dialog>
 
@@ -440,7 +525,12 @@ export default function StaffPage() {
             <DialogHeader><DialogTitle className="text-xl font-bold text-slate-800 tracking-tight">Register New Staff</DialogTitle></DialogHeader>
             <div className="flex gap-2"><Button variant="ghost" onClick={() => setIsAddOpen(false)} className="rounded-xl h-10 px-6 text-xs font-bold text-slate-400 hover:bg-slate-50">Cancel</Button><Button onClick={handleRegister} className="rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white h-10 px-10 font-bold text-xs shadow-lg shadow-indigo-100 transition-all">Complete Registration</Button></div>
           </div>
-          <StaffForm data={formData} onChange={setFormData} />
+          <StaffForm 
+            data={formData} 
+            onChange={setFormData} 
+            wantsAccount={wantsAccount}
+            onAccountToggle={setWantsAccount}
+          />
         </DialogContent>
       </Dialog>
 

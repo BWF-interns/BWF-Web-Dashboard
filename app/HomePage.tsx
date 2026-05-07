@@ -3,7 +3,7 @@
 
 import { useRouter } from "next/navigation";
 import Image from "next/image";
-import { GraduationCap, Shield, UserCog, ArrowRight } from "lucide-react";
+import { GraduationCap, Shield, UserCog, BookOpen, ArrowRight } from "lucide-react";
 
 interface RoleCard {
   id: string;
@@ -33,6 +33,15 @@ export default function HomePage() {
       icon: <Shield size={24} />,
       route: "/warden/community",
       color: "bg-purple-500",
+    },
+    {
+      id: "teacher",
+      title: "Teacher / Mentor Portal",
+      description:
+        "Assignments, schedules, mentorship notes, resources, and student progress",
+      icon: <BookOpen size={24} />,
+      route: "/teacher/dashboard",
+      color: "bg-amber-500",
     },
     {
       id: "admin",
@@ -83,7 +92,7 @@ export default function HomePage() {
           </div>
 
           {/* Role Cards */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 sm:gap-6">
             {roles.map((role) => (
               <button
                 key={role.id}
