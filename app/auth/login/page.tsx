@@ -1,16 +1,22 @@
 "use client";
 
 import { loginUser } from "./service";
-import { useState } from "react";
+import { useState, Suspense } from "react";
 import Image from "next/image";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 
-export default function LoginPage() {
+function safeInternalRedirect(path: string | null): string | null {
+  if (!path || !path.startsWith("/") || path.startsWith("//")) return null;
+  return path;
+}
+
+function LoginForm() {
   const [studentId, setStudentId] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
   const router = useRouter();
+  const searchParams = useSearchParams();
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -23,11 +29,21 @@ export default function LoginPage() {
       localStorage.setItem("accessToken", data.accessToken);
       localStorage.setItem("role", data.role);
       localStorage.setItem("auth_id", data.auth_id);
+      localStorage.setItem("studentId", studentId);
+
+      const next = safeInternalRedirect(searchParams.get("redirect"));
+      if (next) {
+        router.push(next);
+        return;
+      }
+
       // role-based redirect
       if (data.role === "admin") {
         router.push("/admin/dashboard");
       } else if (data.role === "warden") {
         router.push("/warden/community");
+      } else if (data.role === "teacher") {
+        router.push("/teacher/dashboard");
       } else {
         router.push("/student/community");
       }
@@ -105,5 +121,19 @@ export default function LoginPage() {
         }
       `}</style>
     </main>
+  );
+}
+
+export default function LoginPage() {
+  return (
+    <Suspense
+      fallback={
+        <main className="flex min-h-screen items-center justify-center bg-gray-100 px-4">
+          <p className="text-gray-600">Loading…</p>
+        </main>
+      }
+    >
+      <LoginForm />
+    </Suspense>
   );
 }
