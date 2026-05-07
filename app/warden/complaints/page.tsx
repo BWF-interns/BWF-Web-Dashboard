@@ -95,7 +95,9 @@ export default function ComplaintsPage() {
   const [escalateReason, setEscalateReason] = useState('');
   const [isLoading, setIsLoading] = useState(true);
 
+  const [viewMode, setViewMode] = useState<'active' | 'history'>('active');
   const [data, setData] = useState<Complaint[]>([]);
+  const [historyData, setHistoryData] = useState<Complaint[]>([]);
 
   const fetchComplaints = async () => {
     try {
@@ -103,7 +105,6 @@ export default function ComplaintsPage() {
       const res = await api.get('/warden/complaints');
       
       const normalizedData = res.data.map((item: any) => {
-        // Combine date and time for dateTime field if available
         let dateTime = item.date;
         if (item.date && item.time) {
           const d = new Date(item.date);
@@ -140,17 +141,65 @@ export default function ComplaintsPage() {
     }
   };
 
+  const fetchHistory = async () => {
+    try {
+      setIsLoading(true);
+      const res = await api.get('/warden/complaints/history');
+      
+      const normalizedData = res.data.map((item: any) => {
+        let dateTime = item.date;
+        if (item.date && item.time) {
+          const d = new Date(item.date);
+          const [hours, minutes] = item.time.split(':');
+          d.setHours(parseInt(hours), parseInt(minutes));
+          dateTime = d.toISOString();
+        }
+
+        return {
+          id: item._id,
+          title: item.title,
+          description: item.description,
+          reporter: item.reporter,
+          role: item.role as ReporterRole,
+          dateTime: dateTime,
+          location: item.location,
+          priority: item.priority,
+          status: item.status,
+          timeline: {
+            reported: item.timeline?.reportedDate || item.date,
+            resolved: item.timeline?.resolvedDate,
+            resolvedReason: item.timeline?.resolvedReason,
+            escalated: item.timeline?.escalatedDate,
+            escalatedReason: item.timeline?.escalatedReason,
+          }
+        };
+      });
+
+      setHistoryData(normalizedData);
+    } catch (error) {
+      console.error("Failed to fetch history:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   useEffect(() => {
-    fetchComplaints();
-  }, []);
+    if (viewMode === 'active') {
+      fetchComplaints();
+    } else {
+      fetchHistory();
+    }
+  }, [viewMode]);
 
   const ITEMS_PER_PAGE = 10;
   const [currentPage, setCurrentPage] = useState(1);
 
+  const activeSource = viewMode === 'active' ? data : historyData;
+
   const filteredComplaints = useMemo(() => {
     const normalizedSearch = searchTerm.toLowerCase();
 
-    return data.filter((complaint) => {
+    return activeSource.filter((complaint) => {
       const matchesSearch = [complaint.title, complaint.description, complaint.reporter, complaint.location]
         .join(' ')
         .toLowerCase()
@@ -162,7 +211,7 @@ export default function ComplaintsPage() {
 
       return matchesSearch && matchesStatus && matchesPriority && matchesRole;
     });
-  }, [data, searchTerm, statusFilter, priorityFilter, roleFilter]);
+  }, [activeSource, searchTerm, statusFilter, priorityFilter, roleFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filteredComplaints.length / ITEMS_PER_PAGE));
   const startIdx = (currentPage - 1) * ITEMS_PER_PAGE;
@@ -224,23 +273,37 @@ export default function ComplaintsPage() {
 
   const deleteComplaint = async (id: string) => {
     try {
-      await api.delete(`/warden/complaints/${id}`);
-      setData((prev) => prev.filter((complaint) => complaint.id !== id));
+      if (viewMode === 'active') {
+        await api.delete(`/warden/complaints/${id}`);
+        setData((prev) => prev.filter((complaint) => complaint.id !== id));
+      } else {
+        await api.delete(`/warden/complaints/history/${id}`);
+        setHistoryData((prev) => prev.filter((complaint) => complaint.id !== id));
+      }
     } catch (error) {
       console.error("Failed to delete complaint:", error);
-      alert("Failed to delete complaint. Please try again.");
+      alert("Failed to delete complaint record. Please try again.");
     }
   };
 
   return (
     <div className="flex-1 p-4 md:p-6 bg-[#f8fafc] min-h-screen text-[13px]">
       <div className="flex items-center justify-between mb-6 animate-fade-in">
-        <div>
+        <div className="flex flex-col gap-4">
           <h1 className="text-2xl font-bold text-slate-800 tracking-tight">Warden Complaints</h1>
-          <div className="flex items-center gap-1 text-[11px] text-slate-400 mt-1 font-medium">
-            <span>Home</span>
-            <span className="text-slate-300">/</span>
-            <span className="text-indigo-500 font-semibold">Complaints</span>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1 text-[11px] text-slate-400 font-medium">
+              <span>Home</span>
+              <span className="text-slate-300">/</span>
+              <span className="text-indigo-500 font-semibold">Complaints</span>
+            </div>
+            
+            <Tabs value={viewMode} onValueChange={(v) => setViewMode(v as any)} className="w-auto">
+              <TabsList className="bg-slate-100 rounded-2xl h-10 p-1">
+                <TabsTrigger value="active" className="rounded-xl px-4 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">Active List</TabsTrigger>
+                <TabsTrigger value="history" className="rounded-xl px-4 text-xs font-semibold data-[state=active]:bg-white data-[state=active]:shadow-sm">Full History</TabsTrigger>
+              </TabsList>
+            </Tabs>
           </div>
         </div>
       </div>
