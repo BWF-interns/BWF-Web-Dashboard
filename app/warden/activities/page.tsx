@@ -16,7 +16,7 @@ interface Activity {
   title: string;
   description: string;
   requestedBy: string;
-  requesterRole: 'Student' | 'Teacher' | 'Warden';
+  requesterRole: 'student' | 'staff' | 'warden';
   dateTime: string;
   location: string;
   category: string;
@@ -24,6 +24,7 @@ interface Activity {
   rejectionReason?: string;
   approvedBy?: string;
   rejectedBy?: string;
+  isPendingCollection?: boolean; // New flag to distinguish source
 }
 
 const STATUS_OPTIONS = ['All', 'Pending', 'Approved', 'Rejected'];
@@ -54,21 +55,26 @@ export default function ActivitiesPage() {
   const fetchActivities = async () => {
     try {
       setIsLoading(true);
-      const response = await api.get('/warden/activities');
+      
+      // Fetch from the moderation (Pending/Rejected/Approved history) collection
+      const response = await api.get('/warden/activities/pending');
+
       const normalizedData = response.data.map((item: any) => ({
         id: item._id,
         title: item.title,
         description: item.description,
         requestedBy: item.requestedBy,
         requesterRole: item.requesterRole,
-        dateTime: item.date, // Backend provides full ISO date
+        dateTime: item.date,
         location: item.location,
         category: item.category,
         status: item.status,
         rejectionReason: item.rejectionReason,
         approvedBy: item.approvedBy?.name || item.approvedBy,
-        rejectedBy: item.rejectedBy?.name || item.rejectedBy
+        rejectedBy: item.rejectedBy?.name || item.rejectedBy,
+        isPendingCollection: true
       }));
+
       setActivities(normalizedData);
     } catch (error) {
       console.error("Failed to fetch activities:", error);
@@ -122,7 +128,9 @@ export default function ActivitiesPage() {
     if (!selectedActivity) return;
     try {
       await api.put(`/warden/activities/${selectedActivity.id}/approve`);
-      setActivities((prev) => prev.map((item) => item.id === selectedActivity.id ? { ...item, status: 'Approved' } : item));
+      // After approval, the item moves from pending collection to live.
+      // Refreshing is the safest way to sync IDs and collection flags.
+      await fetchActivities();
       setApproveOpen(false);
     } catch (error) {
       console.error("Failed to approve activity:", error);
@@ -134,6 +142,7 @@ export default function ActivitiesPage() {
     if (!selectedActivity || !rejectReason.trim()) return;
     try {
       await api.put(`/warden/activities/${selectedActivity.id}/reject`, { reason: rejectReason });
+      // Update local state to reflect rejection in the moderation collection
       setActivities((prev) => prev.map((item) =>
         item.id === selectedActivity.id
           ? { ...item, status: 'Rejected', rejectionReason: rejectReason }
@@ -150,12 +159,14 @@ export default function ActivitiesPage() {
   const confirmDelete = async () => {
     if (!selectedActivity) return;
     try {
+      // Deleting from the Warden dashboard now only removes the moderation record.
+      // The backend deleteActivity has been updated to target PendingActivity.
       await api.delete(`/warden/activities/${selectedActivity.id}`);
       setActivities((prev) => prev.filter((item) => item.id !== selectedActivity.id));
       setDeleteOpen(false);
     } catch (error) {
-      console.error("Failed to delete activity:", error);
-      alert("Failed to delete activity.");
+      console.error("Failed to delete activity record:", error);
+      alert("Failed to delete activity record.");
     }
   };
 
@@ -209,7 +220,8 @@ export default function ActivitiesPage() {
         status: item.status,
         rejectionReason: item.rejectionReason,
         approvedBy: item.approvedBy?.name || item.approvedBy,
-        rejectedBy: item.rejectedBy?.name || item.rejectedBy
+        rejectedBy: item.rejectedBy?.name || item.rejectedBy,
+        isPendingCollection: true // Test create always goes to pending
       };
 
       setActivities((prev) => [normalizedItem, ...prev]);
@@ -301,7 +313,7 @@ export default function ActivitiesPage() {
                             : 'bg-amber-50 text-amber-700 border border-amber-100'
                         }`}>{activity.status}</Badge>
                         <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[100px]">{activity.category}</Badge>
-                        <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200">{activity.requesterRole}</Badge>
+                        <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">{activity.requesterRole}</Badge>
                       </div>
                       <p className="mt-4 text-sm leading-6 text-slate-600 break-words line-clamp-3 hover:line-clamp-none transition-all duration-300">
                         {activity.description}
@@ -321,24 +333,24 @@ export default function ActivitiesPage() {
                         </div>
                       )}
                     </div>
-                    <div className="flex flex-col gap-3 sm:flex-row items-center">
-                      {activity.status === 'Pending' && (
-                        <>
-                          <Button onClick={() => openApprove(activity)} size="sm" className="h-10 rounded-xl bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700">Approve</Button>
-                          <Button onClick={() => openReject(activity)} size="sm" variant="outline" className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-600 hover:text-white">Reject</Button>
-                        </>
-                      )}
-                      {activity.status !== 'Pending' && (
-                        <Button
-                          onClick={() => openDelete(activity)}
-                          variant="ghost"
-                          size="icon"
-                          className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
-                        >
-                          <Trash2 className="w-5 h-5" />
-                        </Button>
-                      )}
-                    </div>
+                      <div className="flex flex-col gap-3 sm:flex-row items-center">
+                        {activity.status === 'Pending' && (
+                          <>
+                            <Button onClick={() => openApprove(activity)} size="sm" className="h-10 rounded-xl bg-green-600 px-4 text-sm font-bold text-white hover:bg-green-700">Approve</Button>
+                            <Button onClick={() => openReject(activity)} size="sm" variant="outline" className="h-10 rounded-xl border-red-200 text-red-600 hover:bg-red-600 hover:text-white">Reject</Button>
+                          </>
+                        )}
+                        {(activity.status === 'Approved' || activity.status === 'Rejected') && (
+                          <Button
+                            onClick={() => openDelete(activity)}
+                            variant="ghost"
+                            size="icon"
+                            className="text-red-500 hover:text-red-600 hover:bg-red-50 rounded-xl"
+                          >
+                            <Trash2 className="w-5 h-5" />
+                          </Button>
+                        )}
+                      </div>
                   </div>
 
                   <div className="mt-6 grid gap-4 sm:grid-cols-2 xl:grid-cols-4">
