@@ -188,10 +188,6 @@ export function TeacherDashboardContent({
   }
 
   async function refreshData() {
-    if (!hasAuthToken()) {
-      applyDemoDashboard();
-      return;
-    }
     try {
       const [dashboard, submissions] = await Promise.all([
         getTeacherDashboard(),
@@ -234,12 +230,6 @@ export function TeacherDashboardContent({
 
   useEffect(() => {
     if (!selectedStudent) return;
-    if (!hasAuthToken()) {
-      setOverview(getMockOverview(selectedStudent));
-      setAssignmentProgress(getMockAssignmentProgress(selectedStudent));
-      return;
-    }
-    if (!liveApi) return;
     Promise.all([
       getStudentOverview(selectedStudent),
       getAssignmentProgress(selectedStudent),
@@ -254,53 +244,6 @@ export function TeacherDashboardContent({
   const studentOptions = useMemo(() => data.students, [data.students]);
 
   async function handleAssignmentCreate() {
-    if (!liveApi) {
-      setIsSaving(true);
-      setTimeout(() => {
-        if (overview && assignmentProgress) {
-          const newId = Date.now().toString();
-          setOverview({
-            ...overview,
-            assignments: [
-              {
-                _id: newId,
-                title: assignmentForm.title || "Untitled",
-                subject: assignmentForm.subject || "General",
-                dueDate: assignmentForm.dueDate || new Date().toISOString().split('T')[0],
-                priority: assignmentForm.priority,
-              },
-              ...overview.assignments,
-            ],
-          });
-          setAssignmentProgress({
-            ...assignmentProgress,
-            summary: {
-              ...assignmentProgress.summary,
-              total: assignmentProgress.summary.total + 1,
-              not_submitted: assignmentProgress.summary.not_submitted + 1,
-            },
-            assignments: [
-              {
-                assignment_id: newId,
-                title: assignmentForm.title || "Untitled",
-                subject: assignmentForm.subject || "General",
-                dueDate: assignmentForm.dueDate || new Date().toISOString().split('T')[0],
-                priority: assignmentForm.priority,
-                progressStatus: "not_submitted",
-                rejectionNote: "",
-                submittedAt: null,
-                reviewedAt: null,
-              },
-              ...assignmentProgress.assignments,
-            ],
-          });
-        }
-        setMessage("Assignment added successfully (Demo Mode).");
-        setAssignmentForm({ title: "", subject: "", dueDate: "", priority: "medium" });
-        setIsSaving(false);
-      }, 500);
-      return;
-    }
     if (!selectedStudent) return setMessage("Select a student first");
     try {
       setIsSaving(true);
@@ -317,21 +260,6 @@ export function TeacherDashboardContent({
   }
 
   async function handleSchedulePush() {
-    if (!liveApi) {
-      setIsSaving(true);
-      setTimeout(() => {
-        setMessage("Academic schedule pushed (Demo Mode).");
-        setScheduleForm({
-          title: "",
-          sessionType: "class",
-          date: "",
-          startTime: "",
-          joinLink: "",
-        });
-        setIsSaving(false);
-      }, 500);
-      return;
-    }
     if (!selectedStudent) return setMessage("Select a student first");
     try {
       setIsSaving(true);
@@ -352,15 +280,6 @@ export function TeacherDashboardContent({
   }
 
   async function handleMentorNote() {
-    if (!liveApi) {
-      setIsSaving(true);
-      setTimeout(() => {
-        setNoteMessage("");
-        setMessage("Mentorship and note updated (Demo Mode).");
-        setIsSaving(false);
-      }, 500);
-      return;
-    }
     if (!selectedStudent) return setMessage("Select a student first");
     try {
       setIsSaving(true);
@@ -376,14 +295,6 @@ export function TeacherDashboardContent({
   }
 
   async function handleResourceSave() {
-    if (!liveApi) {
-      setIsSaving(true);
-      setTimeout(() => {
-        setMessage("Student dashboard resources updated (Demo Mode).");
-        setIsSaving(false);
-      }, 500);
-      return;
-    }
     try {
       setIsSaving(true);
       await Promise.all([
@@ -400,10 +311,6 @@ export function TeacherDashboardContent({
   }
 
   async function handleReview(submissionId: string, status: "approved" | "rejected") {
-    if (!liveApi) {
-      setMessage(`Submission ${status} (Demo Mode).`);
-      return;
-    }
     try {
       const rejectionNote =
         status === "rejected" ? "Please improve based on rubric and resubmit." : "";
