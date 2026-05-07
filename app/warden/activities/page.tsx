@@ -55,10 +55,8 @@ export default function ActivitiesPage() {
   const fetchActivities = async () => {
     try {
       setIsLoading(true);
-
       // Fetch from the moderation (Pending/Rejected/Approved history) collection
       const response = await api.get('/warden/activities/pending');
-
       const normalizedData = response.data.map((item: any) => ({
         id: item._id,
         title: item.title,
@@ -74,7 +72,6 @@ export default function ActivitiesPage() {
         rejectedBy: item.rejectedBy?.name || item.rejectedBy,
         isPendingCollection: true
       }));
-
       setActivities(normalizedData);
     } catch (error) {
       console.error("Failed to fetch activities:", error);
@@ -306,10 +303,10 @@ export default function ActivitiesPage() {
                       <div className="flex flex-wrap items-center gap-3">
                         <h2 className="text-xl font-semibold text-slate-900">{activity.title}</h2>
                         <Badge className={`rounded-full px-3 py-1 text-xs font-bold uppercase ${activity.status === 'Approved'
-                            ? 'bg-green-50 text-green-700 border border-green-100'
-                            : activity.status === 'Rejected'
-                              ? 'bg-red-50 text-red-700 border border-red-100'
-                              : 'bg-amber-50 text-amber-700 border border-amber-100'
+                          ? 'bg-green-50 text-green-700 border border-green-100'
+                          : activity.status === 'Rejected'
+                            ? 'bg-red-50 text-red-700 border border-red-100'
+                            : 'bg-amber-50 text-amber-700 border border-amber-100'
                           }`}>{activity.status}</Badge>
                         <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 truncate max-w-[100px]">{activity.category}</Badge>
                         <Badge className="rounded-full px-3 py-1 text-xs font-medium bg-slate-100 text-slate-700 border border-slate-200 capitalize">{activity.requesterRole}</Badge>
