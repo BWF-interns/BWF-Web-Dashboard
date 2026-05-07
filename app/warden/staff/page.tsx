@@ -54,6 +54,9 @@ interface StaffMember {
 interface StaffFormProps {
   data: StaffMember;
   onChange: (data: StaffMember) => void;
+  wantsAccount: boolean;
+  onAccountToggle: (wants: boolean) => void;
+  isEdit?: boolean;
 }
 
 const emptyStaff: StaffMember = {
